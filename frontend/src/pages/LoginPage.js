@@ -1,60 +1,43 @@
-import { Box, FormControl, Input, FormLabel } from "@chakra-ui/react";
-import { useState } from "react";
-import useAuthStore from "../stores/authStore";
+import {
+  Container,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Tab,
+  Box,
+  TabList,
+} from "@chakra-ui/react";
+import Login from "../components/Login";
+import SignUp from "../components/SignUp";
 
 const LoginPage = () => {
-  const { login } = useAuthStore();
-
-  const [formData, setFormData] = useState({ username: "", password: "" });
-
-  const handleUsernameChange = (e) =>
-    setFormData({ ...formData, username: e.target.value });
-  const handlePasswordChange = (e) =>
-    setFormData({ ...formData, password: e.target.value });
-
-  const handleLogin = () => {
-    const userData = formData;
-    login(userData);
-  };
-
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="60vh" // This ensures it covers the full viewport height
-    >
+    <Container maxW="xl" centerContent>
       <Box
-        maxW="850px"
-        p="20px"
-        border="1px solid #e2e8f0"
-        borderRadius="lg"
-        boxShadow="md"
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
+        d="flex"
+        m="120px 0 0px 0"
+        w="35%"
+        borderRadius="10"
+        borderWidth="3px"
+        bg="#FFC154"
       >
-        <FormControl isRequired>
-          <FormLabel>Username</FormLabel>
-          <Input
-            minW="300px"
-            type="text"
-            value={formData.username}
-            onChange={handleUsernameChange}
-          />
-        </FormControl>
+        <Tabs align="center" variant="soft-rounded">
+          <TabList mb="1em">
+            <Tab width="50%">Login</Tab>
+            <Tab width="50%">SignUp</Tab>
+          </TabList>
 
-        <FormControl isRequired mt="20px">
-          <FormLabel>Password</FormLabel>
-          <Input
-            minW="300px"
-            type="password"
-            value={formData.password}
-            onChange={handlePasswordChange}
-          />
-        </FormControl>
+          <TabPanels>
+            <TabPanel>
+              <Login />
+            </TabPanel>
+            <TabPanel>
+              <SignUp />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </Box>
-    </Box>
+    </Container>
   );
 };
 

@@ -4,7 +4,6 @@ import "./index.css";
 import App from "./App";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
@@ -13,7 +12,6 @@ root.render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="signup" element={<SignupPage />} />
         <Route path="*" element={<Navigate to={"login"} />} />
       </Routes>
     </BrowserRouter>
