@@ -9,7 +9,6 @@ const useAuthStore = create((set) => ({
     set((state) => ({
       user: userData,
       isAuthenticated: true,
-      q,
     }));
   },
 
