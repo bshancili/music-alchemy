@@ -4,16 +4,21 @@ import "./index.css";
 import App from "./App";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import { ChakraProvider } from "@chakra-ui/react";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to={"login"} />} />
-      </Routes>
+      <ChakraProvider>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="*" element={<Navigate to={"login"} />} />
+          <Route path="/aa" element={<HomePage />} />
+        </Routes>
+      </ChakraProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

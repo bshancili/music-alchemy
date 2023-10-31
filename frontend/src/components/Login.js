@@ -1,71 +1,85 @@
-import { Box, FormControl, Input, FormLabel, Button } from "@chakra-ui/react";
+import {
+  FormControl,
+  Input,
+  FormLabel,
+  Button,
+  VStack,
+  toast,
+  useToast,
+} from "@chakra-ui/react";
 import { useState } from "react";
 import useAuthStore from "../stores/authStore";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { login } = useAuthStore();
 
   const [formData, setFormData] = useState({ username: "", password: "" });
-
-  const handleUsernameChange = (e) =>
-    setFormData({ ...formData, username: e.target.value });
-  const handlePasswordChange = (e) =>
-    setFormData({ ...formData, password: e.target.value });
-
+  const toast = useToast();
+  const navigate = useNavigate();
+  const handleInputChange = (e, inputName) => {
+    setFormData({ ...formData, [inputName]: e.target.value });
+  };
   const handleLogin = () => {
+    if (!formData.username || !formData.password) {
+      toast({
+        title: "Please fill required fields.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+        colorScheme: "red",
+      });
+    }
     const userData = formData;
-    login(userData);
+    console.log(userData);
+    try {
+      // After configuring api and sending it
+      login(userData);
+
+      // TODO: edit /aa with actual landing / home page dont forget to update index.js as well
+      navigate("/aa");
+    } catch (error) {}
   };
 
   return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="50vh"
-    >
-      <Box
-        maxW="850px"
-        p="20px"
-        border="1px solid #e2e8f0"
-        borderRadius=" 0 12px"
-        boxShadow="md"
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        borderColor="#462445"
-      >
-        <FormControl isRequired>
-          <FormLabel>Username</FormLabel>
-          <Input
-            minW="300px"
-            type="text"
-            value={formData.username}
-            onChange={handleUsernameChange}
-          />
-        </FormControl>
+    <VStack spacing="5px">
+      <FormControl isRequired>
+        <FormLabel>Username</FormLabel>
+        <Input
+          type="text"
+          border
+          value={formData.username}
+          onChange={(e) => handleInputChange(e, "username")}
+          placeholder="Username"
+          colorScheme="blue"
+          bg="purple.100"
+        />
+      </FormControl>
 
-        <FormControl isRequired mt="20px">
-          <FormLabel>Password</FormLabel>
-          <Input
-            minW="300px"
-            type="password"
-            value={formData.password}
-            onChange={handlePasswordChange}
-          />
-        </FormControl>
-        <Button
-          mt="30"
-          border="none"
-          colorScheme="green"
-          variant="solid"
-          onClick={handleLogin}
-          style={{ marginTop: "40px" }}
-        >
-          Login
-        </Button>
-      </Box>
-    </Box>
+      <FormControl isRequired mt="20px">
+        <FormLabel>Password</FormLabel>
+        <Input
+          type="password"
+          value={formData.password}
+          onChange={(e) => handleInputChange(e, "password")}
+          placeholder="Password"
+          bg="purple.100"
+        />
+      </FormControl>
+      <Button
+        mb="30"
+        width="80%"
+        colorScheme="purple"
+        border="none"
+        onClick={handleLogin}
+        style={{
+          marginTop: "40px",
+        }}
+      >
+        Login
+      </Button>
+    </VStack>
   );
 };
 

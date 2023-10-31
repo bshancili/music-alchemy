@@ -19,6 +19,13 @@ const useAuthStore = create((set) => ({
       isAuthenticated: false,
     }));
   },
+
+  signup: (userData) => {
+    set((state) => ({
+      user: userData,
+      isAuthenticated: true,
+    }));
+  },
 }));
 
 export default useAuthStore;
