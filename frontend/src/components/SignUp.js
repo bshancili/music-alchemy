@@ -24,6 +24,7 @@ const SignUp = () => {
   const toast = useToast();
 
   const handleClick = () => setShow(!show);
+
   const handleInputChange = (e, inputName) => {
     setFormData({ ...formData, [inputName]: e.target.value });
   };
@@ -40,23 +41,21 @@ const SignUp = () => {
     ) {
       toast({
         title: "Please fill required fields.",
-        status: "warning",
+        status: "error",
         duration: 5000,
         isClosable: true,
         position: "bottom",
-        colorScheme: "red",
       });
       return;
     }
 
-    if (formData.password != formData.checkPassword) {
+    if (formData.password !== formData.checkPassword) {
       toast({
         title: "Passwords do not match",
-        status: "warning",
+        status: "error",
         duration: 5000,
         isClosable: true,
         position: "bottom",
-        colorScheme: "red",
       });
       return;
     }
@@ -75,7 +74,7 @@ const SignUp = () => {
         <Input
           _placeholder={{ opacity: 0.8, color: "black" }}
           focusBorderColor="purple"
-          bg="purple.100"
+          backgroundColor="purple.100"
           placeholder="Enter your name"
           onChange={(e) => handleInputChange(e, "username")}
         />

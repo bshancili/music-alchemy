@@ -4,7 +4,6 @@ import {
   FormLabel,
   Button,
   VStack,
-  toast,
   useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
@@ -30,6 +29,7 @@ const Login = () => {
         position: "bottom",
         colorScheme: "red",
       });
+      return;
     }
     const userData = formData;
     console.log(userData);

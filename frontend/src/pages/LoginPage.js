@@ -19,21 +19,18 @@ const LoginPage = () => {
       maxW="100%"
       display="flex"
       flexDirection="column"
-      justifyContent="center"
       alignItems="center"
     >
       <Flex
         as="header"
         width="90%"
-        alignItems="center"
         justifyContent="center"
         bg="yellow.400"
         color="purple.700"
         borderRadius="15px 0"
         mt={2}
-        p={4}
+        p={5}
       >
-        {" "}
         <Text
           display="flex"
           flexDirection={"column"}
