@@ -1,13 +1,17 @@
-import create from "zustand";
+import { create } from "zustand";
 
 const useAuthStore = create((set) => ({
   user: null, // Initialize user to null
   isAuthenticated: false, // Initialize authentication status to false
+  customToken: null,
+  userID: null,
 
   // Method to log in
-  login: (userData) => {
+  login: (userData, uid, token) => {
     set((state) => ({
       user: userData,
+      userID: uid,
+      customToken: token,
       isAuthenticated: true,
     }));
   },
@@ -20,9 +24,10 @@ const useAuthStore = create((set) => ({
     }));
   },
 
-  signup: (userData) => {
+  signup: (userData, uid) => {
     set((state) => ({
       user: userData,
+      userID: uid,
       isAuthenticated: true,
     }));
   },

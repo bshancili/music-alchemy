@@ -10,6 +10,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const SignUp = () => {
   const { signup } = useAuthStore();
@@ -21,6 +23,7 @@ const SignUp = () => {
     checkPassword: "",
   });
 
+  const navigate = useNavigate();
   const toast = useToast();
 
   const handleClick = () => setShow(!show);
@@ -30,9 +33,6 @@ const SignUp = () => {
   };
 
   const handleSignUp = async () => {
-    const userData = formData;
-    console.log(userData);
-
     if (
       !formData.username ||
       !formData.email ||
@@ -59,12 +59,33 @@ const SignUp = () => {
       });
       return;
     }
-
+    const userData = {
+      email: formData.email,
+      password: formData.password,
+    };
     // TODO: Implement api
     try {
-    } catch (error) {}
-
-    signup(userData);
+      const response = await api.post("/signup", userData, {
+        withCredentials: true,
+      });
+      if (response) {
+        const storeData = {
+          username: formData.username,
+          email: formData.email,
+        };
+        const userID = response.data.uid;
+        signup(storeData, userID);
+        navigate("/aa");
+      }
+    } catch (error) {
+      toast({
+        title: "Error occured at creating the account!",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
   };
 
   return (

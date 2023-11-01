@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
-
+import api from "../api/axios";
 const Login = () => {
   const { login } = useAuthStore();
 
@@ -19,7 +19,7 @@ const Login = () => {
   const handleInputChange = (e, inputName) => {
     setFormData({ ...formData, [inputName]: e.target.value });
   };
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!formData.username || !formData.password) {
       toast({
         title: "Please fill required fields.",
@@ -31,14 +31,28 @@ const Login = () => {
       });
       return;
     }
-    const userData = formData;
-    console.log(userData);
+
+    const userData = {
+      email: formData.username,
+      password: formData.password,
+    };
     try {
       // After configuring api and sending it
-      login(userData);
+      const response = await api.post("/signin", userData, {
+        withCredentials: true,
+      });
+
+      if (response) {
+        const storeData = {
+          username: formData.username,
+        };
+        const token = response.data.customToken;
+        const userID = response.data.uid;
+        login(storeData, userID, token);
+        navigate("/aa");
+      }
 
       // TODO: edit /aa with actual landing / home page dont forget to update index.js as well
-      navigate("/aa");
     } catch (error) {}
   };
 
