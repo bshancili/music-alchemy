@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: androidx.compose.material:material-android:1.5.4@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/e45c06ccdbda9f25afcf615d0917e839/transformed/material-release/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/e45c06ccdbda9f25afcf615d0917e839/transformed/material-release/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/e45c06ccdbda9f25afcf615d0917e839/transformed/material-release/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/androidx.compose.material/material-android/1.5.4/8a97a5b09febb2f501a4b5c099732084b2ec96ec/material-android-1.5.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

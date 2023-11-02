@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">910312247053-6sjo5d4b5quur2mktdkgfhnbopukfcj2.apps.googleusercontent.com</string>
+    <string name="firebase_database_url" translatable="false">https://music-alchemy-default-rtdb.europe-west1.firebasedatabase.app</string>
+    <string name="gcm_defaultSenderId" translatable="false">910312247053</string>
+    <string name="google_api_key" translatable="false">AIzaSyADIJZJ88O8-p5TYOQPm-i9yHUx01UQuBo</string>
+    <string name="google_app_id" translatable="false">1:910312247053:android:0cd1e59bf5e7d819c1ea44</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyADIJZJ88O8-p5TYOQPm-i9yHUx01UQuBo</string>
+    <string name="google_storage_bucket" translatable="false">music-alchemy.appspot.com</string>
+    <string name="project_id" translatable="false">music-alchemy</string>
+</resources>

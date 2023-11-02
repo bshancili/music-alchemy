@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-60:/xml_backup_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-62:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-60:/xml_data_extraction_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-62:/xml/data_extraction_rules.xml"
+    }
+]
