@@ -17,8 +17,4 @@ object FirebaseAuthManager {
         firebaseApi.signUp(request).enqueue(callback)
     }
 
-    fun signIn(email: String, password: String, callback: Callback<SignInResponse>) {
-        val request = SignInRequest(email, password)
-        firebaseApi.signIn(request).enqueue(callback)
-    }
 }
