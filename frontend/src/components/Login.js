@@ -9,18 +9,19 @@ import {
 import { useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
 const Login = () => {
   const { login } = useAuthStore();
 
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const toast = useToast();
   const navigate = useNavigate();
   const handleInputChange = (e, inputName) => {
     setFormData({ ...formData, [inputName]: e.target.value });
   };
   const handleLogin = async () => {
-    if (!formData.username || !formData.password) {
+    if (!formData.email || !formData.password) {
       toast({
         title: "Please fill required fields.",
         status: "warning",
@@ -33,39 +34,43 @@ const Login = () => {
     }
 
     const userData = {
-      email: formData.username,
+      email: formData.email,
       password: formData.password,
     };
     try {
       // After configuring api and sending it
-      const response = await api.post("/signin", userData, {
-        withCredentials: true,
-      });
-
-      if (response) {
-        const storeData = {
-          username: formData.username,
-        };
-        const token = response.data.customToken;
-        const userID = response.data.uid;
-        login(storeData, userID, token);
-        navigate("/aa");
-      }
-
+      const auth = getAuth();
+      const response = await signInWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
+      const uid = response.user.uid;
+      const token = response._tokenResponse.idToken;
+      login(userData, uid, token);
+      navigate("/aa");
       // TODO: edit /aa with actual landing / home page dont forget to update index.js as well
-    } catch (error) {}
+    } catch (error) {
+      toast({
+        title: "Invalid Credentials",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
   };
 
   return (
     <VStack spacing="5px">
       <FormControl isRequired>
-        <FormLabel>Username</FormLabel>
+        <FormLabel>Email</FormLabel>
         <Input
           type="text"
           border
-          value={formData.username}
-          onChange={(e) => handleInputChange(e, "username")}
-          placeholder="Username"
+          value={formData.email}
+          onChange={(e) => handleInputChange(e, "email")}
+          placeholder="Email"
           colorScheme="blue"
           bg="purple.100"
         />

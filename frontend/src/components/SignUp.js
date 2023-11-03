@@ -11,8 +11,7 @@ import {
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
-
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 const SignUp = () => {
   const { signup } = useAuthStore();
   const [show, setShow] = useState(false);
@@ -61,25 +60,25 @@ const SignUp = () => {
     }
     const userData = {
       email: formData.email,
-      password: formData.password,
+      username: formData.username,
     };
-    // TODO: Implement api
+
     try {
-      const response = await api.post("/signup", userData, {
-        withCredentials: true,
-      });
-      if (response) {
-        const storeData = {
-          username: formData.username,
-          email: formData.email,
-        };
-        const userID = response.data.uid;
-        signup(storeData, userID);
-        navigate("/aa");
-      }
+      const auth = getAuth();
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      console.log(response);
+      const userID = response.user.uid;
+      const token = response._tokenResponse.idToken;
+
+      signup(userData, userID, token);
+      navigate("/aa");
     } catch (error) {
       toast({
-        title: "Error occured at creating the account!",
+        title: "This Email is already taken!",
         status: "error",
         duration: 5000,
         isClosable: true,

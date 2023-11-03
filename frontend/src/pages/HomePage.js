@@ -1,8 +1,7 @@
 import React from "react";
 import useAuthStore from "../stores/authStore";
 const HomePage = () => {
-  const { customToken, userID } = useAuthStore();
-  console.log(customToken, userID);
+  const { token, userID } = useAuthStore();
   return <div>HomePage</div>;
 };
 
