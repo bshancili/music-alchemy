@@ -6,7 +6,7 @@ plugins {
 }
 
 buildscript {
-    val kotlinVersion by extra("1.8.10")
+    val kotlinVersion by extra("1.9.10")
     repositories {
         mavenCentral()
         // ...
@@ -14,6 +14,6 @@ buildscript {
     dependencies {
         // ...
         classpath("com.google.gms:google-services:4.4.0")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10")
     }
 }
