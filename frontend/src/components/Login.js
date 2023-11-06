@@ -9,7 +9,8 @@ import {
 import { useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const Login = () => {
   const { login } = useAuthStore();
@@ -39,7 +40,6 @@ const Login = () => {
     };
     try {
       // After configuring api and sending it
-      const auth = getAuth();
       const response = await signInWithEmailAndPassword(
         auth,
         userData.email,
@@ -48,8 +48,7 @@ const Login = () => {
       const uid = response.user.uid;
       const token = response._tokenResponse.idToken;
       login(userData, uid, token);
-      navigate("/aa");
-      // TODO: edit /aa with actual landing / home page dont forget to update index.js as well
+      navigate("/home");
     } catch (error) {
       toast({
         title: "Invalid Credentials",

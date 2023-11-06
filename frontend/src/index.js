@@ -16,7 +16,7 @@ root.render(
           <Route path="/" element={<App />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to={"login"} />} />
-          <Route path="/aa" element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
         </Routes>
       </ChakraProvider>
     </BrowserRouter>

@@ -17,10 +17,12 @@ const useAuthStore = create((set) => ({
   },
 
   // Method to log out
-  logout: () => {
-    set((state) => ({
+  signout: () => {
+    set(() => ({
       user: null,
       isAuthenticated: false,
+      token: null,
+      userID: null,
     }));
   },
 

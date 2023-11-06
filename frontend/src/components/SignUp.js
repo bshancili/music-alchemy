@@ -11,7 +11,8 @@ import {
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 const SignUp = () => {
   const { signup } = useAuthStore();
   const [show, setShow] = useState(false);
@@ -64,7 +65,6 @@ const SignUp = () => {
     };
 
     try {
-      const auth = getAuth();
       const response = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -75,10 +75,10 @@ const SignUp = () => {
       const token = response._tokenResponse.idToken;
 
       signup(userData, userID, token);
-      navigate("/aa");
+      navigate("/home");
     } catch (error) {
       toast({
-        title: "This Email is already taken!",
+        title: error.message,
         status: "error",
         duration: 5000,
         isClosable: true,
