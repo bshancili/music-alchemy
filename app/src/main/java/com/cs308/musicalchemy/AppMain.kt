@@ -156,7 +156,8 @@ fun InitialMenu(navController: NavController) {
             Text(text = "Sign up")
         }
 
-
+        //Icons and buttons for apple/google sign in
+        //TODO: add google / apple sign in when backend is ready
         Row(
             modifier = Modifier.padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
