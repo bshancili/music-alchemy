@@ -8,6 +8,8 @@
     <string name="google_app_id" translatable="false">1:910312247053:android:0cd1e59bf5e7d819c1ea44</string>
     <string name="google_crash_reporting_api_key" translatable="false">AIzaSyADIJZJ88O8-p5TYOQPm-i9yHUx01UQuBo</string>
     <string name="google_storage_bucket" translatable="false">music-alchemy.appspot.com</string>
+    <string name="profile">Profile</string>
     <string name="project_id" translatable="false">music-alchemy</string>
+    <string name="settings">Settings</string>
     <style name="Theme.App_template" parent="android:Theme.Material.Light.NoActionBar"/>
 </resources>

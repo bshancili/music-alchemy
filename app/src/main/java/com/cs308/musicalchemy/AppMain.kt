@@ -155,6 +155,44 @@ fun InitialMenu(navController: NavController) {
         ) {
             Text(text = "Sign up")
         }
+
+
+        Row(
+            modifier = Modifier.padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_google),
+                contentDescription = "Google sign-in",
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable {
+                        // TODO: Implement Google sign-in logic here
+                        Log.d("InitialMenu", "Google Sign-in button pressed")
+                        //call a function to start the Google sign-in process
+                    }
+                    .padding(vertical = 8.dp)
+            )
+
+
+            Icon(
+                painter = painterResource(id = R.drawable.ic_apple),
+                contentDescription = "Apple sign-in",
+                tint = Color.Unspecified,
+                modifier = Modifier
+                    .size(48.dp) // Adjust the size as needed
+                    .clickable {
+                        // TODO: Implement Apple sign-in logic here
+                        Log.d("InitialMenu", "Apple Sign-in button pressed")
+                        //call a function to start the Apple sign-in process
+                    }
+                    .padding(vertical = 8.dp)
+            )
+        }
+
+
+
     }
 }
 @Composable
@@ -250,8 +288,8 @@ fun MainMenu(navController: NavController) {
                     painter = imagePainter,
                     contentDescription = stringResource(R.string.profile),
                     modifier = Modifier
-                        .size(24.dp) // Adjust the size as needed
-                        .clip(CircleShape) // Clip as a circle
+                        .size(24.dp)
+                        .clip(CircleShape)
                 )
             } else {
        */
@@ -266,14 +304,13 @@ fun MainMenu(navController: NavController) {
     ) {
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // Logo aligned to the top
             Logo(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 64.dp) // Adjust the padding to move the logo closer to the top as desired
+                    .padding(top = 64.dp)
             )
 
-            // Settings icon on the bottom left
+           //Settings Icon
             IconButton(
                 onClick = { navController.navigate("settings") },
                 modifier = Modifier
@@ -309,7 +346,7 @@ fun MainMenu(navController: NavController) {
 fun SettingsScreen() {
     // Settings screen UI elements
     Text(text = "Settings", style = MaterialTheme.typography.h4)
-    // Add different settings options here
+    //TODO: Add different settings options here
 }
 
 

@@ -1,5 +1,10 @@
 R_DEF: Internal format may change without notice
 local
+drawable ic_apple
+drawable ic_google
+drawable profile_placeholder
+font moon_font
+font my_custom_font
 string app_name
 string default_web_client_id
 string firebase_database_url
@@ -8,7 +13,9 @@ string google_api_key
 string google_app_id
 string google_crash_reporting_api_key
 string google_storage_bucket
+string profile
 string project_id
+string settings
 style Theme.App_template
 xml backup_rules
 xml data_extraction_rules

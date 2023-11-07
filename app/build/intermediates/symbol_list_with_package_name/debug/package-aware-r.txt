@@ -121,12 +121,14 @@ drawable common_google_signin_btn_text_light_normal
 drawable common_google_signin_btn_text_light_normal_background
 drawable googleg_disabled_color_18
 drawable googleg_standard_color_18
+drawable ic_apple
 drawable ic_call_answer
 drawable ic_call_answer_low
 drawable ic_call_answer_video
 drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
+drawable ic_google
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low
@@ -140,6 +142,9 @@ drawable notification_template_icon_bg
 drawable notification_template_icon_low_bg
 drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
+drawable profile_placeholder
+font moon_font
+font my_custom_font
 id accessibility_action_clickable_span
 id accessibility_custom_action_0
 id accessibility_custom_action_1
@@ -323,10 +328,12 @@ string navigation_menu
 string not_selected
 string off
 string on
+string profile
 string project_id
 string range_end
 string range_start
 string selected
+string settings
 string status_bar_notification_info_overflow
 string switch_role
 string tab
