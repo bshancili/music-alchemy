@@ -9,9 +9,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a46ab04c-5c52-4632-b8e4-b2b9eaff1387" name="Changes" comment="wegfwe">
+    <list default="true" id="a46ab04c-5c52-4632-b8e4-b2b9eaff1387" name="Changes" comment="Phase 3: added google and apple sign in buttons. Not yet functional, waiting backend.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/cs308/musicalchemy/AppMain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/cs308/musicalchemy/AppMain.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -222,7 +221,14 @@
       <option name="project" value="LOCAL" />
       <updated>1699366043968</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Phase 3: added google and apple sign in buttons. Not yet functional, waiting backend.">
+      <created>1699366582528</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1699366582528</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -255,6 +261,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="wegfwe" />
-    <option name="LAST_COMMIT_MESSAGE" value="wegfwe" />
+    <MESSAGE value="Phase 3: added google and apple sign in buttons. Not yet functional, waiting backend." />
+    <option name="LAST_COMMIT_MESSAGE" value="Phase 3: added google and apple sign in buttons. Not yet functional, waiting backend." />
   </component>
 </project>
