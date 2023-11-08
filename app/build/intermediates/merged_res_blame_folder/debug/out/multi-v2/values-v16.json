@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.cs308.musicalchemy.app-mergeDebugResources-58:/values-v16/values-v16.xml",
+            "outputFile": "com.cs308.musicalchemy.app-mergeDebugResources-59:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\163871fa4ae968795e22dda09982c37c\\transformed\\core-1.13.0-alpha01\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\c99cb11c13360379bf23b92ce37aff50\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

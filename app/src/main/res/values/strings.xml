@@ -2,4 +2,7 @@
     <string name="app_name">Music_Alchemy</string>
     <string name="settings">Settings</string>
     <string name="profile">Profile</string>
+    <string name="default_web_client_id">910312247053-6sjo5d4b5quur2mktdkgfhnbopukfcj2.apps.googleusercontent.com</string>
+
+
 </resources>

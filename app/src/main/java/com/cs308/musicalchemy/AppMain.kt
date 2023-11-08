@@ -1,5 +1,6 @@
 package com.cs308.musicalchemy
 import android.app.Application
+import android.content.ContentValues.TAG
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -46,6 +47,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+
+import android.content.Intent
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
+
+
+private const val RC_SIGN_IN = 9001
 
 val PastelButtermilk = Color(0xFFF9FBE7)
 val PastelLavender = Color(0xFFCEB2FC)
@@ -88,20 +102,79 @@ class MainApp : Application() {
 
 }
 class MainActivity : ComponentActivity() {
+    private lateinit var googleSignInClient: GoogleSignInClient
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        configureGoogleSignIn()
         setContent {
             AppTheme {
-                App()
+                App(::startGoogleSignIn)
             }
         }
     }
+
+
+    private fun configureGoogleSignIn() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+    }
+    private fun startGoogleSignIn() {
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+    @Deprecated("")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignInResult(task)
+        }
+    }
+    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = completedTask.getResult(ApiException::class.java)
+            firebaseAuthWithGoogle(account.idToken!!)
+        } catch (e: ApiException) {
+            Log.w(TAG, "signInResult:failed code=" + e.statusCode)
+            // Update UI accordingly
+        }
+    }
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        FirebaseAuth.getInstance().signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success")
+                //TODO: save user for later
+                //val user = FirebaseAuth.getInstance().currentUser
+
+
+                    // TODO: Navigate to the next screen or update the UI
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    // TODO: Update UI to show sign-in failed
+                }
+            }
+    }
+
+
+
+
 }
+
+
 @Composable
-fun App() {
+fun App(startGoogleSignIn: () -> Unit) {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "initialMenu") {
-        composable("initialMenu") { InitialMenu(navController) }
+        composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") { MainMenu(navController) }
         composable("signUp") { SignUpScreen(navController) }
@@ -127,7 +200,7 @@ fun Logo(modifier: Modifier = Modifier) {
     )
 }
 @Composable
-fun InitialMenu(navController: NavController) {
+fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colors.background)
@@ -169,9 +242,7 @@ fun InitialMenu(navController: NavController) {
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
-                        // TODO: Implement Google sign-in logic here
-                        Log.d("InitialMenu", "Google Sign-in button pressed")
-                        //call a function to start the Google sign-in process
+                        startGoogleSignIn()
                     }
                     .padding(vertical = 8.dp)
             )

@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Music_Alchemy.iml" filepath="$PROJECT_DIR$/.idea/modules/Music_Alchemy.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.androidTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Music_Alchemy.app.unitTest.iml" />
