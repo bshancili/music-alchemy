@@ -10,7 +10,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
-
+import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 const SignUp = () => {
   const { signup } = useAuthStore();
   const [show, setShow] = useState(false);
@@ -21,6 +23,7 @@ const SignUp = () => {
     checkPassword: "",
   });
 
+  const navigate = useNavigate();
   const toast = useToast();
 
   const handleClick = () => setShow(!show);
@@ -30,9 +33,6 @@ const SignUp = () => {
   };
 
   const handleSignUp = async () => {
-    const userData = formData;
-    console.log(userData);
-
     if (
       !formData.username ||
       !formData.email ||
@@ -59,12 +59,32 @@ const SignUp = () => {
       });
       return;
     }
+    const userData = {
+      email: formData.email,
+      username: formData.username,
+    };
 
-    // TODO: Implement api
     try {
-    } catch (error) {}
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      console.log(response);
+      const userID = response.user.uid;
+      const token = response._tokenResponse.idToken;
 
-    signup(userData);
+      signup(userData, userID, token);
+      navigate("/home");
+    } catch (error) {
+      toast({
+        title: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
   };
 
   return (

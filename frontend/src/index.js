@@ -6,6 +6,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import { ChakraProvider } from "@chakra-ui/react";
+import ProfilePage from "./pages/ProfilePage";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
@@ -16,7 +17,8 @@ root.render(
           <Route path="/" element={<App />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to={"login"} />} />
-          <Route path="/aa" element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Routes>
       </ChakraProvider>
     </BrowserRouter>

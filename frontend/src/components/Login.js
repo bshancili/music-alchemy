@@ -9,18 +9,20 @@ import {
 import { useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const Login = () => {
   const { login } = useAuthStore();
 
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const toast = useToast();
   const navigate = useNavigate();
   const handleInputChange = (e, inputName) => {
     setFormData({ ...formData, [inputName]: e.target.value });
   };
-  const handleLogin = () => {
-    if (!formData.username || !formData.password) {
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
       toast({
         title: "Please fill required fields.",
         status: "warning",
@@ -31,27 +33,43 @@ const Login = () => {
       });
       return;
     }
-    const userData = formData;
-    console.log(userData);
+
+    const userData = {
+      email: formData.email,
+      password: formData.password,
+    };
     try {
       // After configuring api and sending it
-      login(userData);
-
-      // TODO: edit /aa with actual landing / home page dont forget to update index.js as well
-      navigate("/aa");
-    } catch (error) {}
+      const response = await signInWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
+      const uid = response.user.uid;
+      const token = response._tokenResponse.idToken;
+      login(userData, uid, token);
+      navigate("/home");
+    } catch (error) {
+      toast({
+        title: "Invalid Credentials",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    }
   };
 
   return (
     <VStack spacing="5px">
       <FormControl isRequired>
-        <FormLabel>Username</FormLabel>
+        <FormLabel>Email</FormLabel>
         <Input
           type="text"
           border
-          value={formData.username}
-          onChange={(e) => handleInputChange(e, "username")}
-          placeholder="Username"
+          value={formData.email}
+          onChange={(e) => handleInputChange(e, "email")}
+          placeholder="Email"
           colorScheme="blue"
           bg="purple.100"
         />
