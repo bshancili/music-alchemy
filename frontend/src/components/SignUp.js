@@ -32,6 +32,13 @@ const SignUp = () => {
     setFormData({ ...formData, [inputName]: e.target.value });
   };
 
+  const passwordCheck = (password) => {
+    // returns true or false
+    if (password.lenght < 8) {
+      return false;
+    }
+  };
+
   const handleSignUp = async () => {
     if (
       !formData.username ||
@@ -57,6 +64,10 @@ const SignUp = () => {
         isClosable: true,
         position: "bottom",
       });
+      return;
+    }
+    if (!passwordCheck(formData.password)) {
+      // throw toast and return
       return;
     }
     const userData = {
