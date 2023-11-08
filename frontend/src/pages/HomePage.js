@@ -4,11 +4,8 @@ import { Box, Heading, Text, Button, Stack, Center } from "@chakra-ui/react";
 import HomeHeader from "../components/HomeHeader";
 import { Outlet, Navigate } from "react-router-dom";
 const HomePage = () => {
-  const { isAuthenticated } = useAuthStore();
-
   return (
     <Box>
-      {isAuthenticated ? <Outlet /> : <Navigate to={"/login"} />}
       <HomeHeader />
 
       {/* Features Section */}

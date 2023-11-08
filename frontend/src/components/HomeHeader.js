@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Heading, Button, Stack, useToast, Text } from "@chakra-ui/react";
+import { Box, Heading, Button, Stack, useToast } from "@chakra-ui/react";
 import AddSongModal from "../components/Misc/AddSongModal";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import useAuthStore from "../stores/authStore";
 
 const HomeHeader = () => {
   const { signout, isAuthenticated } = useAuthStore();
+
   const toast = useToast();
   const navigate = useNavigate();
   const handleSignOut = async () => {
@@ -44,8 +45,15 @@ const HomeHeader = () => {
       </Stack>
 
       <Stack direction="row" spacing={4}>
-        <Button colorScheme="yellow" size="lg" border="1px solid black">
-          Learn More
+        <Button
+          colorScheme="yellow"
+          size="lg"
+          border="1px solid black"
+          onClick={() => {
+            navigate("/profile");
+          }}
+        >
+          Profile
         </Button>
       </Stack>
       <AddSongModal />
