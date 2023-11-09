@@ -1,14 +1,22 @@
 const admin = require('firebase-admin');
+const express = require('express');
+const cors = require('cors');
 const serviceAccount = require('./music-alchemy-firebase-adminsdk.json');
+const bodyParser = require('body-parser');
+
 //initialize firebase
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     //databaseURL: 'https://your-database-url.firebaseio.com' // Replace with your Firebase DB URL
   });
+
+  const db = admin.firestore(); 
 //set up express app
 const app = express();
 app.use(bodyParser.json());
-console.log("  hello  youtube");
+app.use(cors());
+
+
 // endpoint song request
 app.post('/song-request', async (req, res) => {
     console.log("Received Song Request:", req.body);
