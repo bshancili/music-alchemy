@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+/*import { initializeApp } from 'firebase/app';
 import { getAuth } from "firebase/auth";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -73,3 +73,4 @@ async function getCities(db) {
 getCities(db).then(cities => {
   console.log("Cities:", cities);})
 */
+  
