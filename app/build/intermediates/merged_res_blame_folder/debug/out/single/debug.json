@@ -1,30 +1,30 @@
 [
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/xml_backup_rules.xml.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/xml/backup_rules.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/font_my_custom_font.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/font/my_custom_font.xml"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/font_my_custom_font.xml.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/font/my_custom_font.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/drawable_ic_google.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/drawable/ic_google.png"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/xml_data_extraction_rules.xml.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/xml/data_extraction_rules.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/drawable_ic_apple.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/drawable/ic_apple.png"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/drawable_ic_apple.png.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/drawable/ic_apple.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/xml_backup_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/xml/backup_rules.xml"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/font_moon_font.ttf.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/font/moon_font.ttf"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/drawable_profile_placeholder.jpg.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/drawable/profile_placeholder.jpg"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/drawable_ic_google.png.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/drawable/ic_google.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/xml_data_extraction_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/xml/data_extraction_rules.xml"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-61:/drawable_profile_placeholder.jpg.flat",
-        "source": "com.cs308.musicalchemy.app-main-63:/drawable/profile_placeholder.jpg"
+        "merged": "com.cs308.musicalchemy.app-merged_res-62:/font_moon_font.ttf.flat",
+        "source": "com.cs308.musicalchemy.app-main-64:/font/moon_font.ttf"
     }
 ]

@@ -1,44 +1,27 @@
 {
     "logs": [
         {
-            "outputFile": "com.cs308.musicalchemy.app-mergeDebugResources-59:/values-en-rIN/values-en-rIN.xml",
+            "outputFile": "com.cs308.musicalchemy.app-mergeDebugResources-60:/values-en-rIN/values-en-rIN.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\a6e4d27c84a27ff6867ae154f561e674\\transformed\\ui-release\\res\\values-en-rIN\\values-en-rIN.xml",
+                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\21985b30bba841cea9ba4239bee9b6c3\\transformed\\material3-1.0.0\\res\\values-en-rIN\\values-en-rIN.xml",
                     "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "105,197,279,373,472,559,641,730,819,903,968,1032,1110,1192,1265,1342,1408",
-                        "endColumns": "91,81,93,98,86,81,88,88,83,64,63,77,81,72,76,65,120",
-                        "endOffsets": "192,274,368,467,554,636,725,814,898,963,1027,1105,1187,1260,1337,1403,1524"
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,133,207",
+                        "endColumns": "77,73,75",
+                        "endOffsets": "128,202,278"
                     },
                     "to": {
-                        "startLines": "9,10,13,14,16,21,22,23,24,25,26,27,28,29,31,32,33",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "824,916,1174,1268,1441,1909,1991,2080,2169,2253,2318,2382,2460,2542,2716,2793,2859",
-                        "endColumns": "91,81,93,98,86,81,88,88,83,64,63,77,81,72,76,65,120",
-                        "endOffsets": "911,993,1263,1362,1523,1986,2075,2164,2248,2313,2377,2455,2537,2610,2788,2854,2975"
+                        "startLines": "11,15,17",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "998,1367,1528",
+                        "endColumns": "77,73,75",
+                        "endOffsets": "1071,1436,1599"
                     }
                 },
                 {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\c99cb11c13360379bf23b92ce37aff50\\transformed\\core-1.12.0\\res\\values-en-rIN\\values-en-rIN.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,151,253,352,451,555,658,774",
-                        "endColumns": "95,101,98,98,103,102,115,100",
-                        "endOffsets": "146,248,347,446,550,653,769,870"
-                    },
-                    "to": {
-                        "startLines": "2,3,4,5,6,7,8,30",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "105,201,303,402,501,605,708,2615",
-                        "endColumns": "95,101,98,98,103,102,115,100",
-                        "endOffsets": "196,298,397,496,600,703,819,2711"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\8c1a5fb573ddc5d8d2ffb4ccc0ae8d67\\transformed\\browser-1.4.0\\res\\values-en-rIN\\values-en-rIN.xml",
+                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\aabaf1607441c5610598960e7138bb51\\transformed\\browser-1.4.0\\res\\values-en-rIN\\values-en-rIN.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",
@@ -55,20 +38,37 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\1c91fd200f29161af48ca8cad49e9221\\transformed\\material3-1.0.0\\res\\values-en-rIN\\values-en-rIN.xml",
+                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\eaf0e90c84f1656639401da5e9a6d0a8\\transformed\\core-1.12.0\\res\\values-en-rIN\\values-en-rIN.xml",
                     "from": {
-                        "startLines": "2,3,4",
-                        "startColumns": "4,4,4",
-                        "startOffsets": "55,133,207",
-                        "endColumns": "77,73,75",
-                        "endOffsets": "128,202,278"
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,658,774",
+                        "endColumns": "95,101,98,98,103,102,115,100",
+                        "endOffsets": "146,248,347,446,550,653,769,870"
                     },
                     "to": {
-                        "startLines": "11,15,17",
-                        "startColumns": "4,4,4",
-                        "startOffsets": "998,1367,1528",
-                        "endColumns": "77,73,75",
-                        "endOffsets": "1071,1436,1599"
+                        "startLines": "2,3,4,5,6,7,8,30",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "105,201,303,402,501,605,708,2615",
+                        "endColumns": "95,101,98,98,103,102,115,100",
+                        "endOffsets": "196,298,397,496,600,703,819,2711"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\7894107efb48b6133cc1f41252c29e0e\\transformed\\ui-release\\res\\values-en-rIN\\values-en-rIN.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "105,197,279,373,472,559,641,730,819,903,968,1032,1110,1192,1265,1342,1408",
+                        "endColumns": "91,81,93,98,86,81,88,88,83,64,63,77,81,72,76,65,120",
+                        "endOffsets": "192,274,368,467,554,636,725,814,898,963,1027,1105,1187,1260,1337,1403,1524"
+                    },
+                    "to": {
+                        "startLines": "9,10,13,14,16,21,22,23,24,25,26,27,28,29,31,32,33",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "824,916,1174,1268,1441,1909,1991,2080,2169,2253,2318,2382,2460,2542,2716,2793,2859",
+                        "endColumns": "91,81,93,98,86,81,88,88,83,64,63,77,81,72,76,65,120",
+                        "endOffsets": "911,993,1263,1362,1523,1986,2075,2164,2248,2313,2377,2455,2537,2610,2788,2854,2975"
                     }
                 }
             ]

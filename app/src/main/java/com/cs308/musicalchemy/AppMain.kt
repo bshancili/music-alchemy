@@ -1,4 +1,6 @@
+//Package and imports
 package com.cs308.musicalchemy
+import android.app.Activity
 import android.app.Application
 import android.content.ContentValues.TAG
 import androidx.compose.foundation.layout.Column
@@ -52,15 +54,33 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-
+import androidx.compose.runtime.livedata.observeAsState
 import android.content.Intent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.PropertyName
 
 
-private const val RC_SIGN_IN = 9001
 
+//~~~~~~~~~~
+// Placeholder data classes
+
+data class UserData(val displayName: String, val email: String, val profilePictureUrl: String)
+data class FriendData(val displayName: String, val profilePictureUrl: String)
+
+
+//~~~~~~~~~~
+//~~~~~THEME~~~~~
+//Design colors, App theme and Logo
 val PastelButtermilk = Color(0xFFF9FBE7)
 val PastelLavender = Color(0xFFCEB2FC)
 
@@ -73,11 +93,6 @@ private val appThemeColors = lightColors(
     surface = PastelLavender,
 )
 
-
-// Placeholder data classes
-data class UserData(val displayName: String, val email: String, val profilePictureUrl: String)
-data class FriendData(val displayName: String, val profilePictureUrl: String)
-
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
     MaterialTheme(
@@ -87,6 +102,26 @@ fun AppTheme(content: @Composable () -> Unit) {
         content = content
     )
 }
+
+@Composable
+fun Logo(modifier: Modifier = Modifier) {
+    val typography = MaterialTheme.typography
+    Text(
+        text = "MUSIC ALCHEMY",
+        style = typography.h3.copy(
+            color = MaterialTheme.colors.primaryVariant,
+            fontFamily = FontFamily(Font(R.font.my_custom_font)),
+            fontSize = 42.sp
+        ),
+        modifier = modifier
+    )
+}
+
+
+//~~~~~~~~~~
+//~~~~~MAIN APP~~~~~
+//Main App, Main Activity, App
+
 class MainApp : Application() {
     override fun onCreate() {
 
@@ -101,11 +136,22 @@ class MainApp : Application() {
     }
 
 }
+
 class MainActivity : ComponentActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var authResultLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         configureGoogleSignIn()
+        authResultLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                handleSignInResult(task)
+            }
+        }
         setContent {
             AppTheme {
                 App(::startGoogleSignIn)
@@ -121,20 +167,12 @@ class MainActivity : ComponentActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
+
     private fun startGoogleSignIn() {
         val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        authResultLauncher.launch(signInIntent)
     }
-    @Deprecated("")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
 
-
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            handleSignInResult(task)
-        }
-    }
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
@@ -169,7 +207,6 @@ class MainActivity : ComponentActivity() {
 
 }
 
-
 @Composable
 fun App(startGoogleSignIn: () -> Unit) {
     val navController = rememberNavController()
@@ -184,21 +221,18 @@ fun App(startGoogleSignIn: () -> Unit) {
             val friendName = backStackEntry.arguments?.getString("friendName")
             FriendProfileScreen(friendName = friendName ?: "Unknown") // Replace with a real composable that displays the friend's profile
         }
+        composable("songs") { SongListScreen(navController) }
+        composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
+            SongDetailScreen(songId = backStackEntry.arguments?.getString("songId") ?: "")
+        }
     }
 }
-@Composable
-fun Logo(modifier: Modifier = Modifier) {
-    val typography = MaterialTheme.typography
-    Text(
-        text = "MUSIC ALCHEMY",
-        style = typography.h3.copy(
-            color = MaterialTheme.colors.primaryVariant,
-            fontFamily = FontFamily(Font(R.font.my_custom_font)),
-            fontSize = 42.sp
-        ),
-        modifier = modifier
-    )
-}
+
+
+//~~~~~~~~~~
+//~~~~~AUTHENTICATION~~~~~
+//Initial Menu, SignUp, Login
+
 @Composable
 fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
     Column(
@@ -267,6 +301,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
 
     }
 }
+
 @Composable
 fun SignUpScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
@@ -301,6 +336,7 @@ fun SignUpScreen(navController: NavController) {
         }
     }
 }
+
 @Composable
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
@@ -342,6 +378,11 @@ fun LoginScreen(navController: NavController) {
         }
     }
 }
+
+
+//~~~~~~~~~~
+////~~~~~MAIN MENU~~~~~
+
 @Composable
 fun MainMenu(navController: NavController) {
     val imagePainter = painterResource(id = R.drawable.profile_placeholder)
@@ -381,6 +422,15 @@ fun MainMenu(navController: NavController) {
                     .align(Alignment.TopCenter)
                     .padding(top = 64.dp)
             )
+            // Songs button
+            Button(
+                onClick = { navController.navigate("songs") },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Text(text = "All Songs List!", style = MaterialTheme.typography.button)
+            }
 
            //Settings Icon
             IconButton(
@@ -414,6 +464,7 @@ fun MainMenu(navController: NavController) {
         }
     }
 }
+
 @Composable
 fun SettingsScreen() {
     // Settings screen UI elements
@@ -421,6 +472,9 @@ fun SettingsScreen() {
     //TODO: Add different settings options here
 }
 
+
+//~~~~~~~~~~
+//~~~~~PROFILE~~~~~
 
 @Composable
 fun ProfileScreen(navController: NavController) {
@@ -484,6 +538,10 @@ fun ProfileHeader(userData: UserData) {
     }
 }
 
+
+//~~~~~~~~~~
+//~~~~~FRIENDS LIST/PROFILE~~~~~
+
 @Composable
 fun FriendsList(friends: List<FriendData>, navController: NavController) {
     LazyColumn {
@@ -540,3 +598,118 @@ fun FriendProfileScreen(friendName: String) {
 
 }
 
+
+//~~~~~~~~~~
+//~~~~~~~~~~SONGS~~~~~~~~~~
+//Song, SongViewModel, SongListScreen, SongListItem, SongDetailScreen
+
+data class Song(
+    // Assuming 'id' does not need annotation, matches the field name in Firestore.
+    var id: String = "",
+
+    @get:PropertyName("acousticness_%") @set:PropertyName("acousticness_%") var acousticnessPercent: Int? = 0,
+    @get:PropertyName("artist(s)_name") @set:PropertyName("artist(s)_name") var artistsName: String? = "",
+    val artistCount: Int? = 0,
+    val bpm: Int? = 0,
+    @get:PropertyName("danceability_%") @set:PropertyName("danceability_%") var danceabilityPercent: Int? = 0,
+    @get:PropertyName("energy_%") @set:PropertyName("energy_%") var energyPercent: Int? = 0,
+    @get:PropertyName("instrumentalness_%") @set:PropertyName("instrumentalness_%") var instrumentalnessPercent: Int? = 0,
+    val key: String? = "",
+    @get:PropertyName("liveness_%") @set:PropertyName("liveness_%") var livenessPercent: Int? = 0,
+    val mode: String? = "",
+    @get:PropertyName("released_year") @set:PropertyName("released_year") var releasedYear: Int? = 0,
+    @get:PropertyName("speechiness_%") @set:PropertyName("speechiness_%") var speechinessPercent: Int? = 0,
+    val streams: Long? = 0L,
+    @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
+    @get:PropertyName("valence_%") @set:PropertyName("valence_%") var valencePercent: Int? = 0
+)
+
+class SongsViewModel : ViewModel() {
+    private val _songs = MutableLiveData<List<Song>>()
+    val songs: LiveData<List<Song>> = _songs
+
+    init {
+        loadSongs()
+    }
+
+    private fun loadSongs() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("Songs") // The name of collection in Firestore
+            .get()
+            .addOnSuccessListener { documents ->
+                val songsList = documents.mapNotNull { documentSnapshot ->
+                    documentSnapshot.toObject(Song::class.java).apply {
+                        id = documentSnapshot.id // Set the id property to the document ID
+                    }
+                }
+                Log.d("SongsViewModel", "Songs loaded: ${songsList.size}")
+                _songs.value = songsList
+            }
+            .addOnFailureListener { exception ->
+                Log.e("SongsViewModel", "Error loading songs", exception)
+            }
+    }
+}
+
+@Composable
+fun SongListScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    val songs by viewModel.songs.observeAsState(initial = emptyList())
+
+    if (songs.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        LazyColumn {
+            items(songs) { song ->
+                SongListItem(song) {
+                    Log.d("SongDetailViewer", "Attempting to view song: ${song.id}")
+                    navController.navigate("songDetail/${song.id}")
+
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SongListItem(song: Song, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(8.dp)
+            .fillMaxWidth()
+    ) {
+        Text(song.trackName ?: "Unknown", style = MaterialTheme.typography.h6)
+        Text("${song.artistsName ?: "Unknown Artist"} • ${song.releasedYear ?: "Year Unknown"}", style = MaterialTheme.typography.subtitle1)
+        Text("Streams: ${song.streams ?: "Not available"}", style = MaterialTheme.typography.body2)
+    }
+    Divider()
+}
+
+@Composable
+fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
+    val songs by viewModel.songs.observeAsState(initial = emptyList())
+    val song = songs.firstOrNull { it.id == songId }
+
+    song?.let { songDetail ->
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
+            Text("Artist(s) Name: ${songDetail.artistsName ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
+            Text("Artist Count: ${songDetail.artistCount ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
+            Text("BPM: ${songDetail.bpm ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Danceability: ${songDetail.danceabilityPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text("Energy: ${songDetail.energyPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text("Instrumentalness: ${songDetail.instrumentalnessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text("Key: ${songDetail.key ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Liveness: ${songDetail.livenessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text("Mode: ${songDetail.mode ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Released Year: ${songDetail.releasedYear ?: "Year Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Speechiness: ${songDetail.speechinessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text("Streams: ${songDetail.streams ?: "Not available"}", style = MaterialTheme.typography.body1)
+            Text("Valence: ${songDetail.valencePercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+        }
+    } ?:Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}
