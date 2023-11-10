@@ -127,6 +127,7 @@ const SignUp = () => {
         liked_songs_list: [], // An array to store liked songs
         friends_list: [], // An array to store friends
         comments: [], // An array to store comments
+        uid: userID,
       });
 
       signup(userData, userID, token);
