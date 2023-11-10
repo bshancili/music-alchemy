@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "910312247053",
+    "firebase_url": "https://music-alchemy-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "music-alchemy",
+    "storage_bucket": "music-alchemy.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910312247053:android:0cd1e59bf5e7d819c1ea44",
+        "android_client_info": {
+          "package_name": "com.cs308.musicalchemy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "910312247053-6sjo5d4b5quur2mktdkgfhnbopukfcj2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADIJZJ88O8-p5TYOQPm-i9yHUx01UQuBo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "910312247053-6sjo5d4b5quur2mktdkgfhnbopukfcj2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

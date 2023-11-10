@@ -16,9 +16,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.ComponentActivity
@@ -59,6 +56,7 @@ import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -123,6 +121,7 @@ fun Logo(modifier: Modifier = Modifier) {
 //Main App, Main Activity, App
 
 class MainApp : Application() {
+
     override fun onCreate() {
 
         if (FirebaseApp.getApps(this).isEmpty()) {
@@ -136,13 +135,33 @@ class MainApp : Application() {
     }
 
 }
+object AuthStateManager {
+    var isAuthenticated = mutableStateOf(false)
+}
 
 class MainActivity : ComponentActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var authResultLauncher: ActivityResultLauncher<Intent>
+    private lateinit var auth: FirebaseAuth
+    private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
+    override fun onStart() {
+        super.onStart()
+        authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            AuthStateManager.isAuthenticated.value = firebaseAuth.currentUser != null
+        }
+        auth.addAuthStateListener(authStateListener)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (::authStateListener.isInitialized) {
+            auth.removeAuthStateListener(authStateListener)
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = FirebaseAuth.getInstance()
         configureGoogleSignIn()
         authResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -161,62 +180,75 @@ class MainActivity : ComponentActivity() {
 
 
     private fun configureGoogleSignIn() {
+        Log.d(TAG, "configureGoogleSignIn called")
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(getString(R.string.default_web_client_id)) // Get this value from the Google Cloud Console
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
     private fun startGoogleSignIn() {
+        Log.d(TAG, "startGoogleSignIn called")
         val signInIntent = googleSignInClient.signInIntent
         authResultLauncher.launch(signInIntent)
     }
 
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+        Log.d(TAG, "handleSignInResult called")
         try {
             val account = completedTask.getResult(ApiException::class.java)
             firebaseAuthWithGoogle(account.idToken!!)
         } catch (e: ApiException) {
             Log.w(TAG, "signInResult:failed code=" + e.statusCode)
-            // Update UI accordingly
         }
     }
+
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        FirebaseAuth.getInstance().signInWithCredential(credential)
+        Log.d(TAG, "firebaseAuthWithGoogle called")
+        auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithCredential:success")
-                //TODO: save user for later
-                //val user = FirebaseAuth.getInstance().currentUser
-
-
-                    // TODO: Navigate to the next screen or update the UI
+                    AuthStateManager.isAuthenticated.value = true
                 } else {
-                    // If sign in fails, display a message to the user.
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
-                    // TODO: Update UI to show sign-in failed
                 }
             }
     }
-
-
-
-
 }
+
+
+
+
+
 
 @Composable
 fun App(startGoogleSignIn: () -> Unit) {
     val navController = rememberNavController()
+    val isAuthenticated = AuthStateManager.isAuthenticated
+
+    LaunchedEffect(key1 = isAuthenticated.value) {
+        if (isAuthenticated.value) {
+            navController.navigate("mainMenu") {
+                popUpTo(navController.graph.startDestinationId) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    MainActivity()
     NavHost(navController, startDestination = "initialMenu") {
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") { MainMenu(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
-        composable("settings") { SettingsScreen() }
+        composable("settings") { SettingsScreen(navController) }
         composable("profile/{friendName}", arguments = listOf(navArgument("friendName") { type = NavType.StringType })) { backStackEntry ->
             val friendName = backStackEntry.arguments?.getString("friendName")
             FriendProfileScreen(friendName = friendName ?: "Unknown") // Replace with a real composable that displays the friend's profile
@@ -276,6 +308,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
                 modifier = Modifier
                     .size(48.dp)
                     .clickable {
+                        Log.d(TAG, "button pressed; calling start-google-signin")
                         startGoogleSignIn()
                     }
                     .padding(vertical = 8.dp)
@@ -306,6 +339,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
 fun SignUpScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val auth = FirebaseAuth.getInstance()
 
     Column(
         modifier = Modifier
@@ -314,33 +348,29 @@ fun SignUpScreen(navController: NavController) {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
         Button(
-            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
             onClick = {
-                Log.d("SignUpScreen", "Attempting to sign up with email: $email")
-                FirebaseAuthManager.signUp(email, password, object : Callback<SignUpResponse> {
-                    override fun onResponse(call: Call<SignUpResponse>, response: Response<SignUpResponse>) {
-                        if (response.isSuccessful) {
-                            Log.d("SignUpScreen", "Sign up successful, navigating to login")
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // Sign up success, update UI with the user's information
+                            Log.d("SignUpScreen", "createUserWithEmail:success")
                             navController.navigate("login")
                         } else {
-                            Log.d("SignUpScreen", "Sign up failed with response: $response")
+                            // If sign up fails, display a message to the user.
+                            Log.w("SignUpScreen", "createUserWithEmail:failure", task.exception)
                         }
                     }
-
-                    override fun onFailure(call: Call<SignUpResponse>, t: Throwable) {
-                        Log.e("SignUpScreen", "Sign up failed with error", t)
-                    }
-                })
-            }) {
+            }
+        ) {
             Text(text = "Sign up")
         }
     }
 }
-
 @Composable
 fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val auth = FirebaseAuth.getInstance()
 
     Column(
         modifier = Modifier
@@ -349,31 +379,24 @@ fun LoginScreen(navController: NavController) {
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    )  {
+    ) {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
         Button(
-            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
             onClick = {
-            Log.d("LoginScreen", "Attempting to sign in with email: $email")
-            FirebaseAuthManager.signIn(email, password, object : Callback<SignInResponse> {
-                override fun onResponse(call: Call<SignInResponse>, response: Response<SignInResponse>) {
-                    if (response.isSuccessful) {
-                        //sign-in success:
-                        Log.d("LoginScreen", "Sign in successful, navigating to main menu")
-                        navController.navigate("mainMenu")
-                    } else {
-                        // sign-in failed:
-                        Log.w("LoginScreen", "Sign in failed with response: ${response.errorBody()?.string()}")
+                auth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d("LoginScreen", "signInWithEmail:success")
+                            navController.navigate("mainMenu")
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w("LoginScreen", "signInWithEmail:failure", task.exception)
+                        }
                     }
-                }
-
-                override fun onFailure(call: Call<SignInResponse>, t: Throwable) {
-                    // Handle the failure case
-                    Log.e("LoginScreen", "Sign in failed with error", t)
-                }
-            })
-        }) {
+            }
+        ) {
             Text(text = "Log in")
         }
     }
@@ -466,10 +489,35 @@ fun MainMenu(navController: NavController) {
 }
 
 @Composable
-fun SettingsScreen() {
-    // Settings screen UI elements
-    Text(text = "Settings", style = MaterialTheme.typography.h4)
-    //TODO: Add different settings options here
+fun SettingsScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Settings", style = MaterialTheme.typography.h4)
+
+        // Other settings options...
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                FirebaseAuth.getInstance().signOut() // Sign out from Firebase
+                AuthStateManager.isAuthenticated.value = false // Set isAuthenticated to false
+                navController.navigate("initialMenu") { // Navigate to initial menu
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true // Remove all previous destinations from the back stack
+                    }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary)
+        ) {
+            Text(text = "Log Out")
+        }
+    }
 }
 
 
