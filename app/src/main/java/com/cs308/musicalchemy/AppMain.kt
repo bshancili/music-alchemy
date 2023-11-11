@@ -35,6 +35,9 @@ import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -246,6 +249,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") { MainMenu(navController) }
+        composable("screen1") { Screen1(navController) }
+        composable("screen2") { Screen2(navController) }
+        composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
         composable("settings") { SettingsScreen(navController) }
@@ -409,13 +415,54 @@ fun LoginScreen(navController: NavController) {
 }
 
 
+
+@Composable
+fun CommonBottomBar(navController: NavController) {
+    BottomNavigation {
+        // Bottom Navigation Item for MainMenu
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = navController.currentDestination?.route == "mainMenu",
+            onClick = {
+                if (navController.currentDestination?.route != "mainMenu") {
+                    navController.navigate("mainMenu")
+                }
+            }
+        )
+
+        // Bottom Navigation Item for Screen1
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Edit, contentDescription = "Screen1") },
+            label = { Text("Screen1") },
+            selected = navController.currentDestination?.route == "screen1",
+            onClick = {
+                if (navController.currentDestination?.route != "screen1") {
+                    navController.navigate("screen1")
+                }
+            }
+        )
+
+        // Bottom Navigation Item for Screen2
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Build, contentDescription = "Screen2") },
+            label = { Text("Screen2") },
+            selected = navController.currentDestination?.route == "screen2",
+            onClick = {
+                if (navController.currentDestination?.route != "screen2") {
+                    navController.navigate("screen2")
+                }
+            }
+        )
+    }
+}
+
+
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
 @Composable
-fun MainMenu(navController: NavController) {
-    val imagePainter = painterResource(id = R.drawable.profile_placeholder)
-
+ fun MainMenu(navController: NavController) {
 
     //FOR FIREBASE LATER:
     /*if (userProfilePictureUrl != null) {
@@ -435,62 +482,122 @@ fun MainMenu(navController: NavController) {
                 )
             } else {
        */
+        val imagePainter = painterResource(id = R.drawable.profile_placeholder)
 
-
-
-
-    Column(
-        modifier = Modifier
-            .background(color = MaterialTheme.colors.background)
-            .fillMaxSize(),
-    ) {
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Logo(
+        Scaffold(
+            bottomBar = { CommonBottomBar(navController) }
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 64.dp)
-            )
-            // Songs button
-            Button(
-                onClick = { navController.navigate("songs") },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxSize()
+                    .padding(innerPadding),
             ) {
-                Text(text = "All Songs List!", style = MaterialTheme.typography.button)
-            }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Logo(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 64.dp)
+                    )
 
-           //Settings Icon
-            IconButton(
-                onClick = { navController.navigate("settings") },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.settings)
-                )
-            }
+                    Button(
+                        onClick = { navController.navigate("addSong") },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 64.dp) // Adjust the padding as needed
+                    ) {
+                        Text(text = "Add Song!", style = MaterialTheme.typography.button)
+                    }
 
-            // Profile button on the top right
-            IconButton(
-                onClick = { navController.navigate("profile") },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                Image(
-                    painter = imagePainter,
-                    contentDescription = stringResource(R.string.profile),
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                )
-
+                    // Songs button
+                    Button(
+                        onClick = { navController.navigate("songs") },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp) // Adjust the padding as needed
+                    ) {
+                        Text(text = "All Songs List!", style = MaterialTheme.typography.button)
+                    }
+                    // Settings button
+                    IconButton(
+                        onClick = { navController.navigate("settings") },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 16.dp, bottom = 16.dp) // Adjust the padding as needed
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
+                    }
+                    // Profile button on the top right
+                    IconButton(
+                        onClick = { navController.navigate("profile") },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                    ) {
+                        Image(
+                            painter = imagePainter,
+                            contentDescription = stringResource(R.string.profile),
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                        )
+                    }
+                }
             }
         }
+    }
+
+
+
+
+@Composable
+fun Screen1(navController: NavController) {
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding), // Apply the innerPadding here
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("This is the Screen 1")
+        }
+    }
+}
+
+
+@Composable
+fun Screen2(navController: NavController) {
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding), // Apply the innerPadding here
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("This is the Screen 2")
+        }
+    }
+}
+
+@Composable
+fun AddSongScreen(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text("This is the Screen 2")
     }
 }
 
@@ -642,7 +749,9 @@ fun FriendItem(friend: FriendData, navController: NavController) {
 
 @Composable
 fun FriendProfileScreen(friendName: String) {
-    Column(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colors.background)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = MaterialTheme.colors.background)) {
 
         // Display the friend's profile information here
         // For now, just displays the friend's name
