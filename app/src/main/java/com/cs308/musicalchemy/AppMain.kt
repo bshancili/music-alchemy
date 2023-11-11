@@ -344,9 +344,14 @@ fun SignUpScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colors.background)
-            .fillMaxSize(),) {
+            .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        )
+    {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 auth.createUserWithEmailAndPassword(email, password)
@@ -382,6 +387,7 @@ fun LoginScreen(navController: NavController) {
     ) {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 auth.signInWithEmailAndPassword(email, password)
