@@ -590,16 +590,66 @@ fun Screen2(navController: NavController) {
 
 @Composable
 fun AddSongScreen(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("This is the Screen 2")
+    // State variables to hold input data
+    var songName by remember { mutableStateOf("") }
+    var dateReleased by remember { mutableStateOf("") }
+    var danceability by remember { mutableStateOf("") }
+
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) // Apply innerPadding here
+                .padding(16.dp), // Additional padding for aesthetics
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("Add a New Song", style = MaterialTheme.typography.h6)
+
+            // Input field for the song's name
+            OutlinedTextField(
+                value = songName,
+                onValueChange = { songName = it },
+                label = { Text("Song Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Input field for the date released
+            OutlinedTextField(
+                value = dateReleased,
+                onValueChange = { dateReleased = it },
+                label = { Text("Date Released") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Input field for danceability
+            OutlinedTextField(
+                value = danceability,
+                onValueChange = { danceability = it },
+                label = { Text("Danceability") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Button to submit the data
+            Button(onClick = {
+                // Handle the logic to add the song
+                // For example, sending data to a database or ViewModel
+            }) {
+                Text("Add Song")
+            }
+        }
     }
 }
+
+
 
 @Composable
 fun SettingsScreen(navController: NavController) {
