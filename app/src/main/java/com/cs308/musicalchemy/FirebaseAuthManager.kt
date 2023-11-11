@@ -1,4 +1,6 @@
 package com.cs308.musicalchemy
+/*
+
 
 import retrofit2.Callback
 import retrofit2.Retrofit
@@ -33,3 +35,4 @@ object FirebaseAuthManager {
     }
 
 }
+*/
