@@ -610,6 +610,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
     var bpm by remember { mutableStateOf("") }
     var streams by remember { mutableStateOf("") }
     // Add more state variables as needed for other song attributes
+    val addSongStatus by viewModel.addSongStatus.observeAsState("")
 
     Scaffold(
         bottomBar = { CommonBottomBar(navController) }
@@ -771,6 +772,9 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                     viewModel.addSong(newSong)
                 }) {
                     Text("Add Song")
+                }
+                if (addSongStatus.isNotEmpty()) {
+                    Text(addSongStatus)
                 }
         }
     }
@@ -969,12 +973,16 @@ class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
+    private val _addSongStatus = MutableLiveData<String>()
+    val addSongStatus: LiveData<String> = _addSongStatus
+
     init {
         loadSongs()
     }
 
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
+
         db.collection("Songs") // The name of collection in Firestore
             .get()
             .addOnSuccessListener { documents ->
@@ -997,11 +1005,11 @@ class SongsViewModel : ViewModel() {
             .add(song)
             .addOnSuccessListener { documentReference ->
                 // Handle success, e.g., log or inform the user
-                Log.d("SongsViewModel", "Song added with ID: ${documentReference.id}")
+                _addSongStatus.value = "Song added successfully with ID: ${documentReference.id}"
             }
             .addOnFailureListener { e ->
                 // Handle failure, e.g., log or show an error message
-                Log.w("SongsViewModel", "Error adding song", e)
+                _addSongStatus.value = "Error adding song: ${e.message}"
             }
     }
 }
