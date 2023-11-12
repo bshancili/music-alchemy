@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.privacysandbox.ads:ads-adservices-java:1.0.0-beta05@aar">
     <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/9be40876c7093a8708291d9d2b27a6bd/transformed/ads-adservices-java-1.0.0-beta05/AndroidManifest.xml" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/9be40876c7093a8708291d9d2b27a6bd/transformed/ads-adservices-java-1.0.0-beta05/res" />
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/9be40876c7093a8708291d9d2b27a6bd/transformed/ads-adservices-java-1.0.0-beta05/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/9be40876c7093a8708291d9d2b27a6bd/transformed/ads-adservices-java-1.0.0-beta05/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
