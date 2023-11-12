@@ -591,10 +591,6 @@ fun Screen2(navController: NavController) {
     }
 }
 
-val textFieldModifier = Modifier
-
-    .heightIn(min = 26.dp) // You can adjust the min height as needed
-    .padding(vertical = 1.dp) // Reduces vertical padding
 
 
 @Composable
@@ -622,7 +618,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding)
-                .padding(horizontal= 16.dp)
+                .padding(horizontal= 8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -632,112 +628,126 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                 OutlinedTextField(
                     value = trackName,
                     onValueChange = { trackName = it },
-                    label = { Text("Track Name", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Track Name", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
 
                 )
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = artistsName,
                     onValueChange = { artistsName = it },
-                    label = { Text("Artist(s) Name", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Artist(s) Name", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = releasedYear,
                     onValueChange = { releasedYear = it },
-                    label = { Text("Released Year", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Released Year", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = acousticnessPercent,
                     onValueChange = { acousticnessPercent = it },
-                    label = { Text("Acousticness (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Acousticness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = energyPercent,
                     onValueChange = { energyPercent = it },
-                    label = { Text("Energy (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Energy (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = danceabilityPercent,
                     onValueChange = { danceabilityPercent = it },
-                    label = { Text("Danceability (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Danceability (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = instrumentalnessPercent,
                     onValueChange = { instrumentalnessPercent = it },
-                    label = { Text("Instrumentalness (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Instrumentalness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = livenessPercent,
                     onValueChange = { livenessPercent = it },
-                    label = { Text("Liveness (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Liveness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = speechinessPercent,
                     onValueChange = { speechinessPercent = it },
-                    label = { Text("Speechiness (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Speechiness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = valencePercent,
                     onValueChange = { valencePercent = it },
-                    label = { Text("Valence (%)", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Valence (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = key,
                     onValueChange = { key = it },
-                    label = { Text("Key", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Key", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = mode,
                     onValueChange = { mode = it },
-                    label = { Text("Mode", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Mode", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = bpm,
                     onValueChange = { bpm = it },
-                    label = { Text("BPM", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("BPM", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
 
-                Spacer(Modifier.height(7.dp))
+                Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = streams,
                     onValueChange = { streams = it },
-                    label = { Text("Streams", style = TextStyle(fontSize = 11.sp)) },
-                    modifier = Modifier.height(36.dp),
+                    label = { Text("Streams", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
                 )
                 Spacer(Modifier.height(16.dp))
 
