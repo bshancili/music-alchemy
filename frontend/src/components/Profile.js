@@ -21,6 +21,7 @@ import {
   doc,
   updateDoc,
   arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 
 function Profile() {
@@ -100,6 +101,21 @@ function Profile() {
       console.log("Friend added successfully!");
     } catch (error) {
       console.error("Error adding friend:", error);
+      throw error;
+    }
+  };
+
+  const removeFriend = async () => {
+    try {
+      // Add friendUid to the current user's friend list
+      const userDocRef = doc(db, "Users", userID);
+      await updateDoc(userDocRef, {
+        friend_list: arrayRemove("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
+      });
+
+      console.log("Friend deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting  friend:", error);
       throw error;
     }
   };
