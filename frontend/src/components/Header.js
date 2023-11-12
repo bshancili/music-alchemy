@@ -49,7 +49,13 @@ const Header = () => {
 
       {/* Center of the header with a search bar */}
       <Box flex="1" ml="4">
-        <Flex align="center" bg="#33373B5E" h="40px" borderRadius="full">
+        <Flex
+          flexDirection="row"
+          align="center"
+          bg="#33373B5E"
+          h="40px"
+          borderRadius="full"
+        >
           <Input
             ml={4}
             variant="unstyled"
@@ -62,7 +68,7 @@ const Header = () => {
             color="#FFFFFF"
             w="48px"
             h="48px"
-            icon={<Image src={fire} />}
+            icon={<SearchIcon />}
           />
         </Flex>
       </Box>

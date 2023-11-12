@@ -28,7 +28,7 @@ function Profile() {
   const [track, setTrack] = useState(null);
   const [user, setUser] = useState();
 
-  const { userID, isAuthenticated } = useAuthStore();
+  const { userID } = useAuthStore();
 
   const searchUserByUsername = async (username) => {
     try {
@@ -133,7 +133,7 @@ function Profile() {
             thickness="4px"
             speed="0.65s"
             emptyColor="gray.200"
-            color="teal.500"
+            color="#FACD66"
             size="xl"
           />
           <Text mt={4}>Loading...</Text>
