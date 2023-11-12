@@ -69,10 +69,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import androidx.compose.ui.text.TextStyle
 
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
 
 
 //~~~~~~~~~~
@@ -1050,29 +1055,135 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
     Divider()
 }
 
+private fun addLikedSongToFirestore(userId: String, songId: String) {
+    val userLikedSongsCollection = Firebase.firestore
+        .collection("Users")
+        .document(userId)
+        .collection("liked_songs")
+
+    userLikedSongsCollection.document(songId)
+        .set(mapOf("timestamp" to FieldValue.serverTimestamp()))
+}
+
+private fun removeLikedSongFromFirestore(userId: String, songId: String) {
+    val userLikedSongsCollection = Firebase.firestore
+        .collection("Users")
+        .document(userId)
+        .collection("liked_songs")
+
+    userLikedSongsCollection.document(songId)
+        .delete()
+}
+
+
+
 @Composable
 fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
     val songs by viewModel.songs.observeAsState(initial = emptyList())
     val song = songs.firstOrNull { it.id == songId }
+    val user = Firebase.auth.currentUser
+    val userId = user?.uid
+
+    // State to track whether the song is liked or not
+    val isLiked = remember { mutableStateOf(false) }
+
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            val likedSongsCollection = Firebase.firestore
+                .collection("Users")
+                .document(userId)
+                .collection("liked_songs")
+
+            val likedSongDocument = likedSongsCollection.document(songId).get().await()
+            isLiked.value = likedSongDocument.exists()
+        }
+    }
+
 
     song?.let { songDetail ->
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
-            Text("Artist(s) Name: ${songDetail.artistsName ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
-            Text("Artist Count: ${songDetail.artistCount ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
+            Text(
+                "Track Name: ${songDetail.trackName ?: "Unknown"}",
+                style = MaterialTheme.typography.h5
+            )
+            Text(
+                "Artist(s) Name: ${songDetail.artistsName ?: "Unknown Artist"}",
+                style = MaterialTheme.typography.subtitle1
+            )
+            Text(
+                "Artist Count: ${songDetail.artistCount ?: "Unknown"}",
+                style = MaterialTheme.typography.subtitle1
+            )
             Text("BPM: ${songDetail.bpm ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Danceability: ${songDetail.danceabilityPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
-            Text("Energy: ${songDetail.energyPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
-            Text("Instrumentalness: ${songDetail.instrumentalnessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text(
+                "Danceability: ${songDetail.danceabilityPercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                "Energy: ${songDetail.energyPercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                "Instrumentalness: ${songDetail.instrumentalnessPercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
             Text("Key: ${songDetail.key ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Liveness: ${songDetail.livenessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text(
+                "Liveness: ${songDetail.livenessPercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
             Text("Mode: ${songDetail.mode ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Released Year: ${songDetail.releasedYear ?: "Year Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Speechiness: ${songDetail.speechinessPercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
-            Text("Streams: ${songDetail.streams ?: "Not available"}", style = MaterialTheme.typography.body1)
-            Text("Valence: ${songDetail.valencePercent ?: "Unknown"}%", style = MaterialTheme.typography.body1)
+            Text(
+                "Released Year: ${songDetail.releasedYear ?: "Year Unknown"}",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                "Speechiness: ${songDetail.speechinessPercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                "Streams: ${songDetail.streams ?: "Not available"}",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                "Valence: ${songDetail.valencePercent ?: "Unknown"}%",
+                style = MaterialTheme.typography.body1
+            )
         }
-    } ?:Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Top
+        ) {
+            song?.let { songDetail ->
+                // Existing text views...
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = {
+                        userId?.let { uid ->
+                            isLiked.value = !isLiked.value
+
+                            // Update Firestore when the like button is clicked
+                            if (isLiked.value) {
+                                addLikedSongToFirestore(uid, songId)
+                            } else {
+                                removeLikedSongFromFirestore(uid, songId)
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                ) {
+                    Text(if (isLiked.value) "Unlike" else "Like")
+                }
+            } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
