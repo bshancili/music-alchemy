@@ -59,6 +59,8 @@ import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -69,6 +71,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
+import androidx.compose.ui.text.TextStyle
 
 
 
@@ -588,66 +591,181 @@ fun Screen2(navController: NavController) {
     }
 }
 
+val textFieldModifier = Modifier
+
+    .heightIn(min = 26.dp) // You can adjust the min height as needed
+    .padding(vertical = 1.dp) // Reduces vertical padding
+
+
 @Composable
-fun AddSongScreen(navController: NavController) {
-    // State variables to hold input data
-    var songName by remember { mutableStateOf("") }
-    var dateReleased by remember { mutableStateOf("") }
-    var danceability by remember { mutableStateOf("") }
+fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    var trackName by remember { mutableStateOf("") }
+    var artistsName by remember { mutableStateOf("") }
+    var releasedYear by remember { mutableStateOf("") }
+    var acousticnessPercent by remember { mutableStateOf("") }
+    var energyPercent by remember { mutableStateOf("") }
+    var danceabilityPercent by remember { mutableStateOf("") }
+    var instrumentalnessPercent by remember { mutableStateOf("") }
+    var livenessPercent by remember { mutableStateOf("") }
+    var speechinessPercent by remember { mutableStateOf("") }
+    var valencePercent by remember { mutableStateOf("") }
+    var key by remember { mutableStateOf("") }
+    var mode by remember { mutableStateOf("") }
+    var bpm by remember { mutableStateOf("") }
+    var streams by remember { mutableStateOf("") }
+    // Add more state variables as needed for other song attributes
 
     Scaffold(
         bottomBar = { CommonBottomBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding) // Apply innerPadding here
-                .padding(16.dp), // Additional padding for aesthetics
+                .fillMaxWidth()
+                .padding(innerPadding)
+                .padding(horizontal= 16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Add a New Song", style = MaterialTheme.typography.h6)
 
-            // Input field for the song's name
-            OutlinedTextField(
-                value = songName,
-                onValueChange = { songName = it },
-                label = { Text("Song Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = trackName,
+                    onValueChange = { trackName = it },
+                    label = { Text("Track Name", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
 
-            Spacer(modifier = Modifier.height(8.dp))
+                )
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = artistsName,
+                    onValueChange = { artistsName = it },
+                    label = { Text("Artist(s) Name", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
 
-            // Input field for the date released
-            OutlinedTextField(
-                value = dateReleased,
-                onValueChange = { dateReleased = it },
-                label = { Text("Date Released") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = releasedYear,
+                    onValueChange = { releasedYear = it },
+                    label = { Text("Released Year", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = acousticnessPercent,
+                    onValueChange = { acousticnessPercent = it },
+                    label = { Text("Acousticness (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
 
-            // Input field for danceability
-            OutlinedTextField(
-                value = danceability,
-                onValueChange = { danceability = it },
-                label = { Text("Danceability") },
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = energyPercent,
+                    onValueChange = { energyPercent = it },
+                    label = { Text("Energy (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = danceabilityPercent,
+                    onValueChange = { danceabilityPercent = it },
+                    label = { Text("Danceability (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
 
-            // Button to submit the data
-            Button(onClick = {
-                // Handle the logic to add the song
-                // For example, sending data to a database or ViewModel
-            }) {
-                Text("Add Song")
-            }
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = instrumentalnessPercent,
+                    onValueChange = { instrumentalnessPercent = it },
+                    label = { Text("Instrumentalness (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = livenessPercent,
+                    onValueChange = { livenessPercent = it },
+                    label = { Text("Liveness (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = speechinessPercent,
+                    onValueChange = { speechinessPercent = it },
+                    label = { Text("Speechiness (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = valencePercent,
+                    onValueChange = { valencePercent = it },
+                    label = { Text("Valence (%)", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it },
+                    label = { Text("Key", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+                Spacer(Modifier.height(7.dp))
+
+                OutlinedTextField(
+                    value = mode,
+                    onValueChange = { mode = it },
+                    label = { Text("Mode", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = bpm,
+                    onValueChange = { bpm = it },
+                    label = { Text("BPM", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+
+                Spacer(Modifier.height(7.dp))
+                OutlinedTextField(
+                    value = streams,
+                    onValueChange = { streams = it },
+                    label = { Text("Streams", style = TextStyle(fontSize = 11.sp)) },
+                    modifier = Modifier.height(36.dp),
+                )
+                Spacer(Modifier.height(16.dp))
+
+                Button(onClick = {
+                    val newSong = Song(
+                        trackName = trackName,
+                        artistsName = artistsName,
+                        releasedYear = releasedYear.toIntOrNull(),
+                        acousticnessPercent = acousticnessPercent.toIntOrNull(),
+                        energyPercent = energyPercent.toIntOrNull(),
+                        danceabilityPercent = danceabilityPercent.toIntOrNull(),
+                        instrumentalnessPercent = instrumentalnessPercent.toIntOrNull(),
+                        livenessPercent = livenessPercent.toIntOrNull(),
+                        speechinessPercent = speechinessPercent.toIntOrNull(),
+                        valencePercent = valencePercent.toIntOrNull(),
+                        key = key,
+                        mode = mode,
+                        bpm = bpm.toIntOrNull(),
+                        streams = streams.toLongOrNull()
+                    )
+                    viewModel.addSong(newSong)
+                }) {
+                    Text("Add Song")
+                }
         }
     }
 }
+
 
 
 
@@ -860,6 +978,20 @@ class SongsViewModel : ViewModel() {
             }
             .addOnFailureListener { exception ->
                 Log.e("SongsViewModel", "Error loading songs", exception)
+            }
+    }
+
+    fun addSong(song: Song) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("Songs")
+            .add(song)
+            .addOnSuccessListener { documentReference ->
+                // Handle success, e.g., log or inform the user
+                Log.d("SongsViewModel", "Song added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                // Handle failure, e.g., log or show an error message
+                Log.w("SongsViewModel", "Error adding song", e)
             }
     }
 }
