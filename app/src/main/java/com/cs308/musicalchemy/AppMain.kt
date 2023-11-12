@@ -46,7 +46,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -73,8 +72,9 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.PropertyName
-import androidx.compose.ui.text.TextStyle
 
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -83,8 +83,7 @@ import kotlinx.coroutines.tasks.await
 //~~~~~~~~~~
 // Placeholder data classes
 
-data class UserData(val displayName: String, val email: String, val profilePictureUrl: String)
-data class FriendData(val displayName: String, val profilePictureUrl: String)
+
 
 
 //~~~~~~~~~~
@@ -263,14 +262,18 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
         composable("settings") { SettingsScreen(navController) }
-        composable("profile/{friendName}", arguments = listOf(navArgument("friendName") { type = NavType.StringType })) { backStackEntry ->
-            val friendName = backStackEntry.arguments?.getString("friendName")
-            FriendProfileScreen(friendName = friendName ?: "Unknown") // Replace with a real composable that displays the friend's profile
+        composable(
+            "profile/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+            FriendProfileScreen(userId, navController)
         }
         composable("songs") { SongListScreen(navController) }
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
+        composable("likedSongs") { LikedSongsScreen(navController) }
     }
 }
 
@@ -472,24 +475,6 @@ fun CommonBottomBar(navController: NavController) {
 @Composable
  fun MainMenu(navController: NavController) {
 
-    //FOR FIREBASE LATER:
-    /*if (userProfilePictureUrl != null) {
-
-
-        rememberImagePainter(userProfilePictureUrl)
-    } else {
-        val imagePainter = painterResource(id = R.drawable.profile_placeholder)}
-
-                if (userProfilePictureUrl != null) {
-                Image(
-                    painter = imagePainter,
-                    contentDescription = stringResource(R.string.profile),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                )
-            } else {
-       */
         val imagePainter = painterResource(id = R.drawable.profile_placeholder)
 
         Scaffold(
@@ -601,20 +586,20 @@ fun Screen2(navController: NavController) {
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     var trackName by remember { mutableStateOf("") }
-    var artistsName by remember { mutableStateOf("") }
-    var releasedYear by remember { mutableStateOf("") }
-    var acousticnessPercent by remember { mutableStateOf("") }
-    var energyPercent by remember { mutableStateOf("") }
-    var danceabilityPercent by remember { mutableStateOf("") }
-    var instrumentalnessPercent by remember { mutableStateOf("") }
-    var livenessPercent by remember { mutableStateOf("") }
-    var speechinessPercent by remember { mutableStateOf("") }
-    var valencePercent by remember { mutableStateOf("") }
+    var artists by remember { mutableStateOf("") }
+    var albumName by remember { mutableStateOf("") }
+    var albumReleaseDate by remember { mutableStateOf("") }
+    var albumType by remember { mutableStateOf("") }
+    var danceability by remember { mutableStateOf("") }
+    var energy by remember { mutableStateOf("") }
+    var instrumentalness by remember { mutableStateOf("") }
     var key by remember { mutableStateOf("") }
+    var lengthInSeconds by remember { mutableStateOf("") }
+    var liveness by remember { mutableStateOf("") }
+    var loudness by remember { mutableStateOf("") }
     var mode by remember { mutableStateOf("") }
-    var bpm by remember { mutableStateOf("") }
-    var streams by remember { mutableStateOf("") }
-    // Add more state variables as needed for other song attributes
+    var tempo by remember { mutableStateOf("") }
+    var valence by remember { mutableStateOf("") }
     val addSongStatus by viewModel.addSongStatus.observeAsState("")
 
     Scaffold(
@@ -624,166 +609,56 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding)
-                .padding(horizontal= 8.dp)
+                .padding(horizontal = 8.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            OutlinedTextField(value = trackName, onValueChange = { trackName = it }, label = { Text("Track Name") })
+            OutlinedTextField(value = artists, onValueChange = { artists = it }, label = { Text("Artist(s)") })
+            OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Album Name") })
+            OutlinedTextField(value = albumReleaseDate, onValueChange = { albumReleaseDate = it }, label = { Text("Album Release Date") })
+            OutlinedTextField(value = albumType, onValueChange = { albumType = it }, label = { Text("Album Type") })
+            OutlinedTextField(value = danceability, onValueChange = { danceability = it }, label = { Text("Danceability") })
+            OutlinedTextField(value = energy, onValueChange = { energy = it }, label = { Text("Energy") })
+            OutlinedTextField(value = instrumentalness, onValueChange = { instrumentalness = it }, label = { Text("Instrumentalness") })
+            OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key") })
+            OutlinedTextField(value = lengthInSeconds, onValueChange = { lengthInSeconds = it }, label = { Text("Length in Seconds") })
+            OutlinedTextField(value = liveness, onValueChange = { liveness = it }, label = { Text("Liveness") })
+            OutlinedTextField(value = loudness, onValueChange = { loudness = it }, label = { Text("Loudness") })
+            OutlinedTextField(value = mode, onValueChange = { mode = it }, label = { Text("Mode") })
+            OutlinedTextField(value = tempo, onValueChange = { tempo = it }, label = { Text("Tempo") })
+            OutlinedTextField(value = valence, onValueChange = { valence = it }, label = { Text("Valence") })
 
-                Spacer(Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = trackName,
-                    onValueChange = { trackName = it },
-                    label = { Text("Track Name", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-
+            Button(onClick = {
+                val newSong = Song(
+                    trackName = trackName,
+                    artists = artists.split(",").map { it.trim() },
+                    albumName = albumName,
+                    albumReleaseDate = albumReleaseDate,
+                    albumType = albumType,
+                    danceability = danceability.toDoubleOrNull(),
+                    energy = energy.toDoubleOrNull(),
+                    instrumentalness = instrumentalness.toDoubleOrNull(),
+                    key = key.toIntOrNull(),
+                    lengthInSeconds = lengthInSeconds.toDoubleOrNull(),
+                    liveness = liveness.toDoubleOrNull(),
+                    loudness = loudness.toDoubleOrNull(),
+                    mode = mode.toIntOrNull(),
+                    tempo = tempo.toDoubleOrNull(),
+                    valence = valence.toDoubleOrNull()
                 )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = artistsName,
-                    onValueChange = { artistsName = it },
-                    label = { Text("Artist(s) Name", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = releasedYear,
-                    onValueChange = { releasedYear = it },
-                    label = { Text("Released Year", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = acousticnessPercent,
-                    onValueChange = { acousticnessPercent = it },
-                    label = { Text("Acousticness (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = energyPercent,
-                    onValueChange = { energyPercent = it },
-                    label = { Text("Energy (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = danceabilityPercent,
-                    onValueChange = { danceabilityPercent = it },
-                    label = { Text("Danceability (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = instrumentalnessPercent,
-                    onValueChange = { instrumentalnessPercent = it },
-                    label = { Text("Instrumentalness (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = livenessPercent,
-                    onValueChange = { livenessPercent = it },
-                    label = { Text("Liveness (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = speechinessPercent,
-                    onValueChange = { speechinessPercent = it },
-                    label = { Text("Speechiness (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = valencePercent,
-                    onValueChange = { valencePercent = it },
-                    label = { Text("Valence (%)", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = key,
-                    onValueChange = { key = it },
-                    label = { Text("Key", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = mode,
-                    onValueChange = { mode = it },
-                    label = { Text("Mode", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = bpm,
-                    onValueChange = { bpm = it },
-                    label = { Text("BPM", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = streams,
-                    onValueChange = { streams = it },
-                    label = { Text("Streams", style = TextStyle(fontSize = 16.sp)) },
-                    modifier = Modifier.height(60.dp),
-                    textStyle = TextStyle(fontSize = 16.sp)
-                )
-                Spacer(Modifier.height(16.dp))
-
-                Button(onClick = {
-                    val newSong = Song(
-                        trackName = trackName,
-                        artistsName = artistsName,
-                        releasedYear = releasedYear.toIntOrNull(),
-                        acousticnessPercent = acousticnessPercent.toIntOrNull(),
-                        energyPercent = energyPercent.toIntOrNull(),
-                        danceabilityPercent = danceabilityPercent.toIntOrNull(),
-                        instrumentalnessPercent = instrumentalnessPercent.toIntOrNull(),
-                        livenessPercent = livenessPercent.toIntOrNull(),
-                        speechinessPercent = speechinessPercent.toIntOrNull(),
-                        valencePercent = valencePercent.toIntOrNull(),
-                        key = key,
-                        mode = mode,
-                        bpm = bpm.toIntOrNull(),
-                        streams = streams.toLongOrNull()
-                    )
-                    viewModel.addSong(newSong)
-                }) {
-                    Text("Add Song")
-                }
-                if (addSongStatus.isNotEmpty()) {
-                    Text(addSongStatus)
-                }
+                viewModel.addSong(newSong)
+            }) {
+                Text("Add Song")
+            }
+            if (addSongStatus.isNotEmpty()) {
+                Text(addSongStatus)
+            }
         }
     }
 }
+
 
 
 
@@ -824,71 +699,315 @@ fun SettingsScreen(navController: NavController) {
 //~~~~~~~~~~
 //~~~~~PROFILE~~~~~
 
+
+data class FriendData(
+    val id: Any?,
+    val name: String,
+    val profilePictureUrl: String
+)
+
 @Composable
 fun ProfileScreen(navController: NavController) {
-    // Placeholder user data
-    val userData = UserData(
-        displayName = "Sucuklu Yumurta",
-        email = "test12@gmail.com (placeholder, will call email from database later)",
-        profilePictureUrl = "https://via.placeholder.com/150" // URL for a placeholder image
-    )
-
-    // Placeholder list of friends
-    val friendsList = listOf(
-        // Assume FriendData is a data class containing friend information
-        FriendData("Chicken Nugget", "https://via.placeholder.com/150"),
-        FriendData("AAAAAAAAAAA", "https://via.placeholder.com/150"),
-        // Add more friends as needed
-    )
-
-    Column(modifier = Modifier
-        .background(color = MaterialTheme.colors.background)) {
-        ProfileHeader(userData)
-        Divider()
-        FriendsList(friendsList, navController)
+    val viewModel: ProfileViewModel = viewModel()
+    val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
+    var newUsername by remember { mutableStateOf("") }
+    val user = Firebase.auth.currentUser
+    val currentUsername by viewModel.username.observeAsState("Unknown")
+    val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
+    LaunchedEffect(user?.uid) {
+        viewModel.fetchUsername(user?.uid ?: "")
+        viewModel.fetchLikedSongs(user?.uid ?: "")
     }
-}
 
-@Composable
-fun ProfileHeader(userData: UserData) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Profile picture
-        Image(
-            painter = painterResource(id = R.drawable.profile_placeholder), // Replace with userData.profilePictureUrl when loading images from the web
-            contentDescription = "Profile Picture",
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        // User's current username
+        Text("Current Username: $currentUsername", style = MaterialTheme.typography.h6)
+
+        // Input field for new username
+        OutlinedTextField(
+            value = newUsername,
+            onValueChange = { newUsername = it },
+            label = { Text("New Username") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // User information
-        Column {
-            Text(
-                text = userData.displayName,
-                style = MaterialTheme.typography.h6,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = userData.email,
-                style = MaterialTheme.typography.body2,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+        // Button to update username
+        Button(
+            onClick = { viewModel.updateUsername(user?.uid ?: "", newUsername) },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Update Username")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Divider()
+
+        // Field to add a friend's username
+        var friendUsername by remember { mutableStateOf("") }
+        TextField(
+            value = friendUsername,
+            onValueChange = { friendUsername = it },
+            label = { Text("Friend's Username") }
+        )
+        Button(onClick = { viewModel.addFriend(user?.uid ?: "", friendUsername) }) {
+            Text("Add Friend")
+        }
+
+        Divider()
+
+        // Friends list
+        FriendsList(friendsList, navController)
+        Text("Liked Songs", style = MaterialTheme.typography.h6)
+        LazyColumn {
+            items(likedSongs) { song ->
+                SongListItem(song) {
+                    // Handle song item click
+                }
+            }
+        }
+
+        Button(
+            onClick = { navController.navigate("likedSongs") },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("View Liked Songs")
+        }
+
     }
+
 }
 
 
 //~~~~~~~~~~
 //~~~~~FRIENDS LIST/PROFILE~~~~~
+
+
+class ProfileViewModel : ViewModel() {
+    private val _friendsList = MutableLiveData<List<FriendData>>()
+    val friendsList: LiveData<List<FriendData>> = _friendsList
+    private val _username = MutableLiveData<String>()
+    val username: LiveData<String> = _username
+    private val _likedSongs = MutableLiveData<List<Song>>()
+    val likedSongs: LiveData<List<Song>> = _likedSongs
+
+    init {
+        val currentUser = Firebase.auth.currentUser
+        currentUser?.uid?.let {
+            fetchUsername(it)
+            fetchLikedSongs(it)
+            fetchFriendsList(it)
+        }
+    }
+
+    fun fetchUsername(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            _username.value = documentSnapshot["username"] as? String ?: "Unknown"
+        }
+    }
+
+    fun addFriend(userId: String, friendUsername: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.whereEqualTo("username", friendUsername).get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val friendId = documents.documents.first().id
+                    usersCollection.document(userId)
+                        .update("friend_list", FieldValue.arrayUnion(friendId))
+                        .addOnSuccessListener {
+                            fetchFriendsList(userId) // Refresh the friends list
+                        }
+                }
+            }
+    }
+
+    private fun fetchFriendsList(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { document ->
+            val friendIds = document["friend_list"] as? List<*> ?: return@addOnSuccessListener
+
+            // Initialize an empty list to hold the friend data
+            val friends = mutableListOf<FriendData>()
+
+            // Fetch each friend's details
+            for (id in friendIds) {
+                usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
+                    val name = friendDoc["username"] as? String ?: "Unknown"
+                    val profilePicUrl = friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
+
+                    // Add the friend data to the list
+                    friends.add(FriendData(id, name, profilePicUrl))
+
+                    // Update the LiveData once all friends are fetched
+                    if (friends.size == friendIds.size) {
+                        _friendsList.value = friends
+                    }
+                }
+            }
+        }
+    }
+    fun updateUsername(userId: String, newUsername: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        val userDocument = usersCollection.document(userId)
+
+        userDocument.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                // User exists, update the username
+                userDocument.update("username", newUsername)
+                    .addOnSuccessListener {
+                        // Handle success
+                    }
+                    .addOnFailureListener {
+                        // Handle failure
+                    }
+            } else {
+                // User does not exist, create a new user with the username
+                userDocument.set(mapOf("username" to newUsername, "liked_songs" to listOf<String>()))
+                    .addOnSuccessListener {
+                        // Handle success
+                    }
+                    .addOnFailureListener {
+                        // Handle failure
+                    }
+            }
+        }
+    }
+    fun fetchLikedSongs(userId: String) {
+        val likedSongsCollection = Firebase.firestore
+            .collection("Users")
+            .document(userId)
+            .collection("liked_songs")
+
+        likedSongsCollection.get().addOnSuccessListener { documents ->
+            val songIds = documents.documents.map { it.id }
+            fetchSongsDetails(songIds)
+        }
+    }
+
+    private fun fetchSongsDetails(songIds: List<String>) {
+        if (songIds.isEmpty()) {
+            _likedSongs.value = emptyList()
+            return
+        }
+
+        val songsCollection = Firebase.firestore.collection("Tracks")
+        songsCollection.whereIn(FieldPath.documentId(), songIds).get()
+            .addOnSuccessListener { documents ->
+                val songsList = documents.map { documentSnapshot ->
+                    documentSnapshot.toObject(Song::class.java).apply {
+                        // Set the id field to the document ID
+                        id = documentSnapshot.id
+                    }
+                }
+                _likedSongs.value = songsList
+            }
+    }
+}
+
+@Composable
+fun LikedSongsScreen(navController: NavController) {
+    val viewModel: ProfileViewModel = viewModel()
+    val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
+    val user = Firebase.auth.currentUser
+
+    LaunchedEffect(key1 = user?.uid) {
+        viewModel.fetchLikedSongs(user?.uid ?: "")
+    }
+
+    LazyColumn {
+        items(likedSongs) { song ->
+            SongListItem(song) {
+                Log.d("SongDetailViewer", "Attempting to view song: ${song.id}")
+                navController.navigate("songDetail/${song.id}")
+            }
+        }
+    }
+}
+
+
+
+//~~~~~~~~~
+//FRIENDS
+
+
+class FriendProfileViewModel : ViewModel() {
+    private val _username = MutableLiveData<String>()
+    val username: LiveData<String> = _username
+    private val _likedSongs = MutableLiveData<List<Song>>()
+    val likedSongs: LiveData<List<Song>> = _likedSongs
+    private val _friendsList = MutableLiveData<List<FriendData>>()
+    val friendsList: LiveData<List<FriendData>> = _friendsList
+
+    fun fetchFriendData(friendId: String) {
+        fetchUsername(friendId)
+        fetchLikedSongs(friendId)
+        fetchFriendsList(friendId)
+    }
+    private fun fetchFriendsList(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { document ->
+            val friendIds = document["friend_list"] as? List<*> ?: return@addOnSuccessListener
+
+
+            val friends = mutableListOf<FriendData>()
+
+
+            for (id in friendIds) {
+                usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
+                    val name = friendDoc["username"] as? String ?: "Unknown"
+                    val profilePicUrl = friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
+
+
+                    friends.add(FriendData(id, name, profilePicUrl))
+
+
+                    if (friends.size == friendIds.size) {
+                        _friendsList.value = friends
+                    }
+                }
+            }
+        }
+    }
+
+    private fun fetchUsername(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            _username.value = documentSnapshot["username"] as? String ?: "Unknown"
+        }
+    }
+
+    private fun fetchLikedSongs(userId: String) {
+        val likedSongsCollection = Firebase.firestore
+            .collection("Users")
+            .document(userId)
+            .collection("liked_songs")
+
+        likedSongsCollection.get().addOnSuccessListener { documents ->
+            val songIds = documents.documents.map { it.id }
+            fetchSongsDetails(songIds)
+        }
+    }
+    private fun fetchSongsDetails(songIds: List<String>) {
+        if (songIds.isEmpty()) {
+            _likedSongs.value = emptyList()
+            return
+        }
+
+        val songsCollection = Firebase.firestore.collection("Tracks")
+        songsCollection.whereIn(FieldPath.documentId(), songIds).get()
+            .addOnSuccessListener { documents ->
+                val songsList = documents.map { documentSnapshot ->
+                    documentSnapshot.toObject(Song::class.java).apply {
+                        // Set the id field to the document ID
+                        id = documentSnapshot.id
+                    }
+                }
+                _likedSongs.value = songsList
+            }
+    }
+
+}
 
 @Composable
 fun FriendsList(friends: List<FriendData>, navController: NavController) {
@@ -904,49 +1023,53 @@ fun FriendItem(friend: FriendData, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                // On click, navigate to the friend's profile
-                // This will be updated to pass the friend's user ID or other identifier to the navController
-                navController.navigate("profile/${friend.displayName}")
-            }
+            .clickable { navController.navigate("profile/${friend.id}") }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Friend profile picture
         Image(
-            painter = painterResource(id = R.drawable.profile_placeholder), // Replace with friend.profilePictureUrl when loading images from the web
+            painter = painterResource(id = R.drawable.profile_placeholder),
             contentDescription = "Friend Profile Picture",
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
+            modifier = Modifier.size(48.dp).clip(CircleShape)
         )
-
         Spacer(modifier = Modifier.width(16.dp))
-
         // Friend name
-        Text(
-            text = friend.displayName,
-            style = MaterialTheme.typography.subtitle1
-        )
-
-
-
+        Text(text = friend.name, style = MaterialTheme.typography.subtitle1)
     }
 }
 
 @Composable
-fun FriendProfileScreen(friendName: String) {
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .background(color = MaterialTheme.colors.background)) {
+fun FriendProfileScreen(friendId: String, navController: NavController) {
+    val viewModel: FriendProfileViewModel = viewModel()
+    val username by viewModel.username.observeAsState("Unknown")
+    val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
+    val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
 
-        // Display the friend's profile information here
-        // For now, just displays the friend's name
-        Text(text = "Profile of $friendName", style = MaterialTheme.typography.h4)
-        // ... Add more UI elements as needed
+    LaunchedEffect(key1 = friendId) {
+        viewModel.fetchFriendData(friendId)
+    }
+
+    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+        Text("Username: $username", style = MaterialTheme.typography.h6)
+        Text("Liked Songs", style = MaterialTheme.typography.h6)
+        LazyColumn {
+            items(likedSongs) { song ->
+                SongListItem(song) {
+                    navController.navigate("songDetail/${song.id}")
+                }
+            }
+        }
+        Text("Friends", style = MaterialTheme.typography.h6)
+        LazyColumn {
+            items(friendsList) { friend ->
+                FriendItem(friend, navController)
+            }
+        }
     }
 
 }
+
 
 
 //~~~~~~~~~~
@@ -954,25 +1077,36 @@ fun FriendProfileScreen(friendName: String) {
 //Song, SongViewModel, SongListScreen, SongListItem, SongDetailScreen
 
 data class Song(
-    // Assuming 'id' does not need annotation, matches the field name in Firestore.
     var id: String = "",
 
-    @get:PropertyName("acousticness_%") @set:PropertyName("acousticness_%") var acousticnessPercent: Int? = 0,
-    @get:PropertyName("artist(s)_name") @set:PropertyName("artist(s)_name") var artistsName: String? = "",
-    val artistCount: Int? = 0,
-    val bpm: Int? = 0,
-    @get:PropertyName("danceability_%") @set:PropertyName("danceability_%") var danceabilityPercent: Int? = 0,
-    @get:PropertyName("energy_%") @set:PropertyName("energy_%") var energyPercent: Int? = 0,
-    @get:PropertyName("instrumentalness_%") @set:PropertyName("instrumentalness_%") var instrumentalnessPercent: Int? = 0,
-    val key: String? = "",
-    @get:PropertyName("liveness_%") @set:PropertyName("liveness_%") var livenessPercent: Int? = 0,
-    val mode: String? = "",
-    @get:PropertyName("released_year") @set:PropertyName("released_year") var releasedYear: Int? = 0,
-    @get:PropertyName("speechiness_%") @set:PropertyName("speechiness_%") var speechinessPercent: Int? = 0,
-    val streams: Long? = 0L,
     @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
-    @get:PropertyName("valence_%") @set:PropertyName("valence_%") var valencePercent: Int? = 0
+    @get:PropertyName("artists") @set:PropertyName("artists") var artists: List<String>? = listOf(),
+    @get:PropertyName("album_name") @set:PropertyName("album_name") var albumName: String? = "",
+    @get:PropertyName("album_release_date") @set:PropertyName("album_release_date") var albumReleaseDate: String? = "",
+    @get:PropertyName("album_type") @set:PropertyName("album_type") var albumType: String? = "",
+    @get:PropertyName("album_URL") @set:PropertyName("album_URL") var albumUrl: String? = "",
+    @get:PropertyName("album_images") @set:PropertyName("album_images") var albumImages: List<Map<String, Any>>? = listOf(),
+    @get:PropertyName("artist_images") @set:PropertyName("artist_images") var artistImages: List<Map<String, Any>>? = listOf(),
+    @get:PropertyName("artist_urls") @set:PropertyName("artist_urls") var artistUrls: List<String>? = listOf(),
+    @get:PropertyName("danceability") @set:PropertyName("danceability") var danceability: Double? = 0.0,
+    @get:PropertyName("energy") @set:PropertyName("energy") var energy: Double? = 0.0,
+    @get:PropertyName("instrumentalness") @set:PropertyName("instrumentalness") var instrumentalness: Double? = 0.0,
+    @get:PropertyName("key") @set:PropertyName("key") var key: Int? = 0,
+    @get:PropertyName("length_in_seconds") @set:PropertyName("length_in_seconds") var lengthInSeconds: Double? = 0.0,
+    @get:PropertyName("liveness") @set:PropertyName("liveness") var liveness: Double? = 0.0,
+    @get:PropertyName("loudness") @set:PropertyName("loudness") var loudness: Double? = 0.0,
+    @get:PropertyName("mode") @set:PropertyName("mode") var mode: Int? = 0,
+    @get:PropertyName("rating") @set:PropertyName("rating") var rating: Int? = 0,
+    @get:PropertyName("spotify_album_id") @set:PropertyName("spotify_album_id") var spotifyAlbumId: String? = "",
+    @get:PropertyName("spotify_artist_id(s)") @set:PropertyName("spotify_artist_id(s)") var spotifyArtistIds: List<String>? = listOf(),
+    @get:PropertyName("spotify_track_id") @set:PropertyName("spotify_track_id") var spotifyTrackId: String? = "",
+    @get:PropertyName("tempo") @set:PropertyName("tempo") var tempo: Double? = 0.0,
+    @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = "",
+    @get:PropertyName("valence") @set:PropertyName("valence") var valence: Double? = 0.0,
+    @get:PropertyName("added_at") @set:PropertyName("added_at") var addedAt: Timestamp? = null
 )
+
+
 
 class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
@@ -988,12 +1122,12 @@ class SongsViewModel : ViewModel() {
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
 
-        db.collection("Songs") // The name of collection in Firestore
+        db.collection("Tracks")
             .get()
             .addOnSuccessListener { documents ->
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     documentSnapshot.toObject(Song::class.java).apply {
-                        id = documentSnapshot.id // Set the id property to the document ID
+                        id = documentSnapshot.id
                     }
                 }
                 Log.d("SongsViewModel", "Songs loaded: ${songsList.size}")
@@ -1006,14 +1140,12 @@ class SongsViewModel : ViewModel() {
 
     fun addSong(song: Song) {
         val db = FirebaseFirestore.getInstance()
-        db.collection("Songs")
+        db.collection("Tracks")
             .add(song)
             .addOnSuccessListener { documentReference ->
-                // Handle success, e.g., log or inform the user
                 _addSongStatus.value = "Song added successfully with ID: ${documentReference.id}"
             }
             .addOnFailureListener { e ->
-                // Handle failure, e.g., log or show an error message
                 _addSongStatus.value = "Error adding song: ${e.message}"
             }
     }
@@ -1033,7 +1165,6 @@ fun SongListScreen(navController: NavController, viewModel: SongsViewModel = vie
                 SongListItem(song) {
                     Log.d("SongDetailViewer", "Attempting to view song: ${song.id}")
                     navController.navigate("songDetail/${song.id}")
-
                 }
             }
         }
@@ -1049,11 +1180,17 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
             .fillMaxWidth()
     ) {
         Text(song.trackName ?: "Unknown", style = MaterialTheme.typography.h6)
-        Text("${song.artistsName ?: "Unknown Artist"} • ${song.releasedYear ?: "Year Unknown"}", style = MaterialTheme.typography.subtitle1)
-        Text("Streams: ${song.streams ?: "Not available"}", style = MaterialTheme.typography.body2)
+        Text("Artists: ${song.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
+        Text("Album: ${song.albumName ?: "Unknown Album"}", style = MaterialTheme.typography.body2)
+        Text("Release Date: ${song.albumReleaseDate ?: "Unknown"}", style = MaterialTheme.typography.body2)
+        // Add more fields as desired...
     }
     Divider()
 }
+
+
+
+
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
     val userLikedSongsCollection = Firebase.firestore
@@ -1102,54 +1239,47 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
 
     song?.let { songDetail ->
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Track Name: ${songDetail.trackName ?: "Unknown"}",
-                style = MaterialTheme.typography.h5
-            )
-            Text(
-                "Artist(s) Name: ${songDetail.artistsName ?: "Unknown Artist"}",
-                style = MaterialTheme.typography.subtitle1
-            )
-            Text(
-                "Artist Count: ${songDetail.artistCount ?: "Unknown"}",
-                style = MaterialTheme.typography.subtitle1
-            )
-            Text("BPM: ${songDetail.bpm ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text(
-                "Danceability: ${songDetail.danceabilityPercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                "Energy: ${songDetail.energyPercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                "Instrumentalness: ${songDetail.instrumentalnessPercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
-            Text("Key: ${songDetail.key ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text(
-                "Liveness: ${songDetail.livenessPercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
-            Text("Mode: ${songDetail.mode ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text(
-                "Released Year: ${songDetail.releasedYear ?: "Year Unknown"}",
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                "Speechiness: ${songDetail.speechinessPercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                "Streams: ${songDetail.streams ?: "Not available"}",
-                style = MaterialTheme.typography.body1
-            )
-            Text(
-                "Valence: ${songDetail.valencePercent ?: "Unknown"}%",
-                style = MaterialTheme.typography.body1
-            )
+            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
+            Text("Artist(s): ${songDetail.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
+            Text("Album Name: ${songDetail.albumName ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
         }
+        fun Double?.format(digits: Int) = this?.let { "%.${digits}f".format(this) }
+
+        fun formatPercentage(value: Double?) = value?.let { "${(it * 100).format(1)}%" } ?: "Unknown"
+
+        fun formatLength(lengthInSeconds: Double?) = lengthInSeconds?.let { "${it.toInt()} sec" } ?: "Unknown"
+
+        fun formatMode(mode: Int?) = when(mode) {
+            0 -> "Minor"
+            1 -> "Major"
+            else -> "Unknown"
+        }
+
+        fun formatTimestamp(timestamp: Timestamp?) = timestamp?.toDate()?.toString() ?: "Unknown"
+
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
+            Text("Artist(s): ${songDetail.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
+            Text("Album Name: ${songDetail.albumName ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
+            Text("Album Type: ${songDetail.albumType ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Release Date: ${songDetail.albumReleaseDate ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Danceability: ${formatPercentage(songDetail.danceability)}", style = MaterialTheme.typography.body1)
+            Text("Energy: ${formatPercentage(songDetail.energy)}", style = MaterialTheme.typography.body1)
+            Text("Instrumentalness: ${formatPercentage(songDetail.instrumentalness)}", style = MaterialTheme.typography.body1)
+            Text("Key: ${songDetail.key ?: "Unknown"}", style = MaterialTheme.typography.body1)
+            Text("Length: ${formatLength(songDetail.lengthInSeconds)}", style = MaterialTheme.typography.body1)
+            Text("Liveness: ${formatPercentage(songDetail.liveness)}", style = MaterialTheme.typography.body1)
+            Text("Loudness: ${songDetail.loudness ?: "Unknown"} dB", style = MaterialTheme.typography.body1)
+            Text("Mode: ${formatMode(songDetail.mode)}", style = MaterialTheme.typography.body1)
+            Text("Tempo: ${songDetail.tempo?.format(2) ?: "Unknown"} BPM", style = MaterialTheme.typography.body1)
+            Text("Valence: ${formatPercentage(songDetail.valence)}", style = MaterialTheme.typography.body1)
+            Text("Added At: ${formatTimestamp(songDetail.addedAt)}", style = MaterialTheme.typography.body1)
+
+        }
+
+    }
+
+
 
         Column(
             modifier = Modifier
@@ -1157,8 +1287,7 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
-            song?.let { songDetail ->
-                // Existing text views...
+            song.let {
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -1166,8 +1295,6 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
                     onClick = {
                         userId?.let { uid ->
                             isLiked.value = !isLiked.value
-
-                            // Update Firestore when the like button is clicked
                             if (isLiked.value) {
                                 addLikedSongToFirestore(uid, songId)
                             } else {
@@ -1181,9 +1308,6 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
                 ) {
                     Text(if (isLiked.value) "Unlike" else "Like")
                 }
-            } ?: Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
             }
         }
     }
-}
