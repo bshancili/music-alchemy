@@ -35,6 +35,9 @@ import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -56,6 +59,8 @@ import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -66,6 +71,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
+import androidx.compose.ui.text.TextStyle
 
 
 
@@ -246,6 +252,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") { MainMenu(navController) }
+        composable("screen1") { Screen1(navController) }
+        composable("screen2") { Screen2(navController) }
+        composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
         composable("settings") { SettingsScreen(navController) }
@@ -344,9 +353,14 @@ fun SignUpScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colors.background)
-            .fillMaxSize(),) {
+            .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        )
+    {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 auth.createUserWithEmailAndPassword(email, password)
@@ -382,6 +396,7 @@ fun LoginScreen(navController: NavController) {
     ) {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
                 auth.signInWithEmailAndPassword(email, password)
@@ -403,13 +418,54 @@ fun LoginScreen(navController: NavController) {
 }
 
 
+
+@Composable
+fun CommonBottomBar(navController: NavController) {
+    BottomNavigation {
+        // Bottom Navigation Item for MainMenu
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = navController.currentDestination?.route == "mainMenu",
+            onClick = {
+                if (navController.currentDestination?.route != "mainMenu") {
+                    navController.navigate("mainMenu")
+                }
+            }
+        )
+
+        // Bottom Navigation Item for Screen1
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Edit, contentDescription = "Screen1") },
+            label = { Text("Screen1") },
+            selected = navController.currentDestination?.route == "screen1",
+            onClick = {
+                if (navController.currentDestination?.route != "screen1") {
+                    navController.navigate("screen1")
+                }
+            }
+        )
+
+        // Bottom Navigation Item for Screen2
+        BottomNavigationItem(
+            icon = { Icon(Icons.Filled.Build, contentDescription = "Screen2") },
+            label = { Text("Screen2") },
+            selected = navController.currentDestination?.route == "screen2",
+            onClick = {
+                if (navController.currentDestination?.route != "screen2") {
+                    navController.navigate("screen2")
+                }
+            }
+        )
+    }
+}
+
+
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
 @Composable
-fun MainMenu(navController: NavController) {
-    val imagePainter = painterResource(id = R.drawable.profile_placeholder)
-
+ fun MainMenu(navController: NavController) {
 
     //FOR FIREBASE LATER:
     /*if (userProfilePictureUrl != null) {
@@ -429,64 +485,303 @@ fun MainMenu(navController: NavController) {
                 )
             } else {
        */
+        val imagePainter = painterResource(id = R.drawable.profile_placeholder)
 
-
-
-
-    Column(
-        modifier = Modifier
-            .background(color = MaterialTheme.colors.background)
-            .fillMaxSize(),
-    ) {
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Logo(
+        Scaffold(
+            bottomBar = { CommonBottomBar(navController) }
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 64.dp)
-            )
-            // Songs button
-            Button(
-                onClick = { navController.navigate("songs") },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+                    .background(color = MaterialTheme.colors.background)
+                    .fillMaxSize()
+                    .padding(innerPadding),
             ) {
-                Text(text = "All Songs List!", style = MaterialTheme.typography.button)
-            }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Logo(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 64.dp)
+                    )
 
-           //Settings Icon
-            IconButton(
-                onClick = { navController.navigate("settings") },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.settings)
-                )
-            }
+                    Button(
+                        onClick = { navController.navigate("addSong") },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 64.dp) // Adjust the padding as needed
+                    ) {
+                        Text(text = "Add Song!", style = MaterialTheme.typography.button)
+                    }
 
-            // Profile button on the top right
-            IconButton(
-                onClick = { navController.navigate("profile") },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                Image(
-                    painter = imagePainter,
-                    contentDescription = stringResource(R.string.profile),
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                )
-
+                    // Songs button
+                    Button(
+                        onClick = { navController.navigate("songs") },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp) // Adjust the padding as needed
+                    ) {
+                        Text(text = "All Songs List!", style = MaterialTheme.typography.button)
+                    }
+                    // Settings button
+                    IconButton(
+                        onClick = { navController.navigate("settings") },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 16.dp, bottom = 16.dp) // Adjust the padding as needed
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
+                    }
+                    // Profile button on the top right
+                    IconButton(
+                        onClick = { navController.navigate("profile") },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                    ) {
+                        Image(
+                            painter = imagePainter,
+                            contentDescription = stringResource(R.string.profile),
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                        )
+                    }
+                }
             }
         }
     }
+
+
+
+
+@Composable
+fun Screen1(navController: NavController) {
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding), // Apply the innerPadding here
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("This is the Screen 1")
+        }
+    }
 }
+
+
+@Composable
+fun Screen2(navController: NavController) {
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding), // Apply the innerPadding here
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("This is the Screen 2")
+        }
+    }
+}
+
+
+
+@Composable
+fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    var trackName by remember { mutableStateOf("") }
+    var artistsName by remember { mutableStateOf("") }
+    var releasedYear by remember { mutableStateOf("") }
+    var acousticnessPercent by remember { mutableStateOf("") }
+    var energyPercent by remember { mutableStateOf("") }
+    var danceabilityPercent by remember { mutableStateOf("") }
+    var instrumentalnessPercent by remember { mutableStateOf("") }
+    var livenessPercent by remember { mutableStateOf("") }
+    var speechinessPercent by remember { mutableStateOf("") }
+    var valencePercent by remember { mutableStateOf("") }
+    var key by remember { mutableStateOf("") }
+    var mode by remember { mutableStateOf("") }
+    var bpm by remember { mutableStateOf("") }
+    var streams by remember { mutableStateOf("") }
+    // Add more state variables as needed for other song attributes
+    val addSongStatus by viewModel.addSongStatus.observeAsState("")
+
+    Scaffold(
+        bottomBar = { CommonBottomBar(navController) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(innerPadding)
+                .padding(horizontal= 8.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = trackName,
+                    onValueChange = { trackName = it },
+                    label = { Text("Track Name", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = artistsName,
+                    onValueChange = { artistsName = it },
+                    label = { Text("Artist(s) Name", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = releasedYear,
+                    onValueChange = { releasedYear = it },
+                    label = { Text("Released Year", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = acousticnessPercent,
+                    onValueChange = { acousticnessPercent = it },
+                    label = { Text("Acousticness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = energyPercent,
+                    onValueChange = { energyPercent = it },
+                    label = { Text("Energy (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = danceabilityPercent,
+                    onValueChange = { danceabilityPercent = it },
+                    label = { Text("Danceability (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = instrumentalnessPercent,
+                    onValueChange = { instrumentalnessPercent = it },
+                    label = { Text("Instrumentalness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = livenessPercent,
+                    onValueChange = { livenessPercent = it },
+                    label = { Text("Liveness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = speechinessPercent,
+                    onValueChange = { speechinessPercent = it },
+                    label = { Text("Speechiness (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = valencePercent,
+                    onValueChange = { valencePercent = it },
+                    label = { Text("Valence (%)", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it },
+                    label = { Text("Key", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = mode,
+                    onValueChange = { mode = it },
+                    label = { Text("Mode", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = bpm,
+                    onValueChange = { bpm = it },
+                    label = { Text("BPM", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = streams,
+                    onValueChange = { streams = it },
+                    label = { Text("Streams", style = TextStyle(fontSize = 16.sp)) },
+                    modifier = Modifier.height(60.dp),
+                    textStyle = TextStyle(fontSize = 16.sp)
+                )
+                Spacer(Modifier.height(16.dp))
+
+                Button(onClick = {
+                    val newSong = Song(
+                        trackName = trackName,
+                        artistsName = artistsName,
+                        releasedYear = releasedYear.toIntOrNull(),
+                        acousticnessPercent = acousticnessPercent.toIntOrNull(),
+                        energyPercent = energyPercent.toIntOrNull(),
+                        danceabilityPercent = danceabilityPercent.toIntOrNull(),
+                        instrumentalnessPercent = instrumentalnessPercent.toIntOrNull(),
+                        livenessPercent = livenessPercent.toIntOrNull(),
+                        speechinessPercent = speechinessPercent.toIntOrNull(),
+                        valencePercent = valencePercent.toIntOrNull(),
+                        key = key,
+                        mode = mode,
+                        bpm = bpm.toIntOrNull(),
+                        streams = streams.toLongOrNull()
+                    )
+                    viewModel.addSong(newSong)
+                }) {
+                    Text("Add Song")
+                }
+                if (addSongStatus.isNotEmpty()) {
+                    Text(addSongStatus)
+                }
+        }
+    }
+}
+
+
+
 
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -636,7 +931,9 @@ fun FriendItem(friend: FriendData, navController: NavController) {
 
 @Composable
 fun FriendProfileScreen(friendName: String) {
-    Column(modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colors.background)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = MaterialTheme.colors.background)) {
 
         // Display the friend's profile information here
         // For now, just displays the friend's name
@@ -676,12 +973,16 @@ class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
+    private val _addSongStatus = MutableLiveData<String>()
+    val addSongStatus: LiveData<String> = _addSongStatus
+
     init {
         loadSongs()
     }
 
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
+
         db.collection("Songs") // The name of collection in Firestore
             .get()
             .addOnSuccessListener { documents ->
@@ -695,6 +996,20 @@ class SongsViewModel : ViewModel() {
             }
             .addOnFailureListener { exception ->
                 Log.e("SongsViewModel", "Error loading songs", exception)
+            }
+    }
+
+    fun addSong(song: Song) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("Songs")
+            .add(song)
+            .addOnSuccessListener { documentReference ->
+                // Handle success, e.g., log or inform the user
+                _addSongStatus.value = "Song added successfully with ID: ${documentReference.id}"
+            }
+            .addOnFailureListener { e ->
+                // Handle failure, e.g., log or show an error message
+                _addSongStatus.value = "Error adding song: ${e.message}"
             }
     }
 }
