@@ -22,7 +22,7 @@ const Header = () => {
       as="header"
       align="center"
       justify="space-between"
-      padding="40px"
+      padding="40px 100px"
       bg="#1D2123"
       color="white"
       gap="10px"
@@ -33,16 +33,16 @@ const Header = () => {
           bg="#33373B5E"
           _hover={{ bg: "#000" }}
           color="#FFFFFF"
-          w="48px"
-          h="48px"
+          w="64px"
+          h="64px"
           icon={<Image src={home} />}
         />
         <IconButton
           bg="#33373B5E"
           _hover={{ bg: "#000" }}
           color="#FFFFFF"
-          w="48px"
-          h="48px"
+          w="64px"
+          h="64px"
           icon={<Image src={fire} />}
         />
       </Flex>
@@ -53,8 +53,8 @@ const Header = () => {
           flexDirection="row"
           align="center"
           bg="#33373B5E"
-          h="40px"
-          borderRadius="full"
+          h="64px"
+          borderRadius="15px"
         >
           <Input
             ml={4}
@@ -66,8 +66,8 @@ const Header = () => {
             bg="#33373B5E"
             _hover={{ bg: "#000" }}
             color="#FFFFFF"
-            w="48px"
-            h="48px"
+            w="64px"
+            h="64px"
             icon={<SearchIcon />}
           />
         </Flex>
@@ -79,24 +79,24 @@ const Header = () => {
           bg="#33373B5E"
           _hover={{ bg: "#000" }}
           color="#FFFFFF"
-          w="48px"
-          h="48px"
+          w="64px"
+          h="64px"
           icon={<Image src={add} />}
         />
         <IconButton
           bg="#33373B5E"
           _hover={{ bg: "#000" }}
           color="#FFFFFF"
-          w="48px"
-          h="48px"
+          w="64px"
+          h="64px"
           icon={<Image src={chat} />}
         />
         <IconButton
           bg="#33373B5E"
           _hover={{ bg: "#000" }}
           color="#FFFFFF"
-          w="48px"
-          h="48px"
+          w="64px"
+          h="64px"
           icon={<Image src={profile} />}
         />
       </Flex>

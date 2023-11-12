@@ -4,11 +4,11 @@ import {
   Container,
   Avatar,
   Text,
-  Heading,
   Spinner,
-  VStack,
-  HStack,
-  Button,
+  Flex,
+  Spacer,
+  Image,
+  IconButton,
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
@@ -23,6 +23,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
+import settings from "../utils/settings.svg";
 
 function Profile() {
   const [track, setTrack] = useState(null);
@@ -145,38 +146,37 @@ function Profile() {
   const isOwnProfile = userID === user?.uid;
 
   return (
-    <Container maxW="xl" mt={16}>
-      <Box p={4} boxShadow="base" bg="white" borderRadius="md">
-        <Avatar
-          size="xl"
-          src={
-            user?.profile_picture_url !== null ? user?.profile_picture_url : ""
-          }
-        />
-        <Heading as="h2" size="lg" mt={4}>
-          {user.username}
-        </Heading>
-
-        <VStack spacing={4} mt={4}>
-          <Text fontSize="md">
-            Hi, I'm John Doe, a passionate front-end developer with a strong
-            focus on web technologies.
-          </Text>
-          <Text fontSize="md">
-            Connect with me on social media to stay updated with my latest
-            projects and thoughts on web development.
-          </Text>
-        </VStack>
-
-        {!isOwnProfile && (
-          <HStack spacing={4} mt={4}>
-            <Button colorScheme="teal" onClick={addFriend}>
-              Add Friend
-            </Button>
-          </HStack>
-        )}
+    <Flex
+      align="top"
+      margin="0px "
+      bg="#1D2123"
+      color="#FFF"
+      gap={4}
+      padding="10px 100px"
+      width="100%" // Set width to 100%
+    >
+      <Image
+        src={user.profile_picture_url}
+        h="256px"
+        w="256px"
+        borderRadius="9px"
+      />
+      <Box pt={5}>
+        <Text fontSize="lg" fontWeight="bold">
+          {user?.username}
+        </Text>
+        <Text>@{user?.username}</Text>
       </Box>
-    </Container>
+      <Spacer />
+      <IconButton
+        bg="#33373B5E"
+        _hover={{ bg: "#000" }}
+        color="#FFFFFF"
+        w="64px"
+        h="64px"
+        icon={<Image src={settings} />}
+      />
+    </Flex>
   );
 }
 
