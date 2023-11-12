@@ -19,18 +19,39 @@ import {
   query,
   where,
   doc,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 
 function Profile() {
   const [track, setTrack] = useState(null);
   const [user, setUser] = useState();
 
-  const { userID } = useAuthStore();
+  const { userID, isAuthenticated } = useAuthStore();
+
+  const searchUserByUsername = async (username) => {
+    try {
+      const usersRef = collection(db, "Users");
+      const querySnapshot = await getDocs(
+        query(usersRef, where("username", "==", username))
+      );
+
+      const matchingUsers = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        matchingUsers.push({ uid: doc.id, ...userData });
+      });
+
+      return matchingUsers;
+    } catch (error) {
+      console.error("Error searching for user:", error);
+      throw error;
+    }
+  };
 
   const fetchUser = async () => {
     try {
-      console.log(userID);
-      const userDocRef = doc(db, "Users", "6ZfUPMC2RjO0oKJquEGIAJ7wV0r2");
+      const userDocRef = doc(db, "Users", "p1u0qWTtY4NgE0KWAO8wYKIX2t92");
       const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {
@@ -49,22 +70,43 @@ function Profile() {
   };
   const fetchPost = async (trackName = "") => {
     const tracksCollection = collection(db, "Tracks");
-    const q = query(tracksCollection, where("track_name", "==", trackName));
+    //const q = query(tracksCollection, where("track_name", "==", trackName));
+    const q = query(
+      tracksCollection,
+      where("artists", "array-contains", "Taylor Swift")
+    );
+
     try {
       const snap = await getDocs(q);
       const trackData = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      console.log(trackData);
       setTrack(trackData);
     } catch (error) {
       console.error("Error fetching tracks:", error);
     }
   };
 
+  const addFriend = async () => {
+    try {
+      // Add friendUid to the current user's friend list
+      const userDocRef = doc(db, "Users", user.uid);
+      await updateDoc(userDocRef, {
+        friend_list: arrayUnion("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
+      });
+
+      console.log("Friend added successfully!");
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    fetchPost("Strangers"); // Pass the track_name you want to search for
     fetchUser();
+    fetchPost("Strangers");
   }, []);
 
   if (!user) {
@@ -91,7 +133,9 @@ function Profile() {
       <Box p={4} boxShadow="base" bg="white" borderRadius="md">
         <Avatar
           size="xl"
-          src={user?.profilepicurl !== null ? user?.profilepicurl : ""}
+          src={
+            user?.profile_picture_url !== null ? user?.profile_picture_url : ""
+          }
         />
         <Heading as="h2" size="lg" mt={4}>
           {user.username}
@@ -108,11 +152,10 @@ function Profile() {
           </Text>
         </VStack>
 
-        {isOwnProfile && (
+        {!isOwnProfile && (
           <HStack spacing={4} mt={4}>
-            <Button colorScheme="teal">Add Friend</Button>
-            <Button variant="outline" colorScheme="teal">
-              Message
+            <Button colorScheme="teal" onClick={addFriend}>
+              Add Friend
             </Button>
           </HStack>
         )}

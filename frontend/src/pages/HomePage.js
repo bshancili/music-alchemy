@@ -4,6 +4,11 @@ import { Box, Heading, Text, Button, Stack, Center } from "@chakra-ui/react";
 import HomeHeader from "../components/HomeHeader";
 import { Outlet, Navigate } from "react-router-dom";
 const HomePage = () => {
+  const { userID } = useAuthStore();
+  useEffect(() => {
+    console.log(userID);
+  }, []);
+
   return (
     <Box>
       <HomeHeader />
