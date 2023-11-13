@@ -25,19 +25,7 @@ import {
   updateDoc,
   arrayRemove,
 } from "firebase/firestore";
-const MusicDetail = () => {
-  const t = {
-    album_images: {
-      height: 640,
-      url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-      width: 640,
-    },
-    album_name: "1989 (Taylor's Version)",
-    artists: ["Taylor Swift"],
-    track_name: "Out Of The Woods (Taylor's Version)",
-    spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-  };
-
+const MusicDetail = ({ t }) => {
   const { userID } = useAuthStore();
 
   const likeSong = async () => {
@@ -49,7 +37,7 @@ const MusicDetail = () => {
 
       if (!isSongAlreadyLiked) {
         await updateDoc(userRef, {
-          liked_song_list: arrayUnion("your_song_id"),
+          liked_song_list: arrayUnion(t.spotify_track_id),
         });
       }
     }
@@ -68,6 +56,9 @@ const MusicDetail = () => {
       }
     }
   };
+  useEffect(() => {
+    console.log(t);
+  }, []);
 
   return (
     <Flex
@@ -79,7 +70,12 @@ const MusicDetail = () => {
       padding="10px 100px"
       width="100%" // Set width to 100%
     >
-      <Image src={t.album_images.url} h="300" w="300px" borderRadius="16px" />
+      <Image
+        src={t.album_images[0].url}
+        h="300"
+        w="300px"
+        borderRadius="16px"
+      />
       <Box ml={5}>
         <Text
           fontSize="24px"
@@ -144,7 +140,7 @@ const MusicDetail = () => {
             bg="#33373b5e"
             icon={<Image src={lined_heart} />}
             _hover={{ bg: "#000" }}
-            onClick={unlikeSong}
+            onClick={likeSong}
           />
           <IconButton
             borderRadius="15px"

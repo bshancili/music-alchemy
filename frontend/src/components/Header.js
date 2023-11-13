@@ -6,7 +6,9 @@ import add from "../utils/add.svg";
 import profile from "../utils/profile.svg";
 import chat from "../utils/chat.svg";
 import { useNavigate } from "react-router-dom";
+import useAuthStore from "../stores/authStore";
 const Header = () => {
+  const { userID } = useAuthStore();
   const navigate = useNavigate();
   return (
     <Flex
@@ -93,7 +95,7 @@ const Header = () => {
           h="64px"
           icon={<Image src={profile} />}
           onClick={() => {
-            navigate("/profile");
+            navigate(`/profile/${userID}`);
           }}
         />
       </Flex>
