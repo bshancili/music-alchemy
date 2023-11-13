@@ -7,6 +7,8 @@ import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import { ChakraProvider } from "@chakra-ui/react";
 import ProfilePage from "./pages/ProfilePage";
+import MusicDetailPage from "./pages/MusicDetailPage";
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
@@ -19,6 +21,7 @@ root.render(
           <Route path="*" element={<Navigate to={"login"} />} />
           <Route path="home" element={<HomePage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="music/:spotify_id" element={<MusicDetailPage />} />
         </Routes>
       </ChakraProvider>
     </BrowserRouter>

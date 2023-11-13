@@ -1,22 +1,13 @@
-import {
-  ChakraProvider,
-  Box,
-  Flex,
-  Button,
-  Input,
-  IconButton,
-  Image,
-  Divider,
-  Spacer,
-} from "@chakra-ui/react";
-import { SearchIcon, AddIcon, BellIcon, SettingsIcon } from "@chakra-ui/icons";
+import { Box, Flex, Input, IconButton, Image } from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
 import home from "../utils/home.svg";
 import fire from "../utils/fire.svg";
 import add from "../utils/add.svg";
 import profile from "../utils/profile.svg";
 import chat from "../utils/chat.svg";
-
+import { useNavigate } from "react-router-dom";
 const Header = () => {
+  const navigate = useNavigate();
   return (
     <Flex
       as="header"
@@ -36,6 +27,9 @@ const Header = () => {
           w="64px"
           h="64px"
           icon={<Image src={home} />}
+          onClick={() => {
+            navigate("/home");
+          }}
         />
         <IconButton
           bg="#33373B5E"
@@ -98,6 +92,9 @@ const Header = () => {
           w="64px"
           h="64px"
           icon={<Image src={profile} />}
+          onClick={() => {
+            navigate("/profile");
+          }}
         />
       </Flex>
     </Flex>

@@ -117,7 +117,15 @@ const ProfileMusicList = () => {
   ];
   return (
     <Box bg="#1D2123" padding="10px 96px">
-      <Button>Collection</Button>
+      <Button
+        bg="#FACD66"
+        color="#1D2123"
+        mb={4}
+        borderRadius="27px"
+        width="90px"
+      >
+        Collection
+      </Button>
       <Grid templateColumns="repeat(5, 1fr)" gap={4}>
         {tracks.map((track) => (
           <GridItem key={track.spotify_track_id}>

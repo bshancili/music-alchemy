@@ -117,7 +117,7 @@ const SignUp = () => {
         formData.email,
         formData.password
       );
-      const userID = response.user.uid;
+      const userID = response.user.uid.toString();
       const token = response._tokenResponse.idToken;
 
       const userDocRef = doc(db, "Users", response.user.uid);

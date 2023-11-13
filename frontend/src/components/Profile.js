@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
-  Avatar,
   Text,
   Spinner,
   Flex,
@@ -128,7 +127,7 @@ function Profile() {
 
   if (!user) {
     return (
-      <Container maxW="xl" mt={16}>
+      <Container maxW="100%" bg="#1D2123">
         <Box textAlign="center">
           <Spinner
             thickness="4px"
