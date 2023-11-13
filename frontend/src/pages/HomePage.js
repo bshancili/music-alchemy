@@ -14,11 +14,11 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 // Import your image files
-import homeIcon from "./images/home.svg";
-import musicIcon from "./images/music.svg";
-import penIcon from "./images/pen.svg";
-import envelopeIcon from "./images/envelope.svg";
-import userIcon from "./images/user.svg";
+import homeIcon from "./utils/home.svg";
+import musicIcon from "./utils/music.svg";
+import penIcon from "./utils/pen.svg";
+import envelopeIcon from "./utils/envelope.svg";
+import userIcon from "./utils/user.svg";
 
 // Extend the theme if needed
 const theme = extendTheme(/* Your theme configurations here */);
