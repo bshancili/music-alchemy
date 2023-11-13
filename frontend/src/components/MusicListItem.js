@@ -1,7 +1,7 @@
 import { Box, Image, Text } from "@chakra-ui/react";
 import React from "react";
 
-const MusicListItem = (track) => {
+const MusicListItem = ({ track }) => {
   const t = {
     album_images: {
       height: 640,
@@ -27,15 +27,24 @@ const MusicListItem = (track) => {
         h="213px"
         objectFit="cover"
       />
-      <Text position="absolute" bottom="6" left="2" fontSize="md" color="white">
+      <Text
+        position="absolute"
+        bottom="6"
+        left="3"
+        fontSize="md"
+        color="white"
+        fontWeight="bold"
+        lineHeight={1.3}
+        mb={1.5}
+      >
         {t.track_name}
       </Text>
       <Text
         position="absolute"
         bottom="2"
-        left="2"
+        left="3"
         fontSize="sm"
-        fontWeight="bold"
+        fontWeight="w.300"
         color="white"
       >
         {t.artists[0]}
