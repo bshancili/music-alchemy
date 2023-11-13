@@ -42,19 +42,31 @@ app.post('/song-request', async (req, res) => {
     const track_url = reqBody.track_url || null;
     const valence = reqBody.valence || null;
     
-    const { songTitle, artist, album } = req.body; // Assuming the request body contains the song details
+    const { track_name, artists, album_name } = req.body; // Assuming the request body contains the song details
     
+  // checks to see if the song already exists.
+  const tracksCollection = db.collection('Tracks');
+  const query = tracksCollection
+    .where('track_name', '==', track_name)
+    .where('artists', '==', artists)
+    .where('album_name', '==', album_name);
+  //exacure query
+  const existingDocuments = await query.get();
 
+if (existingDocuments.size > 0) {
+    // A document with the same song title, artist, and album already exists
+    console.log("Song request already exists in the collection");
+} else {
 
     
     try {
       // Add logic here to save the song request to your databmore than ase or perform any necessary operations
       // For example, you can use Firebase Firestore to store the song request details
      
-      const songRequestRef = await db.collection('Tracks').add({ 
-        track_name: songTitle,
-        artists: artist,
-        album_name: album,
+      const songRequestRef = await tracksCollection.add({ 
+        track_name: track_name,
+        artists: artists,
+        album_name: album_name,
         album_images: album_images,
         acousticness: acousticness,
         album_URL: album_URL,
@@ -85,4 +97,5 @@ app.post('/song-request', async (req, res) => {
       // If an error occurs during the process, send an appropriate error response
       res.status(500).send({ status: 'Error creating song request', error: error.message });
     }
-  });
+  }
+});
