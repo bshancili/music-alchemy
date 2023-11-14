@@ -16,12 +16,7 @@ const TopChartItem = ({ mainText, smallText, cover }) => {
       justifyContent="space-between"
     >
       <Box display="flex" flexDir="row" gap={5}>
-        <Box
-          width="63px"
-          height="63px"
-          borderRadius="10px"
-          bg="gray.400" // Replace with your photo background color
-        >
+        <Box width="63px" height="63px" borderRadius="10px">
           {cover}
         </Box>
         <VStack>

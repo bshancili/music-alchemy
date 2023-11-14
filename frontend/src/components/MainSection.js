@@ -23,18 +23,23 @@ const MainSection = () => {
         {/* Add content for the black rectangle if needed */}
       </Box>
       <Flex direction="column">
-        <Flex width={123} height={29}>
-          <Text
-            fontFamily="Quicksand"
-            fontSize={24}
-            fontWeight={700}
-            lineHeight={29}
-            letterSpacing={0}
-            textAlign="left"
-          >
-            Your Text Here
-          </Text>
-        </Flex>
+        <Text
+          bottom="12px"
+          left="3"
+          fontSize="md"
+          color="white"
+          fontWeight="bold"
+          lineHeight={1.3}
+          mb={1.5}
+          font-family="Quicksand"
+          font-size="24px"
+          font-weight="700"
+          line-height="29px"
+          letter-spacing="0em"
+          text-align="left"
+        >
+          Top Charts
+        </Text>
         <TopChartItem
           mainText="Golden age of 80s"
           smallText="Sean swadder"
@@ -48,7 +53,7 @@ const MainSection = () => {
         <TopChartItem
           mainText="Tomorrow's tunes"
           smallText="Obi Datti"
-          cover="/assets/tomorrows_tunes.jpg"
+          cover="./assets/tomorrows_tunes.jpg"
         />
       </Flex>
     </Box>
