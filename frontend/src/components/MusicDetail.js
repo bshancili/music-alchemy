@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Text,
@@ -27,7 +27,9 @@ import {
 } from "firebase/firestore";
 const MusicDetail = ({ t }) => {
   const { userID } = useAuthStore();
+  const [isLiked, setIsLiked] = useState(false);
 
+  // TODO: set isLiked = true if t exists in user.liked_song_list else isLiked = false
   const isSongLiked = () => {};
 
   const likeSong = async () => {
@@ -47,17 +49,7 @@ const MusicDetail = ({ t }) => {
       });
     }
   };
-  const unlikeSong = async () => {
-    if (userID) {
-      const userRef = doc(db, "Users", userID);
-      const userDoc = await getDoc(userRef);
-      const likedSongsArray = userDoc.data().liked_song_list || [];
-
-      await updateDoc(userRef, {
-        liked_song_list: arrayRemove(t.id),
-      });
-    }
-  };
+  const unlikeSong = async () => {};
 
   return (
     <Flex
@@ -132,15 +124,28 @@ const MusicDetail = ({ t }) => {
             icon={<Image src={spotify_logo} />}
             _hover={{ bg: "#147040" }}
           />
-          <IconButton
-            borderRadius="15px"
-            w="64px"
-            h="64px"
-            bg="#33373b5e"
-            icon={<Image src={lined_heart} />}
-            _hover={{ bg: "#000" }}
-            onClick={likeSong}
-          />
+          {isLiked ? (
+            <IconButton
+              borderRadius="15px"
+              w="64px"
+              h="64px"
+              bg="#33373b5e"
+              icon={<Image src={lined_heart} />}
+              _hover={{ bg: "#000" }}
+              onClick={unlikeSong}
+            />
+          ) : (
+            <IconButton
+              borderRadius="15px"
+              w="64px"
+              h="64px"
+              bg="#1D2123"
+              icon={<Image src={lined_heart} />}
+              _hover={{ bg: "#000" }}
+              onClick={likeSong}
+            />
+          )}
+
           <IconButton
             borderRadius="15px"
             w="64px"
