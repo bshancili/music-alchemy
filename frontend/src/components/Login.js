@@ -45,7 +45,7 @@ const Login = () => {
         userData.email,
         userData.password
       );
-      const uid = response.user.uid;
+      const uid = response.user.uid.toString();
       const token = response._tokenResponse.idToken;
       login(userData, uid, token);
       navigate("/home");

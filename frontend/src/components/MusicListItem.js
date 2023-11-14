@@ -1,16 +1,13 @@
 import { Box, Image, Text } from "@chakra-ui/react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const MusicListItem = ({ track }) => {
-  const t = {
-    album_images: {
-      height: 640,
-      url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-      width: 640,
-    },
-    album_name: "1989 (Taylor's Version)",
-    artists: ["Taylor Swift"],
-    track_name: "Out Of The Woods (Taylor's Version)",
+  const navigate = useNavigate();
+  const handleItemClick = () => {
+    navigate(`/music/${track.id}`, {
+      state: { trackData: track },
+    });
   };
   return (
     <Box
@@ -19,13 +16,22 @@ const MusicListItem = ({ track }) => {
       borderRadius="20px"
       overflow="hidden"
       position="relative"
+      transition="transform 0.2s ease-in-out"
+      _hover={{
+        transform: "scale(1.08)",
+      }}
+      onClick={handleItemClick}
     >
       <Image
-        src={t.album_images.url}
+        src={track.album_images[0].url}
         alt="Album Cover"
         w="234px"
         h="213px"
         objectFit="cover"
+        transition="transform 0.2s ease-in-out"
+        _hover={{
+          transform: "scale(1.4)",
+        }}
       />
       <Text
         position="absolute"
@@ -36,8 +42,9 @@ const MusicListItem = ({ track }) => {
         fontWeight="bold"
         lineHeight={1.3}
         mb={1.5}
+        transition="bottom 0.2s ease-in-out"
       >
-        {t.track_name}
+        {track.track_name}
       </Text>
       <Text
         position="absolute"
@@ -47,7 +54,7 @@ const MusicListItem = ({ track }) => {
         fontWeight="w.300"
         color="white"
       >
-        {t.artists[0]}
+        {track.artists[0]}
       </Text>
     </Box>
   );

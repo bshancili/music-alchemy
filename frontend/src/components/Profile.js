@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
-  Avatar,
   Text,
   Spinner,
   Flex,
@@ -25,10 +24,8 @@ import {
 } from "firebase/firestore";
 import settings from "../utils/settings.svg";
 
-function Profile() {
+function Profile({ user }) {
   const [track, setTrack] = useState(null);
-  const [user, setUser] = useState();
-
   const { userID } = useAuthStore();
 
   const searchUserByUsername = async (username) => {
@@ -58,8 +55,6 @@ function Profile() {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        setUser(userData);
-        console.log("User data:", userData);
         // Do something with the user data, e.g., set it in the component state
       } else {
         console.log("User not found");
@@ -70,33 +65,13 @@ function Profile() {
       // Handle the error appropriately
     }
   };
-  const fetchPost = async (trackName = "") => {
-    const tracksCollection = collection(db, "Tracks");
-    //const q = query(tracksCollection, where("track_name", "==", trackName));
-    const q = query(
-      tracksCollection,
-      where("artists", "array-contains", "Taylor Swift")
-    );
-
-    try {
-      const snap = await getDocs(q);
-      const trackData = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log(trackData);
-      setTrack(trackData);
-    } catch (error) {
-      console.error("Error fetching tracks:", error);
-    }
-  };
 
   const addFriend = async () => {
     try {
       // Add friendUid to the current user's friend list
       const userDocRef = doc(db, "Users", user.uid);
       await updateDoc(userDocRef, {
-        friend_list: arrayUnion("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
+        friends_list: arrayUnion("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
       });
 
       console.log("Friend added successfully!");
@@ -123,12 +98,11 @@ function Profile() {
 
   useEffect(() => {
     fetchUser();
-    fetchPost("Strangers");
   }, []);
 
   if (!user) {
     return (
-      <Container maxW="xl" mt={16}>
+      <Container maxW="100%" bg="#1D2123">
         <Box textAlign="center">
           <Spinner
             thickness="4px"
@@ -142,8 +116,6 @@ function Profile() {
       </Container>
     );
   }
-
-  const isOwnProfile = userID === user?.uid;
 
   return (
     <Flex

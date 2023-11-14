@@ -4,7 +4,7 @@ const useAuthStore = create((set) => ({
   user: null, // Initialize user to null
   isAuthenticated: false, // Initialize authentication status to false
   token: null,
-  userID: null,
+  userID: "",
 
   // Method to log in
   login: (userData, uid, token) => {

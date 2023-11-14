@@ -3,11 +3,6 @@ import React from "react";
 
 import { Box, Flex, Text, extendTheme } from "@chakra-ui/react";
 // Import your image files
-import homeIcon from "../utils/home.svg";
-import musicIcon from "../utils/fire.svg";
-import penIcon from "../utils/add.svg";
-import envelopeIcon from "../utils/chat.svg";
-import userIcon from "../utils/profile.svg";
 import Header from "../components/Header";
 import MainSection from "../components/MainSection";
 import HomePageMusicList from "../components/HomePageMusicList";
