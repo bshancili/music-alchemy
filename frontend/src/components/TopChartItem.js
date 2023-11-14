@@ -1,60 +1,76 @@
 // TopChartItem.js
 
 import React from "react";
-import { Box, Text, IconButton, VStack, Image } from "@chakra-ui/react";
+import { Box, Text, IconButton, VStack, Image, HStack } from "@chakra-ui/react";
+import heart from "../utils/heart.svg";
+const TopChartItem = ({ track }) => {
+  const t = {
+    album_images: [
+      {
+        height: 640,
+        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
+        width: 640,
+      },
+    ],
+    album_name: "1989 (Taylor's Version)",
+    artists: ["Taylor Swift"],
+    track_name: "Out Of The Woods (Taylor's Version)",
+    spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
+    id: "05tVryr3s4GtbGMjLyB7",
+  };
 
-const TopChartItem = ({ mainText, smallText, cover }) => {
   return (
     <Box
-      width="550px"
+      width="560px"
       height="96px"
       borderRadius="20px"
       backgroundColor="#1A1E1F"
       display="flex"
-      flexDirection="row"
+      p="10px 30px"
       alignItems="center"
+      flexDir="row"
       justifyContent="space-between"
+      mb={5}
     >
-      <Box display="flex" flexDir="row" gap={5}>
-        <Box width="63px" height="63px" borderRadius="10px">
-          {cover}
-        </Box>
-        <VStack>
+      <HStack>
+        <Image
+          borderRadius="17px"
+          width="73px"
+          height="73px"
+          src={track.album_images[0].url}
+        />
+
+        <VStack alignItems="start">
           <Text
-            width="144px"
-            height="20px"
             fontFamily="Quicksand"
             fontSize="17px"
             fontWeight="400"
-            color="#FFFFFF" // Assuming white text color
+            color="#FFFFFF"
           >
-            {mainText}
+            {track.track_name}
           </Text>
           <Text
-            width="144px"
-            height="14px"
             fontFamily="Quicksand"
             fontSize="12px"
             fontWeight="400"
             lineHeight="14px"
             color="#FFFFFF80" // Adjusted for alpha transparency
           >
-            {smallText}
+            {track.artists[0]}
           </Text>
         </VStack>
-      </Box>
+      </HStack>
+
       <IconButton
         width="48px"
         height="48px"
         borderRadius="15px"
-        aria-label="Like button"
+        bg="#33373B5E"
+        icon={<Image src={heart} />}
         onClick={() => {
           // Handle like button click logic here
         }}
-      >
-        {/* Use an Image component as the icon */}
-        <Image src="./assets/like_icon.png" alt="Like icon" />
-      </IconButton>
+      ></IconButton>
     </Box>
   );
 };

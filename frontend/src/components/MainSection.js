@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Flex, Text, extendTheme } from "@chakra-ui/react";
 import TopChartItem from "./TopChartItem";
 
-const MainSection = () => {
+const MainSection = ({ topTracks }) => {
   return (
     <Box
       w="100%"
@@ -24,8 +24,6 @@ const MainSection = () => {
       </Box>
       <Flex direction="column">
         <Text
-          bottom="12px"
-          left="3"
           fontSize="md"
           color="white"
           fontWeight="bold"
@@ -34,27 +32,13 @@ const MainSection = () => {
           font-family="Quicksand"
           font-size="24px"
           font-weight="700"
-          line-height="29px"
-          letter-spacing="0em"
           text-align="left"
         >
           Top Charts
         </Text>
-        <TopChartItem
-          mainText="Golden age of 80s"
-          smallText="Sean swadder"
-          cover="./assets/golden_age.jpg"
-        />
-        <TopChartItem
-          mainText='Raggae "n" blues'
-          smallText="Dj YK mule"
-          cover="./assets/raggae_n_blues.jpg"
-        />
-        <TopChartItem
-          mainText="Tomorrow's tunes"
-          smallText="Obi Datti"
-          cover="./assets/tomorrows_tunes.jpg"
-        />
+        {topTracks.map((track) => (
+          <TopChartItem track={track} />
+        ))}
       </Flex>
     </Box>
   );

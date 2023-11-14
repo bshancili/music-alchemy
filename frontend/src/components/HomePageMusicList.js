@@ -1,76 +1,9 @@
 import { Grid, GridItem, Button, Box, Text } from "@chakra-ui/react";
 import React from "react";
 import AlbumCardItem from "./AlbumCardItem";
+import MusicListItem from "./MusicListItem";
 
-const HomePageMusicList = () => {
-  const tracks = [
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    },
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    },
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfsjz1t4VnGhagcg",
-    },
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    },
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    },
-    {
-      album_images: {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-      album_name: "1989 (Taylor's Version)",
-      artists: ["Taylor Swift"],
-      track_name: "Out Of The Woods (Taylor's Version)",
-      spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    },
-  ];
+const HomePageMusicList = ({ allTracks }) => {
   return (
     <Box bg="#1D2123" padding="50px 96px" flexDirection={"column"}>
       <Text
@@ -84,9 +17,9 @@ const HomePageMusicList = () => {
       >
         Music
       </Text>
-      <Grid templateColumns="repeat(6, 1fr)" gap={4}>
-        {tracks.map((track) => (
-          <GridItem key={track.spotify_track_id}>
+      <Grid templateColumns="repeat(6, 1fr)" gap={6}>
+        {allTracks.map((track) => (
+          <GridItem key={track.id}>
             <AlbumCardItem track={track} />
           </GridItem>
         ))}

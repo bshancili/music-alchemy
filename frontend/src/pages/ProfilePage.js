@@ -121,7 +121,6 @@ function ProfilePage() {
   return (
     <Box display="flex" flexDirection="column" h="100vh">
       <Header />
-      <Button onClick={addFriend}>Add Friend</Button>
       <Profile user={user} />
       <ProfileMusicList tracks={likedSongs} />
     </Box>

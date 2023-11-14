@@ -139,7 +139,7 @@ const MusicDetail = ({ t }) => {
             bg="#33373b5e"
             icon={<Image src={lined_heart} />}
             _hover={{ bg: "#000" }}
-            onClick={unlikeSong}
+            onClick={likeSong}
           />
           <IconButton
             borderRadius="15px"
