@@ -32,8 +32,6 @@ function ProfilePage() {
       if (userSnap.exists()) {
         const userData = userSnap.data();
         setUser(userData);
-        console.log("User data:", userData);
-        // Do something with the user data, e.g., set it in the component state
       } else {
         console.log("User not found");
         // Handle the case where the user document does not exist
@@ -64,20 +62,19 @@ function ProfilePage() {
     }
   };
 
-  const fetchTrackDetails = async (spotifyTrackId) => {
-    const tracksCollection = collection(db, "Tracks");
-    const q = query(
-      tracksCollection,
-      where("spotify_track_id", "==", spotifyTrackId)
-    );
-
+  const fetchTrackDetails = async (id) => {
+    const trackRef = doc(db, "Tracks", id);
     try {
-      const snap = await getDocs(q);
-      const trackDetails = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      return trackDetails[0]; // Assuming there is only one track with a given spotify_track_id
+      const trackSnap = await getDoc(trackRef);
+
+      if (trackSnap.exists()) {
+        const trackDetails = trackSnap.data();
+        console.log(trackDetails);
+        return trackDetails;
+      } else {
+        console.error("Track not found");
+        return null;
+      }
     } catch (error) {
       console.error("Error fetching track details:", error);
       return null;
@@ -90,17 +87,13 @@ function ProfilePage() {
       const userSnap = await getDoc(userDocRef);
       if (userSnap) {
         const userData = userSnap.data();
-        console.log(userData.liked_song_list);
-        const likedSongs = await userData.liked_song_list;
+        const likedSongs = Object.keys(userData.liked_song_list || {});
         const tracksDetails = await Promise.all(
           likedSongs.map((trackId) => fetchTrackDetails(trackId))
         );
-        const validTracksDetails = tracksDetails.filter(
-          (track) => track !== undefined
-        );
-        console.log(validTracksDetails);
 
-        setLikedSongs(validTracksDetails);
+        console.log(tracksDetails);
+        setLikedSongs(tracksDetails);
       }
     } catch (error) {}
   };
@@ -123,8 +116,6 @@ function ProfilePage() {
   useEffect(() => {
     fetchUser();
     fetchAllLikedSongs();
-    fetchPost("Taylor Swift");
-    console.log(likedSongs);
   }, []);
 
   return (

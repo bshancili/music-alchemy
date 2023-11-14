@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 const MusicListItem = ({ track }) => {
   const navigate = useNavigate();
   const handleItemClick = () => {
-    navigate(`/music/${track.spotify_track_id}`, {
+    navigate(`/music/${track.id}`, {
       state: { trackData: track },
     });
   };

@@ -55,7 +55,6 @@ function Profile({ user }) {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        console.log("User data:", userData);
         // Do something with the user data, e.g., set it in the component state
       } else {
         console.log("User not found");

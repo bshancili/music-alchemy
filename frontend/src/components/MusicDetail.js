@@ -28,18 +28,23 @@ import {
 const MusicDetail = ({ t }) => {
   const { userID } = useAuthStore();
 
+  const isSongLiked = () => {};
+
   const likeSong = async () => {
     if (userID) {
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || [];
-      const isSongAlreadyLiked = likedSongsArray.includes(t.spotify_track_id);
 
-      if (!isSongAlreadyLiked) {
-        await updateDoc(userRef, {
-          liked_song_list: arrayUnion(t.spotify_track_id),
-        });
-      }
+      const timestamp = new Date();
+      const updatedLikedSongs = {
+        ...likedSongsArray,
+        [t.id]: { timestamp },
+      };
+
+      await updateDoc(userRef, {
+        liked_song_list: updatedLikedSongs,
+      });
     }
   };
   const unlikeSong = async () => {
@@ -47,18 +52,12 @@ const MusicDetail = ({ t }) => {
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || [];
-      const isSongAlreadyLiked = likedSongsArray.includes(t.spotify_track_id);
 
-      if (isSongAlreadyLiked) {
-        await updateDoc(userRef, {
-          liked_song_list: arrayRemove(t.spotify_track_id),
-        });
-      }
+      await updateDoc(userRef, {
+        liked_song_list: arrayRemove(t.id),
+      });
     }
   };
-  useEffect(() => {
-    console.log(t);
-  }, []);
 
   return (
     <Flex
@@ -140,7 +139,7 @@ const MusicDetail = ({ t }) => {
             bg="#33373b5e"
             icon={<Image src={lined_heart} />}
             _hover={{ bg: "#000" }}
-            onClick={likeSong}
+            onClick={unlikeSong}
           />
           <IconButton
             borderRadius="15px"
