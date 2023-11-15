@@ -1,5 +1,5 @@
 import { Grid, GridItem, Button, Box } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect } from "react";
 import MusicListItem from "./MusicListItem";
 
 const ProfileMusicList = ({ tracks }) => {

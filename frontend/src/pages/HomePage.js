@@ -37,7 +37,7 @@ const Homepage = () => {
   }, []);
 
   return (
-    <Box w="100%" display="flex" flexDirection="column">
+    <Box h="100vh" bg="#1D2123" display="flex" flexDirection="column">
       <Header />
       <MainSection topTracks={allTracks.slice(0, 3)} />
       <HomePageMusicList allTracks={allTracks} />
