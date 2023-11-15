@@ -17,12 +17,12 @@ import {
 } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 function ProfilePage() {
-  const { userID } = useParams();
+  //const { userID } = useParams();
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const [tracks, setTracks] = useState([]);
 
-  //const { userID } = useAuthStore();
+  const { userID } = useAuthStore();
 
   const fetchUser = async () => {
     try {
