@@ -34,11 +34,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -58,9 +56,18 @@ import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -76,6 +83,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.PropertyName
+import com.google.firebase.firestore.SetOptions
+import coil.compose.rememberImagePainter
+
 
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -90,7 +100,6 @@ import kotlinx.coroutines.tasks.await
 //~~~~~~~~~~
 //~~~~~THEME~~~~~
 //Design colors, App theme and Logo
-val PastelButtermilk = Color(0xFFF9FBE7)
 val PastelLavender = Color(0xFFCEB2FC)
 
 private val appThemeColors = lightColors(
@@ -98,7 +107,7 @@ private val appThemeColors = lightColors(
     primaryVariant = PastelLavender,
     secondary = PastelLavender,
 
-    background = PastelButtermilk,
+    background = Color(0xFF1D2123),
     surface = PastelLavender,
 )
 
@@ -254,9 +263,13 @@ fun App(startGoogleSignIn: () -> Unit) {
 
     MainActivity()
     NavHost(navController, startDestination = "initialMenu") {
+
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
-        composable("mainMenu") { MainMenu(navController) }
+        composable("mainMenu") {
+            val viewModel = viewModel<SongsViewModel>() // Instantiate your SongsViewModel here
+            MainMenu(navController, viewModel)
+        }
         composable("screen1") { Screen1(navController) }
         composable("screen2") { Screen2(navController) }
         composable("addSong") { AddSongScreen(navController) }
@@ -422,123 +435,326 @@ fun LoginScreen(navController: NavController) {
     }
 }
 
+@Composable
+fun TopNav(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(color = Color(0xFF1D2123)),
+            //.padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.group11),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { navController.navigate("addSong")  }
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f) // Takes remaining space in the row
+                .padding(horizontal = 16.dp) // Padding from sides and top/bottom
+                .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                .fillMaxWidth() // Fill the entire width of the row
+        ) {
+            Text(
+                text = "Music\nAlchemy",
+                style = TextStyle(
+                    fontSize = 22.sp,
+                    lineHeight = 22.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFFFFFFFF),
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier
+                    .fillMaxSize() // Fill the entire Text composable
+                    .padding(vertical = 8.dp), // Padding from the sides of the text
+                 // Center the text within the Text composable
+            )
+        }
+
+        Image(
+            painter = painterResource(id = R.drawable.group10),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { navController.navigate("profile") }
+        )
+    }
+}
+
 
 
 @Composable
 fun CommonBottomBar(navController: NavController) {
-    BottomNavigation {
-        // Bottom Navigation Item for MainMenu
-        BottomNavigationItem(
-            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = navController.currentDestination?.route == "mainMenu",
-            onClick = {
-                if (navController.currentDestination?.route != "mainMenu") {
-                    navController.navigate("mainMenu")
-                }
-            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(color = Color(0xFF1D2123)),
+        //.padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.home),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { navController.navigate("mainMenu")  }
         )
 
-        // Bottom Navigation Item for Screen1
-        BottomNavigationItem(
-            icon = { Icon(Icons.Filled.Edit, contentDescription = "Screen1") },
-            label = { Text("Screen1") },
-            selected = navController.currentDestination?.route == "screen1",
-            onClick = {
-                if (navController.currentDestination?.route != "screen1") {
-                    navController.navigate("screen1")
-                }
-            }
+        Image(
+            painter = painterResource(id = R.drawable.search),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { /* Handle click if needed */ }
         )
 
-        // Bottom Navigation Item for Screen2
-        BottomNavigationItem(
-            icon = { Icon(Icons.Filled.Build, contentDescription = "Screen2") },
-            label = { Text("Screen2") },
-            selected = navController.currentDestination?.route == "screen2",
-            onClick = {
-                if (navController.currentDestination?.route != "screen2") {
-                    navController.navigate("screen2")
-                }
-            }
+        Image(
+            painter = painterResource(id = R.drawable.recommendation),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { /* Handle click if needed */ }
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.dm),
+            contentDescription = "image description",
+            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            modifier = Modifier
+                .fillMaxHeight() // Make the image fill the height of the row
+                .aspectRatio(1f) // Maintain aspect ratio
+                .clickable { /* Handle click if needed */ }
         )
     }
 }
+
 
 
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
 @Composable
- fun MainMenu(navController: NavController) {
+fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
+    val songs by viewModel.songs.observeAsState(emptyList())
 
-        val imagePainter = painterResource(id = R.drawable.profile_placeholder)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+    ) {
+        TopNav(navController = navController)
 
-        Scaffold(
-            bottomBar = { CommonBottomBar(navController) }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colors.background)
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Logo(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 64.dp)
-                    )
+        Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { navController.navigate("addSong") },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 64.dp) // Adjust the padding as needed
-                    ) {
-                        Text(text = "Add Song!", style = MaterialTheme.typography.button)
-                    }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(192.dp)
+                .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 20.dp))
+        ) {
+            // Add content inside the Box as needed
+        }
 
-                    // Songs button
-                    Button(
-                        onClick = { navController.navigate("songs") },
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 16.dp) // Adjust the padding as needed
-                    ) {
-                        Text(text = "All Songs List!", style = MaterialTheme.typography.button)
-                    }
-                    // Settings button
-                    IconButton(
-                        onClick = { navController.navigate("settings") },
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(start = 16.dp, bottom = 16.dp) // Adjust the padding as needed
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = stringResource(R.string.settings)
-                        )
-                    }
-                    // Profile button on the top right
-                    IconButton(
-                        onClick = { navController.navigate("profile") },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(16.dp)
-                    ) {
-                        Image(
-                            painter = imagePainter,
-                            contentDescription = stringResource(R.string.profile),
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Top charts",
+            style = TextStyle(
+                fontSize = 20.sp,
+                lineHeight = 24.sp,
+                fontWeight = FontWeight(700),
+                color = Color(0xFFEFEEE0),
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Keep the first LazyRow unchanged
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(128.dp)
+                .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp))
+        ) {
+            items(songs) { song ->
+                SongItem(song = song)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Music",
+            style = TextStyle(
+                fontSize = 20.sp,
+                lineHeight = 24.sp,
+                fontWeight = FontWeight(700),
+                color = Color(0xFFEFEEE0),
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Use LazyColumn with itemsInRow for the two-column layout
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f) // Takes up the available space
+                .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp)),
+        ) {
+            items(songs.windowed(2, step = 2, partialWindows = true)) { rowSongs ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(290.dp)
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    for (song in rowSongs) {
+                        SongItemMusic(song = song, navController = navController)
                     }
                 }
             }
         }
+
+        CommonBottomBar(navController = navController)
     }
+}
+
+@Composable
+fun SongItemMusic(song: Song, navController: NavController) {
+    Card(
+        modifier = Modifier
+            .height(290.dp) // Adjust the height as needed
+            .width(190.dp),
+        shape = RoundedCornerShape(20.dp),
+        backgroundColor = Color(0xFF1A1E1F)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+        ) {
+            // Album Image
+            val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
+            imageUrl?.let {
+                Image(
+                    painter = rememberImagePainter(data = it),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(190.dp)
+                        .clip(shape = RoundedCornerShape(20.dp))
+                        .clickable { navController.navigate("songDetail/${song.id}") },
+                    contentScale = ContentScale.FillBounds
+                )
+            }
+
+            // Spacer to add some space between the image and text
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Text for track name
+            Text(
+                text = "${song.trackName}",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+
+            // Text for artist
+            Text(
+                text = "${song.artists}",
+                color = Color.White,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+
+@Composable
+fun SongItem(song: Song) {
+    Card(
+        modifier = Modifier
+            .width(380.dp)
+            .height(128.dp),
+        shape = RoundedCornerShape(20.dp),
+        backgroundColor = Color(0xFF1A1E1F)
+    ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(), // Add padding to the Box
+                contentAlignment = Alignment.CenterStart
+            ) {
+                // Image with proper alignment
+                val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
+                imageUrl?.let {
+                    Image(
+                        painter = rememberImagePainter(data = it),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(128.dp)
+                            .clip(shape = RoundedCornerShape(20.dp)),
+                        contentScale = ContentScale.FillBounds
+                    )
+                }
+                // Column for text
+                Column(
+                    modifier = Modifier
+                        .padding(start = 8.dp) // Adjust the padding as needed
+                        .align(Alignment.TopStart), // Align the Column to the top
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    // Text for track name
+                    Text(
+                        modifier = Modifier
+                            .padding(start = 128.dp),
+                        text = "${song.trackName}",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
+
+                    // Text for artist
+                    Text(
+                        modifier = Modifier
+                            .padding(start = 128.dp),
+                        text = "${song.artists}",
+                        color = Color(0x80FFFFFF),
+                        fontSize = 12.sp
+                    )
+                }
+            }
+    }
+}
+
+
+
+
 
 
 
@@ -716,7 +932,9 @@ fun ProfileScreen(navController: NavController) {
         viewModel.fetchLikedSongs(user?.uid ?: "")
     }
 
-    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+    Column(modifier = Modifier
+        .padding(16.dp)
+        .fillMaxSize()) {
         // User's current username
         Text("Current Username: $currentUsername", style = MaterialTheme.typography.h6)
 
@@ -1028,7 +1246,9 @@ fun FriendItem(friend: FriendData, navController: NavController) {
         Image(
             painter = painterResource(id = R.drawable.profile_placeholder),
             contentDescription = "Friend Profile Picture",
-            modifier = Modifier.size(48.dp).clip(CircleShape)
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
         )
         Spacer(modifier = Modifier.width(16.dp))
         // Friend name
@@ -1047,7 +1267,9 @@ fun FriendProfileScreen(friendId: String, navController: NavController) {
         viewModel.fetchFriendData(friendId)
     }
 
-    Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+    Column(modifier = Modifier
+        .padding(16.dp)
+        .fillMaxSize()) {
         Text("Username: $username", style = MaterialTheme.typography.h6)
         Text("Liked Songs", style = MaterialTheme.typography.h6)
         LazyColumn {
@@ -1167,7 +1389,6 @@ fun SongListScreen(navController: NavController, viewModel: SongsViewModel = vie
         }
     }
 }
-
 @Composable
 fun SongListItem(song: Song, onClick: () -> Unit) {
     Column(
@@ -1185,34 +1406,38 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
     Divider()
 }
 
-
-
-
-
 private fun addLikedSongToFirestore(userId: String, songId: String) {
-    val userLikedSongsCollection = Firebase.firestore
+    val userDocument = Firebase.firestore
         .collection("Users")
         .document(userId)
-        .collection("liked_songs")
 
-    userLikedSongsCollection.document(songId)
-        .set(mapOf("timestamp" to FieldValue.serverTimestamp()))
+    val likedSongs = mapOf(
+        songId to mapOf(
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+    )
+
+    // Use set with merge option to create or update the liked_song_list field
+    userDocument.set(mapOf("liked_song_list" to likedSongs), SetOptions.merge())
 }
 
 private fun removeLikedSongFromFirestore(userId: String, songId: String) {
-    val userLikedSongsCollection = Firebase.firestore
+    val userDocument = Firebase.firestore
         .collection("Users")
         .document(userId)
-        .collection("liked_songs")
 
-    userLikedSongsCollection.document(songId)
-        .delete()
+    // Use FieldValue.delete() to remove the specific song from the liked_song_list map
+    userDocument.update("liked_song_list.$songId", FieldValue.delete())
 }
+
+
 
 
 
 @Composable
 fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
+
+
     val songs by viewModel.songs.observeAsState(initial = emptyList())
     val song = songs.firstOrNull { it.id == songId }
     val user = Firebase.auth.currentUser
@@ -1223,15 +1448,15 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
 
     LaunchedEffect(userId) {
         if (userId != null) {
-            val likedSongsCollection = Firebase.firestore
+            val userDocument = Firebase.firestore
                 .collection("Users")
                 .document(userId)
-                .collection("liked_songs")
 
-            val likedSongDocument = likedSongsCollection.document(songId).get().await()
-            isLiked.value = likedSongDocument.exists()
+            val likedSongs = userDocument.get().await().get("liked_song_list") as? Map<String, Any>
+            isLiked.value = likedSongs?.containsKey(songId) ?: false
         }
     }
+
 
 
     song?.let { songDetail ->
@@ -1275,15 +1500,13 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
         }
 
     }
-
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.Top
         ) {
+
             song.let {
 
                 Spacer(modifier = Modifier.weight(1f))
