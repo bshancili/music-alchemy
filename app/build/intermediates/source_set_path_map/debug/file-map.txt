@@ -55,10 +55,10 @@ com.cs308.musicalchemy.app-ui-util-release-53 C:\Users\ASUS\.gradle\caches\trans
 com.cs308.musicalchemy.app-animation-core-release-54 C:\Users\ASUS\.gradle\caches\transforms-3\fb2ad22cd9d1d5b720e764b6aab0a419\transformed\animation-core-release\res
 com.cs308.musicalchemy.app-lifecycle-livedata-core-2.6.2-55 C:\Users\ASUS\.gradle\caches\transforms-3\fd9191ff0fe261bac86a303049be4302\transformed\lifecycle-livedata-core-2.6.2\res
 com.cs308.musicalchemy.app-lifecycle-viewmodel-ktx-2.6.2-56 C:\Users\ASUS\.gradle\caches\transforms-3\ff812c9cd17f55742920ad1636bea7af\transformed\lifecycle-viewmodel-ktx-2.6.2\res
-com.cs308.musicalchemy.app-res-57 C:\Users\ASUS\Desktop\cs308\Android_App\app\build\generated\res\processDebugGoogleServices
-com.cs308.musicalchemy.app-resValues-58 C:\Users\ASUS\Desktop\cs308\Android_App\app\build\generated\res\resValues\debug
-com.cs308.musicalchemy.app-packageDebugResources-59 C:\Users\ASUS\Desktop\cs308\Android_App\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.cs308.musicalchemy.app-packageDebugResources-60 C:\Users\ASUS\Desktop\cs308\Android_App\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.cs308.musicalchemy.app-merged_res-61 C:\Users\ASUS\Desktop\cs308\Android_App\app\build\intermediates\merged_res\debug
-com.cs308.musicalchemy.app-debug-62 C:\Users\ASUS\Desktop\cs308\Android_App\app\src\debug\res
-com.cs308.musicalchemy.app-main-63 C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\res
+com.cs308.musicalchemy.app-res-57 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\build\generated\res\processDebugGoogleServices
+com.cs308.musicalchemy.app-resValues-58 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\build\generated\res\resValues\debug
+com.cs308.musicalchemy.app-packageDebugResources-59 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.cs308.musicalchemy.app-packageDebugResources-60 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.cs308.musicalchemy.app-merged_res-61 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\build\intermediates\merged_res\debug
+com.cs308.musicalchemy.app-debug-62 C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\debug\res
+com.cs308.musicalchemy.app-main-63 C:\Users\ASUS\D

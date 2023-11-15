@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:2:1-30:12
 MERGED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:2:1-18:12
 MERGED from [com.google.firebase:firebase-auth-ktx:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\db05f060545ffc11b48d2fddc7b4f6fc\transformed\firebase-auth-ktx-22.2.0\AndroidManifest.xml:2:1-17:12
 MERGED from [com.google.firebase:firebase-auth:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\1bd2e42e286265c29b633ddd59f56832\transformed\firebase-auth-22.2.0\AndroidManifest.xml:17:1-75:12
@@ -108,17 +108,17 @@ MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\ASUS\.gradle\caches\transf
 MERGED from [io.grpc:grpc-android:1.52.1] C:\Users\ASUS\.gradle\caches\transforms-3\e09e41b19cb5f84d3acb3b177eaa9367\transformed\grpc-android-1.52.1\AndroidManifest.xml:2:1-11:12
 MERGED from [com.google.firebase:protolite-well-known-types:18.0.0] C:\Users\ASUS\.gradle\caches\transforms-3\af334e8a5b5e9ca8c18b83bc9c3fcb8e\transformed\protolite-well-known-types-18.0.0\AndroidManifest.xml:2:1-11:12
 	package
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 	android:versionName
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 	xmlns:tools
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:3:5-51
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:3:5-51
 	android:versionCode
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 	xmlns:android
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:2:11-69
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:2:11-69
 uses-permission#android.permission.INTERNET
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:4:5-67
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:4:5-67
 MERGED from [com.google.firebase:firebase-auth:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\1bd2e42e286265c29b633ddd59f56832\transformed\firebase-auth-22.2.0\AndroidManifest.xml:25:5-67
 MERGED from [com.google.firebase:firebase-auth:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\1bd2e42e286265c29b633ddd59f56832\transformed\firebase-auth-22.2.0\AndroidManifest.xml:25:5-67
 MERGED from [com.google.firebase:firebase-firestore:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\ad5a79d5cad7319041e4c4dcc9dd19f7\transformed\firebase-firestore-24.9.1\AndroidManifest.xml:11:5-67
@@ -136,10 +136,10 @@ MERGED from [com.google.android.gms:play-services-measurement-impl:21.5.0] C:\Us
 MERGED from [com.google.android.gms:play-services-measurement-sdk-api:21.5.0] C:\Users\ASUS\.gradle\caches\transforms-3\4ddc5605958ed4c452e7e26cbee5f92b\transformed\play-services-measurement-sdk-api-21.5.0\AndroidManifest.xml:23:5-67
 MERGED from [com.google.android.gms:play-services-measurement-sdk-api:21.5.0] C:\Users\ASUS\.gradle\caches\transforms-3\4ddc5605958ed4c452e7e26cbee5f92b\transformed\play-services-measurement-sdk-api-21.5.0\AndroidManifest.xml:23:5-67
 	android:name
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:4:22-64
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:4:22-64
 application
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:6:5-28:19
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:6:5-28:19
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:6:5-28:19
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:6:5-28:19
 MERGED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:8:5-16:19
 MERGED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:8:5-16:19
 MERGED from [com.google.firebase:firebase-auth-ktx:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\db05f060545ffc11b48d2fddc7b4f6fc\transformed\firebase-auth-ktx-22.2.0\AndroidManifest.xml:7:5-15:19
@@ -207,53 +207,53 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\AS
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ASUS\.gradle\caches\transforms-3\c0e16a13e1da37b885efb4d7b519cee6\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ASUS\.gradle\caches\transforms-3\c0e16a13e1da37b885efb4d7b519cee6\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
 	android:extractNativeLibs
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\ASUS\.gradle\caches\transforms-3\eaf0e90c84f1656639401da5e9a6d0a8\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:15:9-35
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:15:9-35
 	android:label
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:13:9-41
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:13:9-41
 	android:fullBackupContent
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:11:9-54
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:11:9-54
 	android:roundIcon
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:14:9-58
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:14:9-58
 	tools:targetApi
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:17:9-29
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:17:9-29
 	android:icon
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:12:9-53
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:12:9-53
 	android:allowBackup
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:8:9-35
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:8:9-35
 	android:theme
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:16:9-50
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:16:9-50
 	android:dataExtractionRules
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:10:9-65
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:10:9-65
 	android:usesCleartextTraffic
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:9:9-44
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:9:9-44
 	android:name
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:7:9-32
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:7:9-32
 activity#com.cs308.musicalchemy.MainActivity
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:18:9-27:20
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:18:9-27:20
 	android:exported
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:20:13-36
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:20:13-36
 	android:theme
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:21:13-54
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:21:13-54
 	android:name
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:19:13-41
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:19:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:22:13-26:29
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:22:13-26:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:23:17-69
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:23:17-69
 	android:name
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:23:25-66
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:23:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:25:17-77
+ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:25:17-77
 	android:name
-		ADDED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml:25:27-74
+		ADDED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml:25:27-74
 uses-sdk
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
-INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
+INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 MERGED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:5:5-44
 MERGED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:5:5-44
 MERGED from [com.google.firebase:firebase-auth-ktx:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\db05f060545ffc11b48d2fddc7b4f6fc\transformed\firebase-auth-ktx-22.2.0\AndroidManifest.xml:5:5-44
@@ -463,9 +463,9 @@ MERGED from [com.google.firebase:protolite-well-known-types:18.0.0] C:\Users\ASU
 	tools:overrideLibrary
 		ADDED from [com.google.firebase:firebase-auth:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\1bd2e42e286265c29b633ddd59f56832\transformed\firebase-auth-22.2.0\AndroidManifest.xml:23:9-61
 	android:targetSdkVersion
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from C:\Users\ASUS\Desktop\cs308\Android_App\app\src\main\AndroidManifest.xml
+		INJECTED from C:\Users\ASUS\Desktop\SCHOOL\cs308\Android_App\app\src\main\AndroidManifest.xml
 service#com.google.firebase.components.ComponentDiscoveryService
 ADDED from [com.google.firebase:firebase-firestore-ktx:24.9.1] C:\Users\ASUS\.gradle\caches\transforms-3\a648fa593b03c8cd4ab9ba4281d80a9b\transformed\firebase-firestore-ktx-24.9.1\AndroidManifest.xml:9:9-15:19
 MERGED from [com.google.firebase:firebase-auth-ktx:22.2.0] C:\Users\ASUS\.gradle\caches\transforms-3\db05f060545ffc11b48d2fddc7b4f6fc\transformed\firebase-auth-ktx-22.2.0\AndroidManifest.xml:8:9-14:19
@@ -839,6 +839,4 @@ ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\ASUS\.gra
 intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
 ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\ASUS\.gradle\caches\transforms-3\0ab4de8bd63ed15b8049836e74836b1d\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
 action#androidx.profileinstaller.action.BENCHMARK_OPERATION
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\ASUS\.gradle\caches\transforms-3\0ab4de8bd63ed15b8049836e74836b1d\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
-	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\ASUS\.gradle\caches\transforms-3\0ab4de8bd63ed15b8049836e74836b1d\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\ASUS\.gradle\caches\transforms-3\0ab4de8bd63ed15b8049836e74836b1d\transfor

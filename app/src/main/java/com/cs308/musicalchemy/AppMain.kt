@@ -65,6 +65,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cs308.musicalchemy.AuthStateManager.isAuthenticated
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
@@ -158,7 +159,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            AuthStateManager.isAuthenticated.value = firebaseAuth.currentUser != null
+            isAuthenticated.value = firebaseAuth.currentUser != null
         }
         auth.addAuthStateListener(authStateListener)
     }
@@ -205,28 +206,32 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
-        Log.d(TAG, "handleSignInResult called")
+        Log.d("MainApp", "handleSignInResult called")
         try {
+            Log.d("MainApp", "ITS WORKING")
             val account = completedTask.getResult(ApiException::class.java)
+            Log.d("MainApp", "LET HIM COOK")
             firebaseAuthWithGoogle(account.idToken!!)
+            Log.d("MainApp", "YOOOOOOOOOOOOOO")
         } catch (e: ApiException) {
-            Log.w(TAG, "signInResult:failed code=" + e.statusCode)
+            Log.w(TAG, "Google sign in failed", e)
         }
     }
 
+
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        Log.d(TAG, "firebaseAuthWithGoogle called")
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
+                    isAuthenticated.value = true
                     Log.d(TAG, "signInWithCredential:success")
-                    AuthStateManager.isAuthenticated.value = true
                 } else {
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
                 }
             }
     }
+
 }
 
 
@@ -242,11 +247,7 @@ fun App(startGoogleSignIn: () -> Unit) {
     LaunchedEffect(key1 = isAuthenticated.value) {
         if (isAuthenticated.value) {
             navController.navigate("mainMenu") {
-                popUpTo(navController.graph.startDestinationId) {
-                    saveState = true
-                }
-                launchSingleTop = true
-                restoreState = true
+                popUpTo("initialMenu") { inclusive = true }
             }
         }
     }
@@ -312,8 +313,6 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
             Text(text = "Sign up")
         }
 
-        //Icons and buttons for apple/google sign in
-        //TODO: add google / apple sign in when backend is ready
         Row(
             modifier = Modifier.padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -339,9 +338,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
                 modifier = Modifier
                     .size(48.dp) // Adjust the size as needed
                     .clickable {
-                        // TODO: Implement Apple sign-in logic here
                         Log.d("InitialMenu", "Apple Sign-in button pressed")
-                        //call a function to start the Apple sign-in process
                     }
                     .padding(vertical = 8.dp)
             )
@@ -681,7 +678,7 @@ fun SettingsScreen(navController: NavController) {
         Button(
             onClick = {
                 FirebaseAuth.getInstance().signOut() // Sign out from Firebase
-                AuthStateManager.isAuthenticated.value = false // Set isAuthenticated to false
+                isAuthenticated.value = false // Set isAuthenticated to false
                 navController.navigate("initialMenu") { // Navigate to initial menu
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true // Remove all previous destinations from the back stack
