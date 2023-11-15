@@ -1,10 +1,18 @@
 R_DEF: Internal format may change without notice
 local
+drawable dm
+drawable group10
+drawable group11
+drawable home
 drawable ic_apple
 drawable ic_google
 drawable profile_placeholder
+drawable recommendation
+drawable search
 font moon_font
 font my_custom_font
+font quantico
+font quantico_regular
 string app_name
 string default_web_client_id
 string firebase_database_url
