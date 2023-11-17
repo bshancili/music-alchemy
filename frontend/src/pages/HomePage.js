@@ -7,17 +7,16 @@ import Header from "../components/Header";
 import MainSection from "../components/MainSection";
 import HomePageMusicList from "../components/HomePageMusicList";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, limit } from "firebase/firestore";
 // Homepage component
 const Homepage = () => {
   const [allTracks, setAllTracks] = useState([]);
 
   const fetchAllTracks = async () => {
     const tracksCollection = collection(db, "Tracks");
-    console.log(tracksCollection);
 
     try {
-      const snap = await getDocs(tracksCollection);
+      const snap = await getDocs(tracksCollection, limit(50));
       const trackData = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),

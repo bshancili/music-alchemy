@@ -68,7 +68,10 @@ function ProfilePage() {
       const trackSnap = await getDoc(trackRef);
 
       if (trackSnap.exists()) {
-        const trackDetails = trackSnap.data();
+        const trackDetails = {
+          id: trackSnap.id,
+          ...trackSnap.data(),
+        };
         console.log(trackDetails);
         return trackDetails;
       } else {
@@ -119,7 +122,7 @@ function ProfilePage() {
   }, []);
 
   return (
-    <Box display="flex" flexDirection="column" h="100vh">
+    <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">
       <Header />
       <Profile user={user} />
       <ProfileMusicList tracks={likedSongs} />

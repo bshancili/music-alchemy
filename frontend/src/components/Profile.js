@@ -102,7 +102,7 @@ function Profile({ user }) {
 
   if (!user) {
     return (
-      <Container maxW="100%" bg="#1D2123">
+      <Container>
         <Box textAlign="center">
           <Spinner
             thickness="4px"

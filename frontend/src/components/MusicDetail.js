@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   HStack,
   IconButton,
+  useToast,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
 import heart from "../utils/heart.svg";
@@ -18,20 +19,89 @@ import bookmark from "../utils/bookmark.svg";
 import spotify_logo from "../utils/spotify_logo.png";
 import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
-import {
-  getDoc,
-  doc,
-  arrayUnion,
-  updateDoc,
-  arrayRemove,
-} from "firebase/firestore";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
+import RatingStars from "./RatingStars";
 const MusicDetail = ({ t }) => {
   const { userID } = useAuthStore();
+  const [isLiked, setIsLiked] = useState(false);
+  const toast = useToast();
+  const [rating, setRating] = useState(0);
 
-  const isSongLiked = () => {};
+  const handleStarClick = (star) => {
+    setRating(star);
+  };
+
+  const handleRateButtonClick = async () => {
+    if (userID) {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+
+      const songRef = doc(db, "Tracks", t.id);
+      const songDoc = await getDoc(songRef);
+      const trackData = songDoc.data();
+
+      const updatedRatedSongList = { ...(userData.rated_song_list || {}) };
+
+      const timestamp = new Date();
+
+      if (updatedRatedSongList[t.id]) {
+        toast({
+          title: `${t.track_name} is re-rated ${rating}`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+        const currentUserRating = updatedRatedSongList[t.id].rating;
+        const currentTrackRating = trackData.rating;
+        const ratingCount = trackData.rating_count;
+        const newRating =
+          (currentTrackRating * ratingCount - currentUserRating + rating) /
+          ratingCount;
+
+        await updateDoc(songRef, {
+          rating: newRating.toFixed(1),
+        });
+        updatedRatedSongList[t.id].rating = rating;
+        updatedRatedSongList[t.id].timestamp = timestamp;
+        await updateDoc(userRef, {
+          rated_song_list: updatedRatedSongList,
+        });
+      } else {
+        toast({
+          title: `${t.track_name} has rated ${rating}`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+        // Calculate the new average rating
+        const currentRating = trackData.rating || 0;
+        const currentCount = trackData.rating_count || 0;
+
+        const newCount = currentCount + 1;
+        const newRating = (currentRating * currentCount + rating) / newCount;
+
+        // Update the track data in the database
+        await updateDoc(songRef, {
+          rating: newRating.toFixed(1),
+          rating_count: newCount,
+        });
+
+        const updatedRatedSongList = {
+          ...userData.rated_song_list,
+          [t.id]: { rating, timestamp },
+        };
+        await updateDoc(userRef, {
+          rated_song_list: updatedRatedSongList,
+        });
+      }
+    }
+  };
 
   const likeSong = async () => {
-    if (userID) {
+    if (userID || !isLiked) {
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || [];
@@ -45,19 +115,71 @@ const MusicDetail = ({ t }) => {
       await updateDoc(userRef, {
         liked_song_list: updatedLikedSongs,
       });
-    }
-  };
-  const unlikeSong = async () => {
-    if (userID) {
-      const userRef = doc(db, "Users", userID);
-      const userDoc = await getDoc(userRef);
-      const likedSongsArray = userDoc.data().liked_song_list || [];
 
-      await updateDoc(userRef, {
-        liked_song_list: arrayRemove(t.id),
+      toast({
+        title: "Song is liked",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      // Now, update the like_count field
+      const songRef = doc(db, "Tracks", t.id);
+      const songDoc = await getDoc(songRef);
+      const currentLikes = songDoc.data().like_count || 0;
+
+      await updateDoc(songRef, {
+        like_count: currentLikes + 1,
       });
     }
   };
+  const unlikeSong = async () => {
+    if (userID || isLiked) {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const likedSongsArray = userDoc.data().liked_song_list || {};
+
+      await likedSongsArray[t.id].delete();
+
+      await updateDoc(userRef, {
+        liked_song_list: likedSongsArray,
+      });
+
+      const songRef = doc(db, "Tracks", t.id);
+      const songDoc = await getDoc(songRef);
+      const currentLikes = songDoc.data().like_count || 0;
+
+      await updateDoc(songRef, {
+        like_count: currentLikes - 1,
+      });
+    }
+  };
+  const fetchIsLiked = async () => {
+    if (userID) {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+      const likedSongList = { ...(userData.liked_song_list || {}) };
+      if (likedSongList[t.id]) {
+        setIsLiked(true);
+      }
+    }
+  };
+  const fetchStars = async () => {
+    if (userID) {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+      const ratedSongList = { ...(userData.rated_song_list || {}) };
+      if (ratedSongList[t.id]) {
+        setRating(ratedSongList[t.id].rating);
+      }
+    }
+  };
+  useEffect(() => {
+    fetchStars();
+    fetchIsLiked();
+  }, []);
 
   return (
     <Flex
@@ -92,7 +214,13 @@ const MusicDetail = ({ t }) => {
         <Text fontSize="24px" fontWeight="w.600" lineHeight="120%">
           {t?.artists[0]}
         </Text>
-        <HStack mt={6} spacing={4}>
+        <HStack
+          width="100%"
+          mt={6}
+          spacing={4}
+          display="flex"
+          justifyContent="space-around"
+        >
           <Box
             display="flex"
             flexDirection="row"
@@ -104,7 +232,7 @@ const MusicDetail = ({ t }) => {
           >
             <Icon as={StarIcon} boxSize={6} />
             <Text fontSize="24px" fontWeight="bold">
-              7,4
+              {t.rating}
             </Text>
           </Box>
           <Box
@@ -118,9 +246,14 @@ const MusicDetail = ({ t }) => {
           >
             <Image src={heart} alt="Heart Icon" boxSize={6} />
             <Text fontSize="24px" fontWeight="bold">
-              142
+              {t.like_count}
             </Text>
           </Box>
+          <RatingStars
+            rating={rating}
+            onStarClick={handleStarClick}
+            onRateButtonClick={handleRateButtonClick}
+          />
         </HStack>
         <HStack mt={6} spacing={4}>
           <IconButton
@@ -136,10 +269,10 @@ const MusicDetail = ({ t }) => {
             borderRadius="15px"
             w="64px"
             h="64px"
-            bg="#33373b5e"
-            icon={<Image src={lined_heart} />}
-            _hover={{ bg: "#000" }}
-            onClick={likeSong}
+            bg={isLiked ? "#147040" : "#151c18"}
+            icon={<Image src={isLiked ? heart : lined_heart} />}
+            _hover={{ bg: isLiked ? "#085e32" : "#000" }}
+            onClick={isLiked ? unlikeSong : likeSong}
           />
           <IconButton
             borderRadius="15px"

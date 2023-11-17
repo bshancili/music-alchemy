@@ -135,7 +135,7 @@ const SignUp = () => {
       await setDoc(userDocRef, {
         username: formData.username,
         profile_picture_url: pic, // Assuming pic contains the URL of the profile picture
-        liked_songs_list: [], // An array to store liked songs
+        liked_song_list: [], // An array to store liked songs
         friends_list: [], // An array to store friends
         comments: [], // An array to store comments
         uid: userID,
