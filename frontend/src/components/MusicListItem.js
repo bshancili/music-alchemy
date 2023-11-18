@@ -23,7 +23,11 @@ const MusicListItem = ({ track }) => {
       onClick={handleItemClick}
     >
       <Image
-        src={track.album_images[0].url}
+        src={
+          track.album_images &&
+          track.album_images[0] &&
+          track.album_images[0].url
+        }
         alt="Album Cover"
         w="234px"
         h="213px"
@@ -54,7 +58,7 @@ const MusicListItem = ({ track }) => {
         fontWeight="w.300"
         color="white"
       >
-        {track.artists[0]}
+        {track.artists && track.artists[0]}
       </Text>
     </Box>
   );

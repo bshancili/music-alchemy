@@ -80,10 +80,22 @@ const SignUp = () => {
   };
 
   const passwordCheck = (password) => {
-    // returns true or false
-    if (password.lenght < 8) {
+    // Check if the password meets the criteria
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&=+#.,]).{8,}$/;
+
+    if (!regex.test(password)) {
+      toast({
+        title:
+          "Password must be at least 8 characters long, with at least one lowercase letter, one uppercase letter, and one special character (@$!%*?&=+#.,)",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
       return false;
     }
+
+    return true;
   };
 
   const handleSignUp = async () => {
@@ -114,7 +126,16 @@ const SignUp = () => {
       return;
     }
     if (!passwordCheck(formData.password)) {
-      // throw toast and return
+      toast({
+        title:
+          "Password must be at least 8 characters long, with at least one lowercase letter, one uppercase letter, and one special character (@$!%*?&=+#.,)",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+
+      // Password check failed, return without signing up
       return;
     }
     const userData = {
