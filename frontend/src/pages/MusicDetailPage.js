@@ -13,7 +13,7 @@ const MusicDetailPage = () => {
   );
 
   return (
-    <Box display="flex" flexDir="column">
+    <Box display="flex" flexDir="column" h="100vh" bg="#1D2123">
       <Header />
       <MusicDetail t={trackData} />
       <Comments />

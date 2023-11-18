@@ -50,7 +50,7 @@ function Profile({ user }) {
 
   const fetchUser = async () => {
     try {
-      const userDocRef = doc(db, "Users", "p1u0qWTtY4NgE0KWAO8wYKIX2t92");
+      const userDocRef = doc(db, "Users", userID);
       const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {
@@ -102,7 +102,7 @@ function Profile({ user }) {
 
   if (!user) {
     return (
-      <Container maxW="100%" bg="#1D2123">
+      <Container>
         <Box textAlign="center">
           <Spinner
             thickness="4px"

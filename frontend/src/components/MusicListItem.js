@@ -12,7 +12,6 @@ const MusicListItem = ({ track }) => {
   return (
     <Box
       maxW="234px"
-      borderWidth="1px"
       borderRadius="20px"
       overflow="hidden"
       position="relative"

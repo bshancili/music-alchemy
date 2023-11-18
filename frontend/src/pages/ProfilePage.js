@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Profile from "../components/Profile";
-import { Box, Button } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import useAuthStore from "../stores/authStore";
@@ -15,14 +15,14 @@ import {
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
-import { useParams } from "react-router-dom";
+
 function ProfilePage() {
-  const { userID } = useParams();
+  //const { userID } = useParams();
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const [tracks, setTracks] = useState([]);
 
-  //const { userID } = useAuthStore();
+  const { userID } = useAuthStore();
 
   const fetchUser = async () => {
     try {
@@ -68,7 +68,10 @@ function ProfilePage() {
       const trackSnap = await getDoc(trackRef);
 
       if (trackSnap.exists()) {
-        const trackDetails = trackSnap.data();
+        const trackDetails = {
+          id: trackSnap.id,
+          ...trackSnap.data(),
+        };
         console.log(trackDetails);
         return trackDetails;
       } else {
@@ -119,7 +122,7 @@ function ProfilePage() {
   }, []);
 
   return (
-    <Box display="flex" flexDirection="column" h="100vh">
+    <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">
       <Header />
       <Profile user={user} />
       <ProfileMusicList tracks={likedSongs} />
