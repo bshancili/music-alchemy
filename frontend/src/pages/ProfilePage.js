@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Profile from "../components/Profile";
-import { Box, Button } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import useAuthStore from "../stores/authStore";
@@ -15,7 +15,7 @@ import {
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
-import { useParams } from "react-router-dom";
+
 function ProfilePage() {
   //const { userID } = useParams();
   const [user, setUser] = useState();

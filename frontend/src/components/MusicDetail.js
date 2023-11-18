@@ -26,7 +26,7 @@ const MusicDetail = ({ t }) => {
   const [isLiked, setIsLiked] = useState(false);
   const toast = useToast();
   const [rating, setRating] = useState(0);
-
+  const [likeCount, setLikeCount] = useState(0);
   const handleStarClick = (star) => {
     setRating(star);
   };
@@ -60,6 +60,7 @@ const MusicDetail = ({ t }) => {
           (currentTrackRating * ratingCount - currentUserRating + rating) /
           ratingCount;
 
+        setRating(newRating.toFixed(1));
         await updateDoc(songRef, {
           rating: newRating.toFixed(1),
         });
@@ -139,7 +140,9 @@ const MusicDetail = ({ t }) => {
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || {};
 
-      await likedSongsArray[t.id].delete();
+      if (likedSongsArray[t.id]) {
+        delete likedSongsArray[t.id];
+      }
 
       await updateDoc(userRef, {
         liked_song_list: likedSongsArray,
@@ -165,7 +168,7 @@ const MusicDetail = ({ t }) => {
       }
     }
   };
-  const fetchStars = async () => {
+  const fetchStarsAndLikes = async () => {
     if (userID) {
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
@@ -175,11 +178,18 @@ const MusicDetail = ({ t }) => {
         setRating(ratedSongList[t.id].rating);
       }
     }
+    if (t.id) {
+      const trackRef = doc(db, "Tracks", t.id);
+      const trackDoc = await getDoc(trackRef);
+      const trackData = trackDoc.data();
+      const lC = trackData.like_count;
+      setLikeCount(lC);
+    }
   };
   useEffect(() => {
-    fetchStars();
+    fetchStarsAndLikes();
     fetchIsLiked();
-  }, []);
+  }, [likeSong, unlikeSong]);
 
   return (
     <Flex
@@ -246,7 +256,7 @@ const MusicDetail = ({ t }) => {
           >
             <Image src={heart} alt="Heart Icon" boxSize={6} />
             <Text fontSize="24px" fontWeight="bold">
-              {t.like_count}
+              {likeCount}
             </Text>
           </Box>
           <RatingStars
