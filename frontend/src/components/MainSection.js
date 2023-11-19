@@ -30,14 +30,12 @@ const MainSection = ({ topTracks }) => {
           lineHeight={1.3}
           mb={1.5}
           font-family="Quicksand"
-          font-size="24px"
-          font-weight="700"
           text-align="left"
         >
           Top Charts
         </Text>
         {topTracks.map((track) => (
-          <TopChartItem track={track} />
+          <TopChartItem track={track} key={track.id} />
         ))}
       </Flex>
     </Box>

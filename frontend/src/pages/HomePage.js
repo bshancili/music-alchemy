@@ -7,16 +7,18 @@ import Header from "../components/Header";
 import MainSection from "../components/MainSection";
 import HomePageMusicList from "../components/HomePageMusicList";
 import { db } from "../firebase";
-import { collection, getDocs, limit } from "firebase/firestore";
+import { collection, getDocs, limit, query } from "firebase/firestore";
 // Homepage component
 const Homepage = () => {
   const [allTracks, setAllTracks] = useState([]);
   const [visibleTracks, setVisibleTracks] = useState(50);
+
   const fetchAllTracks = async () => {
-    const tracksCollection = collection(db, "Tracks");
+    //const tracksCollection = collection(db, "Tracks");
+    const first = query(collection(db, "Tracks"), limit(12));
 
     try {
-      const snap = await getDocs(tracksCollection, limit(50));
+      const snap = await getDocs(first);
       const trackData = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -31,10 +33,6 @@ const Homepage = () => {
   };
   useEffect(() => {
     fetchAllTracks();
-  }, [visibleTracks]);
-
-  useEffect(() => {
-    console.log(allTracks);
   }, []);
 
   return (

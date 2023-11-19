@@ -5,22 +5,15 @@ import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
-import {
-  doc,
-  collection,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  updateDoc,
-  arrayUnion,
-} from "firebase/firestore";
+import { useParams } from "react-router-dom";
+
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 
 function ProfilePage() {
   //const { userID } = useParams();
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
-  const [tracks, setTracks] = useState([]);
+  const { id } = useParams();
 
   const { userID } = useAuthStore();
 
@@ -39,26 +32,6 @@ function ProfilePage() {
     } catch (error) {
       console.error("Error fetching user:", error);
       // Handle the error appropriately
-    }
-  };
-
-  const fetchPost = async (artistName = "") => {
-    const tracksCollection = collection(db, "Tracks");
-    //const q = query(tracksCollection, where("track_name", "==", trackName));
-    const q = query(
-      tracksCollection,
-      where("artists", "array-contains", artistName)
-    );
-
-    try {
-      const snap = await getDocs(q);
-      const trackData = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setTracks(trackData);
-    } catch (error) {
-      console.error("Error fetching tracks:", error);
     }
   };
 
@@ -95,7 +68,6 @@ function ProfilePage() {
           likedSongs.map((trackId) => fetchTrackDetails(trackId))
         );
 
-        console.log(tracksDetails);
         setLikedSongs(tracksDetails);
       }
     } catch (error) {}
@@ -117,8 +89,10 @@ function ProfilePage() {
   };
 
   useEffect(() => {
+    console.log(id);
+
     fetchUser();
-    fetchAllLikedSongs();
+    //fetchAllLikedSongs();
   }, []);
 
   return (

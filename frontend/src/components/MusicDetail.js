@@ -128,7 +128,8 @@ const MusicDetail = ({ t }) => {
       const songRef = doc(db, "Tracks", t.id);
       const songDoc = await getDoc(songRef);
       const currentLikes = songDoc.data().like_count || 0;
-
+      setLikeCount(likeCount + 1);
+      setIsLiked(true);
       await updateDoc(songRef, {
         like_count: currentLikes + 1,
       });
@@ -151,6 +152,8 @@ const MusicDetail = ({ t }) => {
       const songRef = doc(db, "Tracks", t.id);
       const songDoc = await getDoc(songRef);
       const currentLikes = songDoc.data().like_count || 0;
+      setLikeCount(likeCount - 1);
+      setIsLiked(false);
 
       await updateDoc(songRef, {
         like_count: currentLikes - 1,
@@ -186,10 +189,11 @@ const MusicDetail = ({ t }) => {
       setLikeCount(lC);
     }
   };
+
   useEffect(() => {
     fetchStarsAndLikes();
     fetchIsLiked();
-  }, [likeSong, unlikeSong]);
+  }, []);
 
   return (
     <Flex

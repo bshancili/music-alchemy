@@ -116,9 +116,12 @@ const Header = () => {
     }
   };
 
-  const handleResultClick = (result) => {
+  const handleResultClick = (result, type) => {
     // Implement what happens when a search result is clicked
     console.log("Clicked on result:", result);
+    if (type === "user") {
+      navigate(`/profile/${result.id}`);
+    }
   };
 
   return (
@@ -194,7 +197,7 @@ const Header = () => {
                 .map((userResult) => (
                   <MenuItem
                     key={userResult.id}
-                    onClick={() => handleResultClick(userResult)}
+                    onClick={() => handleResultClick(userResult, "user")}
                   >
                     <Flex
                       direction="column"
