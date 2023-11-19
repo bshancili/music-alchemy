@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 import Profile from "../components/Profile";
-import { Box } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
 
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 
 function ProfilePage() {
-  //const { userID } = useParams();
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const { id } = useParams();
-
   const { userID } = useAuthStore();
+  const isUserProfile = id === userID;
 
   const fetchUser = async () => {
     try {
-      const userDocRef = doc(db, "Users", userID);
+      const userDocRef = doc(db, "Users", id);
       const userSnap = await getDoc(userDocRef);
 
       if (userSnap.exists()) {
@@ -59,7 +64,7 @@ function ProfilePage() {
 
   const fetchAllLikedSongs = async () => {
     try {
-      const userDocRef = doc(db, "Users", userID);
+      const userDocRef = doc(db, "Users", id);
       const userSnap = await getDoc(userDocRef);
       if (userSnap) {
         const userData = userSnap.data();
@@ -78,7 +83,7 @@ function ProfilePage() {
       // Add friendUid to the current user's friend list
       const userDocRef = doc(db, "Users", userID);
       await updateDoc(userDocRef, {
-        friends_list: arrayUnion("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
+        friends_list: arrayUnion(id),
       });
 
       console.log("Friend added successfully!");
@@ -87,18 +92,37 @@ function ProfilePage() {
       throw error;
     }
   };
+  const unfriend = async () => {
+    try {
+      // Remove friendUid from the current user's friend list
+      const userDocRef = doc(db, "Users", userID);
+      await updateDoc(userDocRef, {
+        friends_list: arrayRemove(id),
+      });
 
+      console.log("Friend removed successfully!");
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      throw error;
+    }
+  };
   useEffect(() => {
     console.log(id);
 
     fetchUser();
-    //fetchAllLikedSongs();
-  }, []);
+    fetchAllLikedSongs();
+  }, [id]);
 
   return (
     <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">
       <Header />
-      <Profile user={user} />
+      <Profile
+        user={user}
+        onaddFriend={addFriend}
+        onunfriend={unfriend}
+        isUserProfile={isUserProfile}
+      />
+
       <ProfileMusicList tracks={likedSongs} />
     </Box>
   );

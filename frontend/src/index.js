@@ -20,7 +20,7 @@ root.render(
           <Route path="login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to={"login"} />} />
           <Route path="home" element={<HomePage />} />
-          <Route exact path="profile/:userID" element={<ProfilePage />} />
+          <Route exact path="profile/:id" element={<ProfilePage />} />
           <Route path="music/:id" element={<MusicDetailPage />} />
         </Routes>
       </ChakraProvider>

@@ -29,7 +29,7 @@ const MainSection = ({ topTracks }) => {
           fontWeight="bold"
           lineHeight={1.3}
           mb={1.5}
-          font-family="Quicksand"
+          fontFamily="Quicksand"
           text-align="left"
         >
           Top Charts

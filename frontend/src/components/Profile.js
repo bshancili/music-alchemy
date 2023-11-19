@@ -23,29 +23,17 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import settings from "../utils/settings.svg";
+import friend from "../utils/addFriend.png";
+import cross from "../utils/cross.png";
 
-function Profile({ user }) {
-  const [track, setTrack] = useState(null);
+function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
   const { userID } = useAuthStore();
 
-  const searchUserByUsername = async (username) => {
-    try {
-      const usersRef = collection(db, "Users");
-      const querySnapshot = await getDocs(
-        query(usersRef, where("username", "==", username))
-      );
-
-      const matchingUsers = [];
-      querySnapshot.forEach((doc) => {
-        const userData = doc.data();
-        matchingUsers.push({ uid: doc.id, ...userData });
-      });
-
-      return matchingUsers;
-    } catch (error) {
-      console.error("Error searching for user:", error);
-      throw error;
-    }
+  const handleAddFriend = () => {
+    onaddFriend();
+  };
+  const handleUnfriend = () => {
+    onunfriend();
   };
 
   const fetchUser = async () => {
@@ -63,36 +51,6 @@ function Profile({ user }) {
     } catch (error) {
       console.error("Error fetching user:", error);
       // Handle the error appropriately
-    }
-  };
-
-  const addFriend = async () => {
-    try {
-      // Add friendUid to the current user's friend list
-      const userDocRef = doc(db, "Users", user.uid);
-      await updateDoc(userDocRef, {
-        friends_list: arrayUnion("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
-      });
-
-      console.log("Friend added successfully!");
-    } catch (error) {
-      console.error("Error adding friend:", error);
-      throw error;
-    }
-  };
-
-  const removeFriend = async () => {
-    try {
-      // Add friendUid to the current user's friend list
-      const userDocRef = doc(db, "Users", userID);
-      await updateDoc(userDocRef, {
-        friend_list: arrayRemove("p1u0qWTtY4NgE0KWAO8wYKIX2t92"),
-      });
-
-      console.log("Friend deleted successfully!");
-    } catch (error) {
-      console.error("Error deleting  friend:", error);
-      throw error;
     }
   };
 
@@ -133,11 +91,41 @@ function Profile({ user }) {
         w="256px"
         borderRadius="9px"
       />
-      <Box pt={5}>
-        <Text fontSize="lg" fontWeight="bold">
-          {user?.username}
-        </Text>
-        <Text>@{user?.username}</Text>
+      <Box
+        pt={5}
+        display="flex"
+        flexDirection="column"
+        justifyContent={"space-between"}
+      >
+        <Box>
+          <Text fontSize="lg" fontWeight="bold">
+            {user?.username}
+          </Text>
+          <Text>@{user?.username}</Text>
+        </Box>
+        {isUserProfile ? null : (
+          <Box>
+            <IconButton
+              bg="#33373B5E"
+              _hover={{ bg: "#000" }}
+              color="#FFFFFF"
+              w="64px"
+              h="64px"
+              icon={<Image src={friend} />}
+              onClick={handleAddFriend}
+            />
+            <IconButton
+              ml={6}
+              bg="#33373B5E"
+              _hover={{ bg: "#000" }}
+              color="#FFFFFF"
+              w="64px"
+              h="64px"
+              icon={<Image src={cross} />}
+              onClick={handleUnfriend}
+            />
+          </Box>
+        )}
       </Box>
       <Spacer />
       <IconButton
