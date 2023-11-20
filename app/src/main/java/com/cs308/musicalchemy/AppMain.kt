@@ -33,10 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,10 +52,7 @@ import android.content.Intent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -72,6 +65,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.annotation.ExperimentalCoilApi
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
@@ -494,8 +488,6 @@ fun TopNav(navController: NavController) {
     }
 }
 
-
-
 @Composable
 fun CommonBottomBar(navController: NavController) {
     Row(
@@ -649,12 +641,13 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SongItemMusic(song: Song, navController: NavController) {
     Card(
         modifier = Modifier
             .height(290.dp) // Adjust the height as needed
-            .width(190.dp),
+            .width(185.dp),
         shape = RoundedCornerShape(20.dp),
         backgroundColor = Color(0xFF1A1E1F)
     ) {
@@ -670,13 +663,12 @@ fun SongItemMusic(song: Song, navController: NavController) {
                     painter = rememberImagePainter(data = it),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(190.dp)
+                        .size(185.dp)
                         .clip(shape = RoundedCornerShape(20.dp))
                         .clickable { navController.navigate("songDetail/${song.id}") },
                     contentScale = ContentScale.FillBounds
                 )
             }
-
             // Spacer to add some space between the image and text
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -699,6 +691,7 @@ fun SongItemMusic(song: Song, navController: NavController) {
 }
 
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SongItem(song: Song) {
     Card(
@@ -1292,8 +1285,6 @@ fun FriendProfileScreen(friendId: String, navController: NavController) {
 
 }
 
-
-
 //~~~~~~~~~~
 //~~~~~~~~~~SONGS~~~~~~~~~~
 //Song, SongViewModel, SongListScreen, SongListItem, SongDetailScreen
@@ -1328,8 +1319,6 @@ data class Song(
     @get:PropertyName("added_at") @set:PropertyName("added_at") var addedAt: Timestamp? = null
 )
 
-
-
 class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
@@ -1341,6 +1330,7 @@ class SongsViewModel : ViewModel() {
         loadSongs()
     }
 
+    //FIRESTORE DA BAZI RATINGLER STRING HALINDE O YÜZDEN ONLARI INTEGERA DONÜŞTÜRMEK GEREKİYOR
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
 
@@ -1348,17 +1338,30 @@ class SongsViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { documents ->
                 val songsList = documents.mapNotNull { documentSnapshot ->
-                    documentSnapshot.toObject(Song::class.java).apply {
-                        id = documentSnapshot.id
+                    try {
+                        val song = documentSnapshot.toObject(Song::class.java)
+                        song?.let {
+                            // Ensure "rating" is an integer
+                            it.rating = it.rating?.toString()?.toIntOrNull() ?: 0
+                            // Set the document ID
+                            it.id = documentSnapshot.id
+                            return@let it // Explicitly return the modified Song object
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SongsViewModel", "Error deserializing song", e)
+                        null
                     }
                 }
-                Log.d("SongsViewModel", "Songs loaded: ${songsList.size}")
+
                 _songs.value = songsList
             }
             .addOnFailureListener { exception ->
                 Log.e("SongsViewModel", "Error loading songs", exception)
             }
     }
+
+
+
 
     fun addSong(song: Song) {
         val db = FirebaseFirestore.getInstance()
@@ -1455,7 +1458,7 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
                 .collection("Users")
                 .document(userId)
 
-            val likedSongs = userDocument.get().await().get("liked_song_list") as? Map<String, Any>
+            val likedSongs = userDocument.get().await().get("liked_song_list") as? Map<*, *>
             isLiked.value = likedSongs?.containsKey(songId) ?: false
         }
     }
