@@ -22,13 +22,13 @@ const HomePageMusicList = () => {
     let queryOptions = query(
       collection(db, "Tracks"),
       limit(42),
-      orderBy("rating")
+      orderBy("rating", "desc")
     );
 
     if (startAfterDoc && !setLoading) {
       queryOptions = query(
         collection(db, "Tracks"),
-        orderBy("rating"),
+        orderBy("rating", "desc"),
         startAfter(startAfterDoc),
         limit(12)
       );

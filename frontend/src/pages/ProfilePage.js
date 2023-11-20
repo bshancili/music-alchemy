@@ -19,7 +19,8 @@ function ProfilePage() {
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const { id } = useParams();
-  const { userID } = useAuthStore();
+  //const { userID } = useAuthStore();
+  const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
   const toast = useToast();
   const fetchUser = async () => {

@@ -21,18 +21,21 @@ import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import RatingStars from "./RatingStars";
+
 const MusicDetail = ({ t }) => {
-  const { userID } = useAuthStore();
+  //const { userID } = useAuthStore();
   const [isLiked, setIsLiked] = useState(false);
   const toast = useToast();
   const [rating, setRating] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const handleStarClick = (star) => {
     setRating(star);
   };
-
+  const userID = localStorage.getItem("userID");
   const handleRateButtonClick = async () => {
-    if (userID) {
+    if (userID && !loading) {
+      setLoading(true);
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const userData = userDoc.data();
@@ -46,13 +49,6 @@ const MusicDetail = ({ t }) => {
       const timestamp = new Date();
 
       if (updatedRatedSongList[t.id]) {
-        toast({
-          title: `${t.track_name} is re-rated ${rating}`,
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom",
-        });
         const currentUserRating = updatedRatedSongList[t.id].rating;
         const currentTrackRating = trackData.rating;
         const ratingCount = trackData.rating_count;
@@ -69,14 +65,15 @@ const MusicDetail = ({ t }) => {
         await updateDoc(userRef, {
           rated_song_list: updatedRatedSongList,
         });
-      } else {
         toast({
-          title: `${t.track_name} has rated ${rating}`,
+          title: `${t.track_name} is re-rated ${rating}`,
           status: "success",
           duration: 5000,
           isClosable: true,
           position: "bottom",
         });
+        setLoading(false);
+      } else {
         // Calculate the new average rating
         const currentRating = trackData.rating || 0;
         const currentCount = trackData.rating_count || 0;
@@ -97,12 +94,21 @@ const MusicDetail = ({ t }) => {
         await updateDoc(userRef, {
           rated_song_list: updatedRatedSongList,
         });
+        toast({
+          title: `${t.track_name} has rated ${rating}`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+        setLoading(false);
       }
     }
   };
 
   const likeSong = async () => {
-    if (userID || !isLiked) {
+    if ((userID || !isLiked) && !loading) {
+      setLoading(true);
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || [];
@@ -133,10 +139,12 @@ const MusicDetail = ({ t }) => {
       await updateDoc(songRef, {
         like_count: currentLikes + 1,
       });
+      setLoading(false);
     }
   };
   const unlikeSong = async () => {
-    if (userID || isLiked) {
+    if ((userID || isLiked) && !loading) {
+      setLoading(true);
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);
       const likedSongsArray = userDoc.data().liked_song_list || {};
@@ -158,6 +166,7 @@ const MusicDetail = ({ t }) => {
       await updateDoc(songRef, {
         like_count: currentLikes - 1,
       });
+      setLoading(false);
     }
   };
   const fetchIsLiked = async () => {
