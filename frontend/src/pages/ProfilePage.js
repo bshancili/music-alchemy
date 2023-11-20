@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Profile from "../components/Profile";
-import { Box, Button } from "@chakra-ui/react";
+import { Box, useToast } from "@chakra-ui/react";
 import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import useAuthStore from "../stores/authStore";
@@ -21,7 +21,7 @@ function ProfilePage() {
   const { id } = useParams();
   const { userID } = useAuthStore();
   const isUserProfile = id === userID;
-
+  const toast = useToast();
   const fetchUser = async () => {
     try {
       const userDocRef = doc(db, "Users", id);
@@ -85,8 +85,18 @@ function ProfilePage() {
       await updateDoc(userDocRef, {
         friends_list: arrayUnion(id),
       });
+      const friendDocRef = doc(db, "Users", id);
+      await updateDoc(friendDocRef, {
+        friends_list: arrayUnion(userID),
+      });
 
-      console.log("Friend added successfully!");
+      toast({
+        title: "Friend Added Successfully!",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
     } catch (error) {
       console.error("Error adding friend:", error);
       throw error;
@@ -99,8 +109,17 @@ function ProfilePage() {
       await updateDoc(userDocRef, {
         friends_list: arrayRemove(id),
       });
-
-      console.log("Friend removed successfully!");
+      const friendDocRef = doc(db, "Users", id);
+      await updateDoc(friendDocRef, {
+        friends_list: arrayRemove(userID),
+      });
+      toast({
+        title: "Friend Removed Successfully!",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
     } catch (error) {
       console.error("Error removing friend:", error);
       throw error;
