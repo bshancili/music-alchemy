@@ -163,6 +163,8 @@ const SignUp = () => {
       });
 
       signup(userData, userID, token);
+      localStorage.setItem("userID", userID);
+
       navigate("/home");
     } catch (error) {
       toast({

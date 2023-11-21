@@ -29,7 +29,8 @@ import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import useAuthStore from "../stores/authStore";
 
 const Header = () => {
-  const { userID } = useAuthStore();
+  //const { userID } = useAuthStore();
+  const userID = localStorage.getItem("userID");
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);

@@ -1,5 +1,5 @@
 // Import necessary Chakra UI components
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import { Box, Button } from "@chakra-ui/react";
 // Import your image files
@@ -8,10 +8,11 @@ import MainSection from "../components/MainSection";
 import HomePageMusicList from "../components/HomePageMusicList";
 import { db } from "../firebase";
 import { collection, getDocs, limit, query } from "firebase/firestore";
-// Homepage component
+
 const Homepage = () => {
   const [allTracks, setAllTracks] = useState([]);
   const [visibleTracks, setVisibleTracks] = useState(50);
+  const observer = useRef();
 
   const fetchAllTracks = async () => {
     //const tracksCollection = collection(db, "Tracks");
@@ -39,12 +40,7 @@ const Homepage = () => {
     <Box h="100vh" bg="#1D2123" display="flex" flexDirection="column">
       <Header />
       <MainSection topTracks={allTracks.slice(0, 3)} />
-      <HomePageMusicList allTracks={allTracks} />
-      {allTracks.length < visibleTracks && (
-        <Button onClick={loadMoreTracks} mt={4} colorScheme="teal" size="lg">
-          Load More
-        </Button>
-      )}
+      <HomePageMusicList />
     </Box>
   );
 };

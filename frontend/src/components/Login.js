@@ -48,6 +48,7 @@ const Login = () => {
       const uid = response.user.uid.toString();
       const token = response._tokenResponse.idToken;
       login(userData, uid, token);
+      localStorage.setItem("userID", uid);
       navigate("/home");
     } catch (error) {
       toast({
