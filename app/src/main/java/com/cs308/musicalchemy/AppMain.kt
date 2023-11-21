@@ -1307,7 +1307,7 @@ data class Song(
     @get:PropertyName("liveness") @set:PropertyName("liveness") var liveness: Double? = 0.0,
     @get:PropertyName("loudness") @set:PropertyName("loudness") var loudness: Double? = 0.0,
     @get:PropertyName("mode") @set:PropertyName("mode") var mode: Int? = 0,
-    @get:PropertyName("rating") @set:PropertyName("rating") var rating: Int? = 0,
+    @get:PropertyName("rating") @set:PropertyName("rating") var rating: Double? = 0.0,
     @get:PropertyName("spotify_album_id") @set:PropertyName("spotify_album_id") var spotifyAlbumId: String? = "",
     @get:PropertyName("spotify_artist_id(s)") @set:PropertyName("spotify_artist_id(s)") var spotifyArtistIds: List<String>? = listOf(),
     @get:PropertyName("spotify_track_id") @set:PropertyName("spotify_track_id") var spotifyTrackId: String? = "",
@@ -1341,8 +1341,13 @@ class SongsViewModel : ViewModel() {
                         val song = documentSnapshot.toObject(Song::class.java)
                         song?.let {
                             // Ensure "rating" is an integer
-                            it.rating = it.rating?.toString()?.toIntOrNull() ?: 0
-                            // Set the document ID
+                            it.rating = try {
+                                it.rating?.toString()?.toDoubleOrNull() ?: 0.0
+                            } catch (e: NumberFormatException) {
+                                // Log an error if the conversion fails
+                                Log.e("SongsViewModel", "Error converting rating to double for song ${it.id}", e)
+                                0.0 // Default to 0.0 in case of an error
+                            }
                             it.id = documentSnapshot.id
                             return@let it // Explicitly return the modified Song object
                         }
@@ -1628,7 +1633,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                                 .padding(0.dp)
                                 .size(24.dp),
                         )
-                        val rating: Int? = song?.rating
+                        val rating: Double? = song?.rating
 
                         if (rating != null) {
                             Text(
@@ -1640,7 +1645,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                                     color = Color(0xFFFFFFFF)
                                 ),
                                 modifier = Modifier
-                                    .width(32.dp),
+                                    .fillMaxWidth(),
                             )
                         }
                     }
