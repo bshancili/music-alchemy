@@ -33,6 +33,8 @@ const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
       handleSearch();
@@ -114,6 +116,8 @@ const Header = () => {
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
+
+    setIsSearchActive(true);
   };
 
   const handleResultClick = (result, type) => {
@@ -122,6 +126,8 @@ const Header = () => {
     if (type === "user") {
       navigate(`/profile/${result.id}`);
     }
+
+    setIsSearchActive(false);
   };
 
   return (
@@ -246,7 +252,37 @@ const Header = () => {
                     key={songResult.id}
                     onClick={() => handleResultClick(songResult)}
                   >
-                    <MusicListItem track={songResult} />
+                    <Flex
+                      direction="column"
+                      align="center"
+                      p={1}
+                      bg="#1A1E1F"
+                      borderRadius="md"
+                      boxShadow="md"
+                      cursor="pointer"
+                      transition="transform 0.2s"
+                      _hover={{ transform: "scale(1.05)" }}
+                      position="relative"
+                    >
+                      {/* Category label for "Song" */}
+                      <Text
+                        position="absolute"
+                        top={2}
+                        left={2}
+                        fontSize="xs"
+                        fontWeight="bold"
+                        color="white"
+                        zIndex={1}
+                        bg="#1A1E1F" // Set the correct background color
+                        px={2} // Add some padding for better visibility
+                        borderRadius="md" // Set border radius
+                      >
+                        Song
+                      </Text>
+
+                      {/* Use the existing MusicListItem component without modification */}
+                      <MusicListItem track={songResult} />
+                    </Flex>
                   </MenuItem>
                 ))}
             </SimpleGrid>
