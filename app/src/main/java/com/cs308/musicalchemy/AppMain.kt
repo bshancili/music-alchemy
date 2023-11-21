@@ -267,6 +267,7 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("screen1") { Screen1(navController) }
         composable("screen2") { Screen2(navController) }
+        composable("search") { Search(navController) }
         composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
@@ -517,7 +518,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { /* Handle click if needed */ }
+                .clickable { navController.navigate("search") }
         )
 
         Image(
@@ -787,6 +788,42 @@ fun Screen2(navController: NavController) {
         }
     }
 }
+
+@Composable
+fun Search(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        TopNav(navController = navController)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Search Input Field
+        var searchText by remember { mutableStateOf("") }
+        TextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Search...") },
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                textColor = Color.White
+            )
+        )
+
+        // You can add more search-related components here
+
+        // Fill the remaining space before the bottom bar
+        Spacer(modifier = Modifier.weight(1f))
+
+        CommonBottomBar(navController = navController)
+    }
+}
+
+
 
 
 
