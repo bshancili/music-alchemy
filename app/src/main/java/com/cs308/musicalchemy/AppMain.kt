@@ -57,7 +57,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -278,12 +281,11 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("songs") { SongListScreen(navController) }
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
-            SongDetailScreen(songId = backStackEntry.arguments?.getString("songId") ?: "")
+            SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
         composable("likedSongs") { LikedSongsScreen(navController) }
     }
 }
-
 
 //~~~~~~~~~~
 //~~~~~AUTHENTICATION~~~~~
@@ -450,7 +452,7 @@ fun TopNav(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { navController.navigate("addSong")  }
+                .clickable { navController.navigate("addSong") }
         )
 
         Box(
@@ -506,7 +508,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { navController.navigate("mainMenu")  }
+                .clickable { navController.navigate("mainMenu") }
         )
 
         Image(
@@ -540,9 +542,6 @@ fun CommonBottomBar(navController: NavController) {
         )
     }
 }
-
-
-
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
@@ -1316,7 +1315,8 @@ data class Song(
     @get:PropertyName("tempo") @set:PropertyName("tempo") var tempo: Double? = 0.0,
     @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = "",
     @get:PropertyName("valence") @set:PropertyName("valence") var valence: Double? = 0.0,
-    @get:PropertyName("added_at") @set:PropertyName("added_at") var addedAt: Timestamp? = null
+    @get:PropertyName("added_at") @set:PropertyName("added_at") var addedAt: Timestamp? = null,
+    @get:PropertyName("like_count") @set:PropertyName("like_count") var likeCount: Int? = 0,
 )
 
 class SongsViewModel : ViewModel() {
@@ -1330,7 +1330,7 @@ class SongsViewModel : ViewModel() {
         loadSongs()
     }
 
-    //FIRESTORE DA BAZI RATINGLER STRING HALINDE O YÜZDEN ONLARI INTEGERA DONÜŞTÜRMEK GEREKİYOR
+    //FIRESTORE'DA BAZI RATINGLER STRING HALINDE O YÜZDEN ONLARI INTEGERA DONÜŞTÜRMEK GEREKİYOR
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
 
@@ -1417,31 +1417,66 @@ private fun addLikedSongToFirestore(userId: String, songId: String) {
         .collection("Users")
         .document(userId)
 
-    val likedSongs = mapOf(
-        songId to mapOf(
-            "timestamp" to FieldValue.serverTimestamp()
-        )
-    )
+    // Use a transaction to increment the like_count field
+    Firebase.firestore.runTransaction { transaction ->
+        val songDocument = Firebase.firestore
+            .collection("Tracks")
+            .document(songId)
 
-    // Use set with merge option to create or update the liked_song_list field
-    userDocument.set(mapOf("liked_song_list" to likedSongs), SetOptions.merge())
+        // Get the current like_count value
+        val currentLikes = transaction.get(songDocument).get("like_count") as? Long ?: 0
+
+        // Increment the like_count by 1
+        val newLikes = currentLikes + 1
+
+        // Update the like_count field
+        transaction.update(songDocument, "like_count", newLikes)
+
+        // Update the liked_song_list field in the user's document
+        val likedSongs = mapOf(
+            songId to mapOf(
+                "timestamp" to FieldValue.serverTimestamp()
+            )
+        )
+
+        transaction.set(userDocument, mapOf("liked_song_list" to likedSongs), SetOptions.merge())
+
+        // Return the new like_count value
+        newLikes
+    }
 }
+
 
 private fun removeLikedSongFromFirestore(userId: String, songId: String) {
     val userDocument = Firebase.firestore
         .collection("Users")
         .document(userId)
 
-    // Use FieldValue.delete() to remove the specific song from the liked_song_list map
-    userDocument.update("liked_song_list.$songId", FieldValue.delete())
+    // Use a transaction to decrement the like_count field
+    Firebase.firestore.runTransaction { transaction ->
+        val songDocument = Firebase.firestore
+            .collection("Tracks")
+            .document(songId)
+
+        // Get the current like_count value
+        val currentLikes = transaction.get(songDocument).get("like_count") as? Long ?: 0
+
+        // Ensure the like_count doesn't go below 0
+        val newLikes = if (currentLikes > 0) currentLikes - 1 else 0
+
+        // Update the like_count field
+        transaction.update(songDocument, "like_count", newLikes)
+
+        // Remove the song from the liked_song_list field in the user's document
+        transaction.update(userDocument, "liked_song_list.$songId", FieldValue.delete())
+
+        // Return the new like_count value
+        newLikes
+    }
 }
 
-
-
-
-
 @Composable
-fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
+fun SongDetailScreen(navController: NavController, songId: String, viewModel: SongsViewModel = viewModel()) {
 
 
     val songs by viewModel.songs.observeAsState(initial = emptyList())
@@ -1451,6 +1486,24 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
 
     // State to track whether the song is liked or not
     val isLiked = remember { mutableStateOf(false) }
+
+    val onLikeClick: () -> Unit = {
+        val user = Firebase.auth.currentUser
+        val userId = user?.uid
+
+        if (userId != null) {
+            if (isLiked.value) {
+                // Remove the song from liked songs
+                removeLikedSongFromFirestore(userId, songId)
+            } else {
+                // Add the song to liked songs
+                addLikedSongToFirestore(userId, songId)
+            }
+
+            // Toggle the liked status
+            isLiked.value = !isLiked.value
+        }
+    }
 
     LaunchedEffect(userId) {
         if (userId != null) {
@@ -1462,78 +1515,316 @@ fun SongDetailScreen(songId: String, viewModel: SongsViewModel = viewModel()) {
             isLiked.value = likedSongs?.containsKey(songId) ?: false
         }
     }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+    ) {
+        TopNav(navController = navController)
 
+        Spacer(modifier = Modifier.height(16.dp))
 
-
-    song?.let { songDetail ->
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
-            Text("Artist(s): ${songDetail.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
-            Text("Album Name: ${songDetail.albumName ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
-        }
-        fun Double?.format(digits: Int) = this?.let { "%.${digits}f".format(this) }
-
-        fun formatPercentage(value: Double?) = value?.let { "${(it * 100).format(1)}%" } ?: "Unknown"
-
-        fun formatLength(lengthInSeconds: Double?) = lengthInSeconds?.let { "${it.toInt()} sec" } ?: "Unknown"
-
-        fun formatMode(mode: Int?) = when(mode) {
-            0 -> "Minor"
-            1 -> "Major"
-            else -> "Unknown"
-        }
-
-        fun formatTimestamp(timestamp: Timestamp?) = timestamp?.toDate()?.toString() ?: "Unknown"
-
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Track Name: ${songDetail.trackName ?: "Unknown"}", style = MaterialTheme.typography.h5)
-            Text("Artist(s): ${songDetail.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
-            Text("Album Name: ${songDetail.albumName ?: "Unknown"}", style = MaterialTheme.typography.subtitle1)
-            Text("Album Type: ${songDetail.albumType ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Release Date: ${songDetail.albumReleaseDate ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Danceability: ${formatPercentage(songDetail.danceability)}", style = MaterialTheme.typography.body1)
-            Text("Energy: ${formatPercentage(songDetail.energy)}", style = MaterialTheme.typography.body1)
-            Text("Instrumentalness: ${formatPercentage(songDetail.instrumentalness)}", style = MaterialTheme.typography.body1)
-            Text("Key: ${songDetail.key ?: "Unknown"}", style = MaterialTheme.typography.body1)
-            Text("Length: ${formatLength(songDetail.lengthInSeconds)}", style = MaterialTheme.typography.body1)
-            Text("Liveness: ${formatPercentage(songDetail.liveness)}", style = MaterialTheme.typography.body1)
-            Text("Loudness: ${songDetail.loudness ?: "Unknown"} dB", style = MaterialTheme.typography.body1)
-            Text("Mode: ${formatMode(songDetail.mode)}", style = MaterialTheme.typography.body1)
-            Text("Tempo: ${songDetail.tempo?.format(2) ?: "Unknown"} BPM", style = MaterialTheme.typography.body1)
-            Text("Valence: ${formatPercentage(songDetail.valence)}", style = MaterialTheme.typography.body1)
-            Text("Added At: ${formatTimestamp(songDetail.addedAt)}", style = MaterialTheme.typography.body1)
-
-        }
-
-    }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-
-            song.let {
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Button(
-                    onClick = {
-                        userId?.let { uid ->
-                            isLiked.value = !isLiked.value
-                            if (isLiked.value) {
-                                addLikedSongToFirestore(uid, songId)
-                            } else {
-                                removeLikedSongFromFirestore(uid, songId)
-                            }
-                        }
-                    },
+        Column( modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .weight(1f) // Takes up all available vertical space
+        ){
+            val imageUrl: String? = song?.albumImages?.firstOrNull()?.get("url") as? String
+            imageUrl?.let {
+                Image(
+                    painter = rememberImagePainter(data = it),
+                    contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                ) {
-                    Text(if (isLiked.value) "Unlike" else "Like")
+                        .aspectRatio(1f)
+                        .clip(shape = RoundedCornerShape(20.dp))
+                        .align(CenterHorizontally),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val albumName: String? = song?.albumName
+
+            if (albumName != null) {
+                Text(
+                    text = albumName,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight(600),
+                        color = Color(0x80FFFFFF),
+                    ),
+                    modifier = Modifier
+                        .width(211.dp),
+                )
+            }
+
+            val trackName: String? = song?.trackName
+
+            if (trackName != null) {
+                Text(
+                    text = trackName,
+                    style = TextStyle(
+                        fontSize = 48.sp,
+                        lineHeight = 48.sp,
+                        fontWeight = FontWeight(700),
+                        color = Color(0xFFFFFFFF)
+                    ),
+                    modifier = Modifier
+                        .width(327.dp),
+                )
+            }
+
+            val artists = song?.artists
+
+            if (artists != null) {
+                Column{
+                    artists.forEach { artist ->
+                        Text(
+                            text = artist,
+                            style = TextStyle(
+                                fontSize = 24.sp,
+                                lineHeight = 24.sp,
+                                fontWeight = FontWeight(300),
+                                color = Color(0xFFFFFFFF),
+                            ),
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .width(327.dp),
+                        )
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(106.22222.dp)
+                        .height(64.dp)
+                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.Start),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(66.38889.dp)
+                            .align(Center),
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.icon),
+                            contentDescription = "icon",
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier
+                                .padding(0.dp)
+                                .size(24.dp),
+                        )
+                        val rating: Int? = song?.rating
+
+                        if (rating != null) {
+                            Text(
+                                text = rating.toString(),
+                                style = TextStyle(
+                                    fontSize = 24.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(600),
+                                    color = Color(0xFFFFFFFF)
+                                ),
+                                modifier = Modifier
+                                    .width(32.dp),
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(106.22222.dp)
+                        .height(64.dp)
+                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(70.81482.dp)
+                            .align(Center),
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.heart),
+                            contentDescription = "heart",
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier
+                                .padding(1.dp)
+                                .size(24.dp),
+                        )
+                        val likeCount: Int? = song?.likeCount
+
+                        if (likeCount != null) {
+                            Text(
+                                text = likeCount.toString(),
+                                style = TextStyle(
+                                    fontSize = 24.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(600),
+                                    color = Color(0xFFFFFFFF)
+                                ),
+                                modifier = Modifier
+                                    .padding(bottom = 4.dp)
+                                    .width(36.dp),
+                            )
+                        }
+                    }
+                }
+
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(152.dp)
+                        .height(64.dp)
+                        .background(color = Color(0xFF1DB954), shape = RoundedCornerShape(size = 15.dp))
+                ){
+                    Image(
+                        painter = painterResource(id = R.drawable.spotify_logo),
+                        contentDescription = "spotifylogo",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .offset(x = 12.dp, y = 13.dp)
+                            .width(128.dp)
+                            .height(38.dp),
+                    )
+                }
+
+                if(isLiked.value) {
+                    Image(
+                        painter = painterResource(id = R.drawable.likedbutton),
+                        contentDescription = "likebutton",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .clickable { onLikeClick() }
+                            .padding(0.dp)
+                            .width(64.dp)
+                            .height(64.dp),
+                    )
+                }
+                else{
+                    Image(
+                        painter = painterResource(id = R.drawable.likebutton),
+                        contentDescription = "likebutton",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .clickable { onLikeClick() }
+                            .padding(0.dp)
+                            .width(64.dp)
+                            .height(64.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ){
+                Image(
+                    painter = painterResource(id = R.drawable.plus),
+                    contentDescription = "plus",
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .padding(0.dp)
+                        .width(64.dp)
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable{},
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.comment),
+                    contentDescription = "comment",
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .padding(0.dp)
+                        .width(64.dp)
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable{},
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.share),
+                    contentDescription = "share",
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .padding(0.dp)
+                        .width(64.dp)
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable{},
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.save),
+                    contentDescription = "save",
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier
+                        .padding(0.dp)
+                        .width(64.dp)
+                        .aspectRatio(1f)
+                        .weight(1f)
+                        .clickable{},
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Comments",
+                style = TextStyle(
+                    fontSize = 35.sp,
+                    lineHeight = 42.sp,
+                    fontWeight = FontWeight(700),
+                    color = Color(0xFFFFFFFF),
+                )
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            //Place Holder Comment Boxes
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp)
+                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+            ){}
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp)
+                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+            ){}
         }
+
+        CommonBottomBar(navController = navController)
+
     }
+}
+

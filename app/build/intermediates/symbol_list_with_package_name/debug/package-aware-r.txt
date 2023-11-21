@@ -101,6 +101,7 @@ dimen notification_subtext_size
 dimen notification_top_pad
 dimen notification_top_pad_large_text
 drawable abc_vector_test
+drawable comment
 drawable common_full_open_on_phone
 drawable common_google_signin_btn_icon_dark
 drawable common_google_signin_btn_icon_dark_focused
@@ -125,6 +126,7 @@ drawable googleg_disabled_color_18
 drawable googleg_standard_color_18
 drawable group10
 drawable group11
+drawable heart
 drawable home
 drawable ic_apple
 drawable ic_call_answer
@@ -134,6 +136,9 @@ drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
 drawable ic_google
+drawable icon
+drawable likebutton
+drawable likedbutton
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low
@@ -147,9 +152,13 @@ drawable notification_template_icon_bg
 drawable notification_template_icon_low_bg
 drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
+drawable plus
 drawable profile_placeholder
 drawable recommendation
+drawable save
 drawable search
+drawable share
+drawable spotify_logo
 font moon_font
 font my_custom_font
 font quantico
