@@ -804,9 +804,17 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         Spacer(modifier = Modifier.height(16.dp))
 
         var searchText by remember { mutableStateOf("") }
+
+        // TextField for search input
         TextField(
             value = searchText,
-            onValueChange = { searchText = it },
+            onValueChange = { newSearchText ->
+                // Update the searchText as the user types
+                searchText = newSearchText
+
+                // Load songs dynamically when the search text changes
+                viewModel.loadSongsWithSubstring(newSearchText)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -822,16 +830,6 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                 unfocusedIndicatorColor = Color.Transparent
             )
         )
-
-        // Search Button
-        Button(
-            onClick = { viewModel.loadSongsWithSubstring(searchText) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            Text("Search")
-        }
 
         // Results Section
         val songs by viewModel.songs.observeAsState(initial = emptyList())
@@ -853,10 +851,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     }
                 }
             }
-
         }
-
-
 
         CommonBottomBar(navController = navController)
     }
