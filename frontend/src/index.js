@@ -12,20 +12,18 @@ import MusicDetailPage from "./pages/MusicDetailPage";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ChakraProvider>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="*" element={<Navigate to={"login"} />} />
-          <Route path="home" element={<HomePage />} />
-          <Route exact path="profile/:id" element={<ProfilePage />} />
-          <Route path="music/:id" element={<MusicDetailPage />} />
-        </Routes>
-      </ChakraProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <ChakraProvider>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to={"login"} />} />
+        <Route path="home" element={<HomePage />} />
+        <Route exact path="profile/:id" element={<ProfilePage />} />
+        <Route path="music/:id" element={<MusicDetailPage />} />
+      </Routes>
+    </ChakraProvider>
+  </BrowserRouter>
 );
 
 // If you want to start measuring performance in your app, pass a function
