@@ -1,87 +1,85 @@
 //Package and imports
 package com.cs308.musicalchemy
+
+
 import android.app.Activity
 import android.app.Application
 import android.content.ContentValues.TAG
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Button
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.activity.ComponentActivity
-import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.google.firebase.FirebaseApp
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.sp
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.lightColors
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import androidx.compose.runtime.livedata.observeAsState
 import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
-import coil.compose.rememberImagePainter
-
-
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
@@ -136,7 +134,6 @@ fun Logo(modifier: Modifier = Modifier) {
 //Main App, Main Activity, App
 
 class MainApp : Application() {
-
     override fun onCreate() {
 
         if (FirebaseApp.getApps(this).isEmpty()) {
@@ -146,10 +143,93 @@ class MainApp : Application() {
         else {
             Log.d("MainApp", "Firebase already initialized")
         }
+
+        initializeUserFields()
+
+
         super.onCreate()
     }
-
 }
+
+private fun initializeUserFields() {
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+    val userId = auth.currentUser?.uid
+
+    if (userId != null) {
+        val userRef = db.collection("Users").document(userId)
+
+        userRef.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                if (document != null && document.exists()) {
+                    // User document exists, check and complete unavailable fields
+                    Log.d("MainApp", "User document already exists for UID: $userId")
+
+                    val comments = document.get("comments") as? List<String> ?: emptyList()
+                    val friendsList = document.get("friends_list") as? List<String> ?: emptyList()
+                    val likedSongList = document.get("liked_song_list") as? Map<String, Any> ?: emptyMap()
+                    val ratedSongList = document.get("rated_song_list") as? Map<String, Any> ?: emptyMap()
+                    val profilePictureUrl = document.getString("profile_picture_url")
+                    val uid = document.getString("uid")
+                    val username = document.getString("username")
+
+                    // Check and complete unavailable fields
+                    if (comments.isEmpty()) {
+                        userRef.update("comments", arrayListOf<String>())
+                    }
+                    if (friendsList.isEmpty()) {
+                        userRef.update("friends_list", arrayListOf<String>())
+                    }
+                    if (likedSongList.isEmpty()) {
+                        userRef.update("liked_song_list", hashMapOf<String, Any>())
+                    }
+                    if (ratedSongList.isEmpty()) {
+                        userRef.update("rated_song_list", hashMapOf<String, Any>())
+                    }
+                    if (uid == null) {
+                        userRef.update("uid", userId)
+                    }
+                    if (username == null) {
+                        userRef.update("username", "default_username")
+                    }
+                    if (profilePictureUrl == null) {
+                        userRef.update("profile_picture_url", "http://res.cloudinary.com/ddjyxzbjg/image/upload/v1699788333/pgreicq1gxpo5pbpgnib.png")
+                    }
+                } else {
+                    // User document does not exist, initialize fields
+                    Log.d("MainApp", "Initializing user document for UID: $userId")
+                    val initialData = hashMapOf(
+                        "comments" to arrayListOf<String>(),
+                        "friends_list" to arrayListOf<String>(),
+                        "liked_song_list" to hashMapOf<String, Any>(),
+                        "rated_song_list" to hashMapOf<String, Any>(),
+                        "uid" to userId,
+                        "username" to "default_username",
+                        "profile_picture_url" to "http://res.cloudinary.com/ddjyxzbjg/image/upload/v1699788333/pgreicq1gxpo5pbpgnib.png"
+                    )
+
+                    // Set the initial data in the Firestore document
+                    userRef.set(initialData)
+                        .addOnSuccessListener {
+                            Log.d("MainApp", "User document initialized successfully for UID: $userId")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("MainApp", "Failed to initialize user document for UID: $userId", e)
+                        }
+                }
+            } else {
+                Log.e("MainApp", "Failed to get user document for UID: $userId", task.exception)
+            }
+        }
+    } else {
+        Log.w("MainApp", "User ID is null. Unable to initialize user fields.")
+    }
+}
+
+
+
+
 object AuthStateManager {
     var isAuthenticated = mutableStateOf(false)
 }
@@ -259,6 +339,7 @@ fun App(startGoogleSignIn: () -> Unit) {
     MainActivity()
     NavHost(navController, startDestination = "initialMenu") {
 
+
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") {
@@ -282,7 +363,6 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
-        composable("likedSongs") { LikedSongsScreen(navController) }
     }
 }
 
@@ -298,7 +378,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = CenterHorizontally
     ) {
         Logo()
         Button(
@@ -370,7 +450,7 @@ fun SignUpScreen(navController: NavController) {
         modifier = Modifier
             .background(color = MaterialTheme.colors.background)
             .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Center
         )
     {
@@ -408,7 +488,7 @@ fun LoginScreen(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = CenterHorizontally
     ) {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
@@ -613,61 +693,39 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Use LazyColumn with itemsInRow for the two-column layout
-        LazyColumn(
+        LazyVerticalGrid(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f) // Takes up the available space
-                .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp)),
-        ) {
-            items(songs.windowed(2, step = 2, partialWindows = true)) { rowSongs ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(290.dp)
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (song in rowSongs) {
-                        SongItemMusic(song = song, navController = navController)
-                    }
+                .weight(1f), // Adjust padding as needed
+            columns = GridCells.Fixed(2),
+            content = {
+                items(songs ?: emptyList()) { songs ->
+                    DisplaySong(song = songs, navController = navController)
                 }
             }
-        }
+        )
 
         CommonBottomBar(navController = navController)
     }
 }
 
-@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun SongItemMusic(song: Song, navController: NavController) {
-    Card(
-        modifier = Modifier
-            .height(290.dp) // Adjust the height as needed
-            .width(185.dp),
-        shape = RoundedCornerShape(20.dp),
-        backgroundColor = Color(0xFF1A1E1F)
-    ) {
+fun DisplaySong(song: Song, navController: NavController) {
+    val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
+    imageUrl?.let {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)
+                .clickable { navController.navigate("songDetail/${song.id}") }
+                .padding(bottom = 24.dp)
         ) {
-            // Album Image
-            val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
-            imageUrl?.let {
-                Image(
-                    painter = rememberImagePainter(data = it),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(185.dp)
-                        .clip(shape = RoundedCornerShape(20.dp))
-                        .clickable { navController.navigate("songDetail/${song.id}") },
-                    contentScale = ContentScale.FillBounds
-                )
-            }
-            // Spacer to add some space between the image and text
+            // Image
+            Image(
+                painter = rememberImagePainter(data = it),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(185.dp)
+                    .clip(shape = RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.FillBounds
+            )
             Spacer(modifier = Modifier.height(8.dp))
 
             // Text for track name
@@ -677,7 +735,6 @@ fun SongItemMusic(song: Song, navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
-
             // Text for artist
             Text(
                 text = "${song.artists}",
@@ -687,8 +744,6 @@ fun SongItemMusic(song: Song, navController: NavController) {
         }
     }
 }
-
-
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SongItem(song: Song) {
@@ -762,7 +817,7 @@ fun Screen1(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding), // Apply the innerPadding here
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text("This is the Screen 1")
@@ -780,7 +835,7 @@ fun Screen2(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding), // Apply the innerPadding here
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text("This is the Screen 2")
@@ -818,7 +873,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                 .padding(innerPadding)
                 .padding(horizontal = 8.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             OutlinedTextField(value = trackName, onValueChange = { trackName = it }, label = { Text("Track Name") })
@@ -877,7 +932,7 @@ fun SettingsScreen(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = CenterHorizontally
     ) {
         Text(text = "Settings", style = MaterialTheme.typography.h4)
 
@@ -913,6 +968,7 @@ data class FriendData(
     val profilePictureUrl: String
 )
 
+
 @Composable
 fun ProfileScreen(navController: NavController) {
     val viewModel: ProfileViewModel = viewModel()
@@ -920,72 +976,158 @@ fun ProfileScreen(navController: NavController) {
     var newUsername by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     val currentUsername by viewModel.username.observeAsState("Unknown")
+    val profilePictureUrl by viewModel.profilePictureURL.observeAsState("Unknown")
     val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
+
     LaunchedEffect(user?.uid) {
         viewModel.fetchUsername(user?.uid ?: "")
+        viewModel.fetchProfilePictureURL(user?.uid ?: "")
         viewModel.fetchLikedSongs(user?.uid ?: "")
     }
 
-    Column(modifier = Modifier
-        .padding(16.dp)
-        .fillMaxSize()) {
-        // User's current username
-        Text("Current Username: $currentUsername", style = MaterialTheme.typography.h6)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+    ) {
+        TopNav(navController = navController)
 
-        // Input field for new username
-        OutlinedTextField(
-            value = newUsername,
-            onValueChange = { newUsername = it },
-            label = { Text("New Username") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Button to update username
-        Button(
-            onClick = { viewModel.updateUsername(user?.uid ?: "", newUsername) },
-            modifier = Modifier.padding(top = 8.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                 // Takes up all available vertical space
         ) {
-            Text("Update Username")
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Divider()
+            Image(
+                painter = rememberImagePainter(data = profilePictureUrl),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 49.dp, end = 49.dp, top = 12.dp)
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp))
+                    .align(CenterHorizontally),
+                contentScale = ContentScale.FillBounds
+            )
 
-        // Field to add a friend's username
-        var friendUsername by remember { mutableStateOf("") }
-        TextField(
-            value = friendUsername,
-            onValueChange = { friendUsername = it },
-            label = { Text("Friend's Username") }
-        )
-        Button(onClick = { viewModel.addFriend(user?.uid ?: "", friendUsername) }) {
-            Text("Add Friend")
-        }
+            Spacer(modifier = Modifier.height(6.dp))
 
-        Divider()
 
-        // Friends list
-        FriendsList(friendsList, navController)
-        Text("Liked Songs", style = MaterialTheme.typography.h6)
-        LazyColumn {
-            items(likedSongs) { song ->
-                SongListItem(song) {
-                    // Handle song item click
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 49.dp, end = 49.dp)
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = currentUsername,
+                    style = TextStyle(
+                        fontSize = 36.sp,
+                        lineHeight = 43.2.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 49.dp, end = 49.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "@" + currentUsername,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 28.8.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0x80FFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row{
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier= Modifier
+                        .width(90.dp)
+                        .height(37.dp)
+                        .background(
+                            color = Color(0xFFFACD66),
+                            shape = RoundedCornerShape(size = 27.dp)
+                        )
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                        .clickable { },
+                ){
+                    Text(
+                        text = "Collection",
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            lineHeight = 16.8.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF1D2123),
+                            textAlign = TextAlign.Center
+                        ),
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier= Modifier
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFEFEEE0),
+                            shape = RoundedCornerShape(size = 27.dp)
+                        )
+                        .width(90.dp)
+                        .height(37.dp)
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                        .clickable { },
+                ){
+                    Text(
+                        text = "Lists",
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            lineHeight = 16.8.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFFEFEEE0),
+                            textAlign = TextAlign.Center
+                        ),
+                    )
                 }
             }
-        }
 
-        Button(
-            onClick = { navController.navigate("likedSongs") },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("View Liked Songs")
-        }
+            Spacer(modifier = Modifier.height(24.dp))
 
+            LazyVerticalGrid(
+                modifier = Modifier
+                    .weight(1f), // Adjust padding as needed
+                columns = GridCells.Fixed(2),
+                content = {
+                    items(likedSongs ?: emptyList()) { likedsongs ->
+                        DisplaySong(song = likedsongs, navController = navController)
+                    }
+                }
+            )
+
+            CommonBottomBar(navController = navController)
+        }
     }
-
 }
+
+
 
 
 //~~~~~~~~~~
@@ -999,6 +1141,8 @@ class ProfileViewModel : ViewModel() {
     val username: LiveData<String> = _username
     private val _likedSongs = MutableLiveData<List<Song>>()
     val likedSongs: LiveData<List<Song>> = _likedSongs
+    private val _profilePictureURL = MutableLiveData<String>()
+    val profilePictureURL: LiveData<String> = _profilePictureURL
 
     init {
         val currentUser = Firebase.auth.currentUser
@@ -1016,25 +1160,44 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    fun fetchProfilePictureURL(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            _profilePictureURL.value =
+                documentSnapshot["profile_picture_url"] as? String ?: "Unknown"
+        }
+    }
+
     fun addFriend(userId: String, friendUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
+
+        // Fetch the friend's information
         usersCollection.whereEqualTo("username", friendUsername).get()
             .addOnSuccessListener { documents ->
                 if (!documents.isEmpty) {
-                    val friendId = documents.documents.first().id
+                    val friendDocument = documents.documents.first()
+                    val friendId = friendDocument.id
+
+                    // Update your friends_list
                     usersCollection.document(userId)
-                        .update("friend_list", FieldValue.arrayUnion(friendId))
+                        .update("friends_list", FieldValue.arrayUnion(friendId))
                         .addOnSuccessListener {
-                            fetchFriendsList(userId) // Refresh the friends list
+                            // Update your friend's friends_list
+                            usersCollection.document(friendId)
+                                .update("friends_list", FieldValue.arrayUnion(userId))
+                                .addOnSuccessListener {
+                                    fetchFriendsList(userId) // Refresh your friends list
+                                }
                         }
                 }
             }
     }
 
+
     private fun fetchFriendsList(userId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         usersCollection.document(userId).get().addOnSuccessListener { document ->
-            val friendIds = document["friend_list"] as? List<*> ?: return@addOnSuccessListener
+            val friendIds = document["friends_list"] as? List<*> ?: return@addOnSuccessListener
 
             // Initialize an empty list to hold the friend data
             val friends = mutableListOf<FriendData>()
@@ -1043,7 +1206,8 @@ class ProfileViewModel : ViewModel() {
             for (id in friendIds) {
                 usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
                     val name = friendDoc["username"] as? String ?: "Unknown"
-                    val profilePicUrl = friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
+                    val profilePicUrl =
+                        friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
 
                     // Add the friend data to the list
                     friends.add(FriendData(id, name, profilePicUrl))
@@ -1056,6 +1220,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
     fun updateUsername(userId: String, newUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         val userDocument = usersCollection.document(userId)
@@ -1072,7 +1237,12 @@ class ProfileViewModel : ViewModel() {
                     }
             } else {
                 // User does not exist, create a new user with the username
-                userDocument.set(mapOf("username" to newUsername, "liked_songs" to listOf<String>()))
+                userDocument.set(
+                    mapOf(
+                        "username" to newUsername,
+                        "liked_song_list" to listOf<String>()
+                    )
+                )
                     .addOnSuccessListener {
                         // Handle success
                     }
@@ -1082,15 +1252,30 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
     fun fetchLikedSongs(userId: String) {
         val likedSongsCollection = Firebase.firestore
             .collection("Users")
             .document(userId)
-            .collection("liked_songs")
 
-        likedSongsCollection.get().addOnSuccessListener { documents ->
-            val songIds = documents.documents.map { it.id }
-            fetchSongsDetails(songIds)
+        likedSongsCollection.get().addOnSuccessListener { documentSnapshot ->
+            // Check if the document exists
+            if (documentSnapshot.exists()) {
+                // Access the liked_song_list field directly from the DocumentSnapshot
+                val likedSongsMap = documentSnapshot["liked_song_list"] as? Map<*, *>
+
+                // Extract song IDs from the liked_song_list field
+                val songIds = likedSongsMap?.keys?.map { it.toString() } ?: emptyList()
+
+                // Fetch song details based on the retrieved song IDs
+                fetchSongsDetails(songIds)
+            } else {
+                // Document doesn't exist
+                Log.d("Debug", "User document does not exist for userID: $userId")
+            }
+        }.addOnFailureListener { exception ->
+            // Handle failure
+            Log.e("Error", "Failed to fetch user document for userID: $userId", exception)
         }
     }
 
@@ -1113,33 +1298,6 @@ class ProfileViewModel : ViewModel() {
             }
     }
 }
-
-@Composable
-fun LikedSongsScreen(navController: NavController) {
-    val viewModel: ProfileViewModel = viewModel()
-    val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
-    val user = Firebase.auth.currentUser
-
-    LaunchedEffect(key1 = user?.uid) {
-        viewModel.fetchLikedSongs(user?.uid ?: "")
-    }
-
-    LazyColumn {
-        items(likedSongs) { song ->
-            SongListItem(song) {
-                Log.d("SongDetailViewer", "Attempting to view song: ${song.id}")
-                navController.navigate("songDetail/${song.id}")
-            }
-        }
-    }
-}
-
-
-
-//~~~~~~~~~
-//FRIENDS
-
-
 class FriendProfileViewModel : ViewModel() {
     private val _username = MutableLiveData<String>()
     val username: LiveData<String> = _username
@@ -1364,8 +1522,9 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-
-
+    fun updateSongs(updatedSongs: List<Song>) {
+        _songs.value = updatedSongs
+    }
 
     fun addSong(song: Song) {
         val db = FirebaseFirestore.getInstance()
@@ -1385,7 +1544,7 @@ fun SongListScreen(navController: NavController, viewModel: SongsViewModel = vie
     val songs by viewModel.songs.observeAsState(initial = emptyList())
 
     if (songs.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Center) {
             CircularProgressIndicator()
         }
     } else {
@@ -1479,6 +1638,8 @@ private fun removeLikedSongFromFirestore(userId: String, songId: String) {
     }
 }
 
+
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SongDetailScreen(navController: NavController, songId: String, viewModel: SongsViewModel = viewModel()) {
 
@@ -1487,6 +1648,18 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     val song = songs.firstOrNull { it.id == songId }
     val user = Firebase.auth.currentUser
     val userId = user?.uid
+
+    fun updateLikeCountLocally(countChange: Int) {
+        val updatedSongs = songs.map {
+            if (it.id == songId) {
+                val currentLikeCount = it.likeCount ?: 0
+                it.copy(likeCount = maxOf(0, currentLikeCount + countChange))
+            } else {
+                it
+            }
+        }
+        viewModel.updateSongs(updatedSongs)
+    }
 
     // State to track whether the song is liked or not
     val isLiked = remember { mutableStateOf(false) }
@@ -1499,9 +1672,11 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             if (isLiked.value) {
                 // Remove the song from liked songs
                 removeLikedSongFromFirestore(userId, songId)
+                updateLikeCountLocally(-1)
             } else {
                 // Add the song to liked songs
                 addLikedSongToFirestore(userId, songId)
+                updateLikeCountLocally(1)
             }
 
             // Toggle the liked status
@@ -1614,15 +1789,18 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             ) {
                 Box(
                     modifier = Modifier
-                        .width(106.22222.dp)
+                        .width(152.dp)
                         .height(64.dp)
-                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                        .background(
+                            color = Color(0x5E33373B),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
                 ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.Start),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .width(66.38889.dp)
+                            .width(100.dp)
                             .align(Center),
                     ) {
                         Image(
@@ -1655,10 +1833,13 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                     modifier = Modifier
                         .width(106.22222.dp)
                         .height(64.dp)
-                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                        .background(
+                            color = Color(0x5E33373B),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .width(70.81482.dp)
@@ -1696,14 +1877,17 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, CenterHorizontally),
                 verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
                         .width(152.dp)
                         .height(64.dp)
-                        .background(color = Color(0xFF1DB954), shape = RoundedCornerShape(size = 15.dp))
+                        .background(
+                            color = Color(0xFF1DB954),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
                 ){
                     Image(
                         painter = painterResource(id = R.drawable.spotify_logo),
@@ -1745,7 +1929,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, CenterHorizontally),
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1759,7 +1943,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable{},
+                        .clickable {},
                 )
                 Image(
                     painter = painterResource(id = R.drawable.comment),
@@ -1770,7 +1954,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable{},
+                        .clickable {},
                 )
                 Image(
                     painter = painterResource(id = R.drawable.share),
@@ -1781,7 +1965,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable{},
+                        .clickable {},
                 )
                 Image(
                     painter = painterResource(id = R.drawable.save),
@@ -1792,7 +1976,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable{},
+                        .clickable {},
                 )
             }
 
