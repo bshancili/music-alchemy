@@ -553,7 +553,6 @@ fun TopNav(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize() // Fill the entire Text composable
                     .padding(vertical = 8.dp), // Padding from the sides of the text
-                 // Center the text within the Text composable
             )
         }
 
@@ -628,82 +627,97 @@ fun CommonBottomBar(navController: NavController) {
 fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
     val songs by viewModel.songs.observeAsState(emptyList())
 
+    // Use verticalScroll modifier for vertical scrolling
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF1D2123))
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp), // Add verticalScroll to enable scrolling
     ) {
+
         TopNav(navController = navController)
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(192.dp)
-                .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 20.dp))
-        ) {
-            // Add content inside the Box as needed
-        }
+        Column( modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .weight(1f) // Takes up all available vertical space
+        ){
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Top charts",
-            style = TextStyle(
-                fontSize = 20.sp,
-                lineHeight = 24.sp,
-                fontWeight = FontWeight(700),
-                color = Color(0xFFEFEEE0),
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Keep the first LazyRow unchanged
-        LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(128.dp)
-                .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp))
-        ) {
-            items(songs) { song ->
-                SongItem(song = song)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(192.dp)
+                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 20.dp))
+            ) {
+                // Add content inside the Box as needed
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = "Music",
-            style = TextStyle(
-                fontSize = 20.sp,
-                lineHeight = 24.sp,
-                fontWeight = FontWeight(700),
-                color = Color(0xFFEFEEE0),
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-        )
+            Text(
+                text = "Top charts",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = FontWeight(700),
+                    color = Color(0xFFEFEEE0),
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        LazyVerticalGrid(
-            modifier = Modifier
-                .weight(1f), // Adjust padding as needed
-            columns = GridCells.Fixed(2),
-            content = {
-                items(songs ?: emptyList()) { songs ->
-                    DisplaySong(song = songs, navController = navController)
+            // Keep the first LazyRow unchanged
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp)
+                    .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp))
+            ) {
+                items(songs) { song ->
+                    SongItem(song = song)
                 }
             }
-        )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Music",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = FontWeight(700),
+                    color = Color(0xFFEFEEE0),
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Display images in a static way with 2 images per row
+            for (i in songs.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (i < songs.size) {
+                        DisplaySong(song = songs[i], navController = navController)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (i + 1 < songs.size) {
+                        DisplaySong(song = songs[i + 1], navController = navController)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
         CommonBottomBar(navController = navController)
     }
 }
@@ -989,14 +1003,16 @@ fun ProfileScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF1D2123))
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp), // Add verticalScroll to enable scrolling
     ) {
-        TopNav(navController = navController)
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                 // Takes up all available vertical space
+        TopNav(navController = navController)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column( modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .weight(1f) // Takes up all available vertical space
         ) {
 
             Image(
@@ -1111,19 +1127,24 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .weight(1f), // Adjust padding as needed
-                columns = GridCells.Fixed(2),
-                content = {
-                    items(likedSongs ?: emptyList()) { likedsongs ->
-                        DisplaySong(song = likedsongs, navController = navController)
+            for (i in likedSongs.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (i < likedSongs.size) {
+                        DisplaySong(song = likedSongs[i], navController = navController)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (i + 1 < likedSongs.size) {
+                        DisplaySong(song = likedSongs[i + 1], navController = navController)
                     }
                 }
-            )
-
-            CommonBottomBar(navController = navController)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
+
+        CommonBottomBar(navController = navController)
     }
 }
 
