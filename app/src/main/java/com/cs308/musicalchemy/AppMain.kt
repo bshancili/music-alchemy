@@ -843,7 +843,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                         .align(Alignment.CenterHorizontally)
                         .padding(top = 16.dp)
                 )
-                /*Spacer(modifier = Modifier.weight(1f))*/
+                Spacer(modifier = Modifier.weight(1f))
             } else if (songs.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(songs) { song ->
