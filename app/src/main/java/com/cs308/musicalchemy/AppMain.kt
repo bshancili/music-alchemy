@@ -804,16 +804,17 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         Spacer(modifier = Modifier.height(16.dp))
 
         var searchText by remember { mutableStateOf("") }
+        var displaySongs by remember { mutableStateOf(false) }
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
 
-        // TextField for search input
         TextField(
             value = searchText,
-            onValueChange = { newSearchText ->
-                // Update the searchText as the user types
-                searchText = newSearchText
-
-                // Load songs dynamically when the search text changes
-                viewModel.loadSongsWithSubstring(newSearchText)
+            onValueChange = { newText ->
+                searchText = newText
+                displaySongs = newText.isNotBlank()
+                if (displaySongs) {
+                    viewModel.loadSongsWithSubstring(newText)
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -832,25 +833,41 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         )
 
         // Results Section
-        val songs by viewModel.songs.observeAsState(initial = emptyList())
-        if (songs.isEmpty()) {
+        if (displaySongs && !isLoading) {
+            val songs by viewModel.songs.observeAsState(initial = emptyList())
+            if (songs.isEmpty() && searchText.isNotBlank()) {
+                Text(
+                    "No results found",
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 16.dp)
+                )
+                /*Spacer(modifier = Modifier.weight(1f))*/
+            } else if (songs.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(songs) { song ->
+                        SongListItem(song) {
+                            // Navigate to song details or handle the click event
+                            navController.navigate("songDetail/${song.id}")
+                        }
+                    }
+                }
+                /*Spacer(modifier = Modifier.weight(1f))*/
+            }
+        } else if (isLoading) {
+            // Display a loading indicator or similar here
             Text(
-                "No results found",
+                "Loading...",
                 color = Color.White,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .padding(top = 16.dp)
+                    .padding(top = 16.dp),
+
             )
             Spacer(modifier = Modifier.weight(1f))
         } else {
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(songs) { song ->
-                    SongListItem(song) {
-                        // Navigate to song details or handle the click event
-                        navController.navigate("songDetail/${song.id}")
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.weight(1f))
         }
 
         CommonBottomBar(navController = navController)
@@ -1482,9 +1499,11 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
     fun loadSongsWithSubstring(substring: String) {
         val db = FirebaseFirestore.getInstance()
+        _isLoading.value = true
 
         db.collection("Tracks")
             .get()
@@ -1512,10 +1531,12 @@ class SongsViewModel : ViewModel() {
                         ?.contains(substring.lowercase(Locale.getDefault())) == true
                 }
                 _songs.value = filteredSongs
+                _isLoading.value = false
             }
             .addOnFailureListener { exception ->
                 Log.e("SongsViewModel", "Error loading songs", exception)
             }
+
     }
 
 
