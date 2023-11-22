@@ -45,10 +45,12 @@ async function getAccessToken(code) {
 
 // endpoint song request
 app.get('/autocomplete', async (req, res) => {
+  
   const query = req.query.q;
   
   try {
     const accessToken = await getAccessToken();
+    const apiUrl = 'https://api.spotify.com/v1/search';
     const response = await axios.get(apiUrl, {
       headers: {
         'Authorization': 'Bearer ' + accessToken,
@@ -65,4 +67,42 @@ app.get('/autocomplete', async (req, res) => {
     console.error('Error fetching autocomplete suggestions:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+
+app.get('/search-track', async (req, res) => {
+  
+  const trackName = req.query.trackName;
+
+  try {
+    // Get access token from Spotify (you may need to implement this function)
+    const accessToken = await getAccessToken();
+    const apiUrl = 'https://api.spotify.com/v1/search';
+    // Make a request to Spotify API to search for the track
+    const response = await axios.get(apiUrl, {
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+      },
+      params: {
+        q: trackName,
+        type: 'track',
+      },
+    });
+
+    const track = response.data.tracks.items[0]; // Assuming you want only the first track
+
+    // Add the returned track to your Firebase database
+    const db = admin.firestore();
+    const tracksCollection = db.collection('added_tracks');
+
+    await tracksCollection.add(track);
+
+    res.json(track); // Adjust the response format as needed
+  } catch (error) {
+    console.error('Error searching for track:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+const PORT = process.env.PORT || 3010;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
