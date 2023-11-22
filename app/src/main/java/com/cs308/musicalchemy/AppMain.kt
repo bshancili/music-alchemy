@@ -844,7 +844,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     .padding(top = 16.dp)
             )
         } else {
-            LazyColumn(modifier = Modifier.padding(top = 16.dp)) {
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 items(songs) { song ->
                     SongListItem(song) {
                         // Navigate to song details or handle the click event
@@ -854,7 +854,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        /*Spacer(modifier = Modifier.weight(1f))*/
 
         CommonBottomBar(navController = navController)
     }
