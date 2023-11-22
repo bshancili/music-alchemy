@@ -17,6 +17,7 @@ const HomePageMusicList = () => {
   const [loading, setLoading] = useState(false);
   const observer = useRef();
   const [lastVisible, setLastVisible] = useState();
+  const [hasMore, setHasMore] = useState(true); // New state variable
 
   const fetchInitialTracks = async () => {
     let queryOptions = query(
@@ -43,7 +44,7 @@ const HomePageMusicList = () => {
   };
 
   const fetchAllTracks = async () => {
-    if (loading || !lastVisible) return;
+    if (loading || !lastVisible | !hasMore) return;
 
     let queryOptions = query(
       collection(db, "Tracks"),
@@ -56,18 +57,22 @@ const HomePageMusicList = () => {
 
     try {
       const snap = await getDocs(queryOptions);
-      const lastDoc = snap.docs[snap.docs.length - 1];
+      if (snap.docs.length === 0) {
+        setHasMore(false);
+      } else {
+        const lastDoc = snap.docs[snap.docs.length - 1];
 
-      if (!lastVisible || lastDoc.id !== lastVisible.id) {
-        setLastVisible(lastDoc);
+        if (!lastVisible || lastDoc.id !== lastVisible.id) {
+          setLastVisible(lastDoc);
+        }
+        const trackData = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAllTracks((prevTracks) => [...prevTracks, ...trackData]);
+        console.log(allTracks);
+        setLoading(false);
       }
-      const trackData = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setAllTracks((prevTracks) => [...prevTracks, ...trackData]);
-      console.log(allTracks);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching tracks:", error);
     }
