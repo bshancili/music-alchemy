@@ -1555,7 +1555,12 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
         )
         // Add more fields as desired...
     }
-    Divider()
+    Divider(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(2.dp) // Adjust the divider height as needed
+            .background(Color.LightGray.copy(alpha = 0.34f)) // Set the divider color here
+    )
 }
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
