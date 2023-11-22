@@ -997,19 +997,39 @@ fun ProfileScreen(navController: NavController) {
         viewModel.fetchLikedSongs(user?.uid ?: "")
     }
 
-    Column(modifier = Modifier
-        .padding(16.dp)
-        .fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
+    )
+    {
+        TopNav(navController = navController)
+
+        Spacer(modifier = Modifier.height(16.dp))
         // User's current username
-        Text("Current Username: $currentUsername", style = MaterialTheme.typography.h6)
+        Text(
+            "Current Username: $currentUsername",
+            style = MaterialTheme.typography.h6.copy(color = Color.White) // Set text color to white
+        )
 
         // Input field for new username
         OutlinedTextField(
             value = newUsername,
             onValueChange = { newUsername = it },
-            label = { Text("New Username") },
+            label = { Text("New Username", color = Color.Black) }, // Set label text color to white
             singleLine = true,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp))
+                ,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
 
         // Button to update username
@@ -1017,7 +1037,7 @@ fun ProfileScreen(navController: NavController) {
             onClick = { viewModel.updateUsername(user?.uid ?: "", newUsername) },
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Update Username")
+            Text("Update Username", color = Color.White) // Set text color to white
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -1027,18 +1047,29 @@ fun ProfileScreen(navController: NavController) {
         var friendUsername by remember { mutableStateOf("") }
         TextField(
             value = friendUsername,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp))
+            ,
             onValueChange = { friendUsername = it },
-            label = { Text("Friend's Username") }
+            label = { Text("Friend's Username", color = Color.Black) }, // Set label text color to white
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
         Button(onClick = { viewModel.addFriend(user?.uid ?: "", friendUsername) }) {
-            Text("Add Friend")
+            Text("Add Friend", color = Color.White) // Set text color to white
         }
 
         Divider()
 
         // Friends list
         FriendsList(friendsList, navController)
-        Text("Liked Songs", style = MaterialTheme.typography.h6)
+        Text("Liked Songs", style = MaterialTheme.typography.h6.copy(color = Color.White)) // Set text color to white
         LazyColumn {
             items(likedSongs) { song ->
                 SongListItem(song) {
@@ -1051,15 +1082,16 @@ fun ProfileScreen(navController: NavController) {
             onClick = { navController.navigate("likedSongs") },
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("View Liked Songs")
+            Text("View Liked Songs", color = Color.White) // Set text color to white
         }
-
+        Spacer(modifier = Modifier.weight(1f))
+        CommonBottomBar(navController = navController)
     }
 
 }
 
 
-//~~~~~~~~~~
+
 //~~~~~FRIENDS LIST/PROFILE~~~~~
 
 
