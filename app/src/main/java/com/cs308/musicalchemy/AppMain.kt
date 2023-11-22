@@ -843,6 +843,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     .align(Alignment.CenterHorizontally)
                     .padding(top = 16.dp)
             )
+            Spacer(modifier = Modifier.weight(1f))
         } else {
             LazyColumn(modifier = Modifier.weight(1f)) {
                 items(songs) { song ->
@@ -852,9 +853,10 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     }
                 }
             }
+
         }
 
-        /*Spacer(modifier = Modifier.weight(1f))*/
+
 
         CommonBottomBar(navController = navController)
     }
