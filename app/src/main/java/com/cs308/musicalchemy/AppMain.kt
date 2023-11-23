@@ -20,9 +20,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -150,7 +147,7 @@ class MainApp : Application() {
         super.onCreate()
     }
 }
-
+@Suppress("UNCHECKED_CAST")
 private fun initializeUserFields() {
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
@@ -400,8 +397,7 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
             Text(text = "Sign up")
         }
 
-        //Icons and buttons for apple/google sign in
-        //TODO: add google / apple sign in when backend is ready
+
         Row(
             modifier = Modifier.padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -427,9 +423,9 @@ fun InitialMenu(navController: NavController, startGoogleSignIn: () -> Unit) {
                 modifier = Modifier
                     .size(48.dp) // Adjust the size as needed
                     .clickable {
-                        // TODO: Implement Apple sign-in logic here
+
                         Log.d("InitialMenu", "Apple Sign-in button pressed")
-                        //call a function to start the Apple sign-in process
+
                     }
                     .padding(vertical = 8.dp)
             )
@@ -722,6 +718,7 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun DisplaySong(song: Song, navController: NavController) {
     val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
@@ -983,6 +980,7 @@ data class FriendData(
 )
 
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
     val viewModel: ProfileViewModel = viewModel()
@@ -1058,7 +1056,7 @@ fun ProfileScreen(navController: NavController) {
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "@" + currentUsername,
+                    text = "@$currentUsername",
                     style = TextStyle(
                         fontSize = 24.sp,
                         lineHeight = 28.8.sp,
@@ -1072,7 +1070,7 @@ fun ProfileScreen(navController: NavController) {
 
             Row{
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier= Modifier
                         .width(90.dp)
@@ -1099,7 +1097,7 @@ fun ProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier= Modifier
                         .border(
@@ -1508,7 +1506,6 @@ class SongsViewModel : ViewModel() {
         loadSongs()
     }
 
-    //FIRESTORE'DA BAZI RATINGLER STRING HALINDE O YÜZDEN ONLARI INTEGERA DONÜŞTÜRMEK GEREKİYOR
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
 
@@ -1518,7 +1515,7 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song?.let {
+                        song.let {
                             // Ensure "rating" is an integer
                             it.rating = try {
                                 it.rating?.toString()?.toDoubleOrNull() ?: 0.0
@@ -1686,17 +1683,17 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     val isLiked = remember { mutableStateOf(false) }
 
     val onLikeClick: () -> Unit = {
-        val user = Firebase.auth.currentUser
-        val userId = user?.uid
+        val userLc = Firebase.auth.currentUser
+        val userIdLc = userLc?.uid
 
-        if (userId != null) {
+        if (userIdLc != null) {
             if (isLiked.value) {
                 // Remove the song from liked songs
-                removeLikedSongFromFirestore(userId, songId)
+                removeLikedSongFromFirestore(userIdLc, songId)
                 updateLikeCountLocally(-1)
             } else {
                 // Add the song to liked songs
-                addLikedSongToFirestore(userId, songId)
+                addLikedSongToFirestore(userIdLc, songId)
                 updateLikeCountLocally(1)
             }
 
@@ -1912,7 +1909,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                 ){
                     Image(
                         painter = painterResource(id = R.drawable.spotify_logo),
-                        contentDescription = "spotifylogo",
+                        contentDescription = "spotify logo",
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
                             .offset(x = 12.dp, y = 13.dp)
@@ -1924,7 +1921,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                 if(isLiked.value) {
                     Image(
                         painter = painterResource(id = R.drawable.likedbutton),
-                        contentDescription = "likebutton",
+                        contentDescription = "like button",
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
                             .clickable { onLikeClick() }
@@ -1936,7 +1933,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                 else{
                     Image(
                         painter = painterResource(id = R.drawable.likebutton),
-                        contentDescription = "likebutton",
+                        contentDescription = "like button",
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
                             .clickable { onLikeClick() }
