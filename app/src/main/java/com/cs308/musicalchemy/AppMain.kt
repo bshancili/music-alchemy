@@ -450,9 +450,9 @@ fun SignUpScreen(navController: NavController) {
         modifier = Modifier
             .background(color = MaterialTheme.colors.background)
             .fillMaxSize(),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        )
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    )
     {
         TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
@@ -520,7 +520,7 @@ fun TopNav(navController: NavController) {
             .fillMaxWidth()
             .height(64.dp)
             .background(color = Color(0xFF1D2123)),
-            //.padding(bottom = 16.dp),
+        //.padding(bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -768,50 +768,50 @@ fun SongItem(song: Song) {
         shape = RoundedCornerShape(20.dp),
         backgroundColor = Color(0xFF1A1E1F)
     ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(), // Add padding to the Box
-                contentAlignment = Alignment.CenterStart
-            ) {
-                // Image with proper alignment
-                val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
-                imageUrl?.let {
-                    Image(
-                        painter = rememberImagePainter(data = it),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(128.dp)
-                            .clip(shape = RoundedCornerShape(20.dp)),
-                        contentScale = ContentScale.FillBounds
-                    )
-                }
-                // Column for text
-                Column(
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(), // Add padding to the Box
+            contentAlignment = Alignment.CenterStart
+        ) {
+            // Image with proper alignment
+            val imageUrl: String? = song.albumImages?.firstOrNull()?.get("url") as? String
+            imageUrl?.let {
+                Image(
+                    painter = rememberImagePainter(data = it),
+                    contentDescription = null,
                     modifier = Modifier
-                        .padding(start = 8.dp) // Adjust the padding as needed
-                        .align(Alignment.TopStart), // Align the Column to the top
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    // Text for track name
-                    Text(
-                        modifier = Modifier
-                            .padding(start = 128.dp),
-                        text = "${song.trackName}",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    )
-
-                    // Text for artist
-                    Text(
-                        modifier = Modifier
-                            .padding(start = 128.dp),
-                        text = "${song.artists}",
-                        color = Color(0x80FFFFFF),
-                        fontSize = 12.sp
-                    )
-                }
+                        .size(128.dp)
+                        .clip(shape = RoundedCornerShape(20.dp)),
+                    contentScale = ContentScale.FillBounds
+                )
             }
+            // Column for text
+            Column(
+                modifier = Modifier
+                    .padding(start = 8.dp) // Adjust the padding as needed
+                    .align(Alignment.TopStart), // Align the Column to the top
+                verticalArrangement = Arrangement.Top
+            ) {
+                // Text for track name
+                Text(
+                    modifier = Modifier
+                        .padding(start = 128.dp),
+                    text = "${song.trackName}",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
+
+                // Text for artist
+                Text(
+                    modifier = Modifier
+                        .padding(start = 128.dp),
+                    text = "${song.artists}",
+                    color = Color(0x80FFFFFF),
+                    fontSize = 12.sp
+                )
+            }
+        }
     }
 }
 
