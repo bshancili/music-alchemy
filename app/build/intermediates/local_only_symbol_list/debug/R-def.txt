@@ -8,11 +8,12 @@ drawable heart
 drawable home
 drawable ic_apple
 drawable ic_google
-drawable icon
 drawable likebutton
 drawable likedbutton
+drawable not_rated
 drawable plus
 drawable profile_placeholder
+drawable rated
 drawable recommendation
 drawable save
 drawable search

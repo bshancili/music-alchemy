@@ -44,8 +44,8 @@
         "source": "com.cs308.musicalchemy.app-main-66:/drawable/ic_google.png"
     },
     {
-        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_icon.png.flat",
-        "source": "com.cs308.musicalchemy.app-main-66:/drawable/icon.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_not_rated.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/not_rated.png"
     },
     {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/xml_backup_rules.xml.flat",
@@ -86,6 +86,10 @@
     {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_recommendation.png.flat",
         "source": "com.cs308.musicalchemy.app-main-66:/drawable/recommendation.png"
+    },
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_rated.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/rated.png"
     },
     {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_heart.png.flat",

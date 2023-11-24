@@ -8,6 +8,7 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResult
@@ -30,16 +31,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -78,10 +83,12 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.QuerySnapshot
 
 
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 
@@ -360,7 +367,6 @@ fun App(startGoogleSignIn: () -> Unit) {
             val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
             FriendProfileScreen(userId, navController)
         }
-        composable("songs") { SongListScreen(navController) }
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
@@ -1488,8 +1494,10 @@ fun FriendItem(friend: FriendData, navController: NavController) {
     }
 }
 
+
 @Composable
 fun FriendProfileScreen(friendId: String, navController: NavController) {
+    /*
     val viewModel: FriendProfileViewModel = viewModel()
     val username by viewModel.username.observeAsState("Unknown")
     val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
@@ -1519,6 +1527,8 @@ fun FriendProfileScreen(friendId: String, navController: NavController) {
         }
     }
 
+     */
+
 }
 
 //~~~~~~~~~~
@@ -1542,10 +1552,12 @@ data class Song(
     @get:PropertyName("instrumentalness") @set:PropertyName("instrumentalness") var instrumentalness: Double? = 0.0,
     @get:PropertyName("key") @set:PropertyName("key") var key: Int? = 0,
     @get:PropertyName("length_in_seconds") @set:PropertyName("length_in_seconds") var lengthInSeconds: Double? = 0.0,
+    @get:PropertyName("acousticness") @set:PropertyName("acousticness") var acousticness: Double? = 0.0,
     @get:PropertyName("liveness") @set:PropertyName("liveness") var liveness: Double? = 0.0,
     @get:PropertyName("loudness") @set:PropertyName("loudness") var loudness: Double? = 0.0,
     @get:PropertyName("mode") @set:PropertyName("mode") var mode: Int? = 0,
     @get:PropertyName("rating") @set:PropertyName("rating") var rating: Double? = 0.0,
+    @get:PropertyName("rating_count") @set:PropertyName("rating_count") var ratingCount: Int? = 0,
     @get:PropertyName("spotify_album_id") @set:PropertyName("spotify_album_id") var spotifyAlbumId: String? = "",
     @get:PropertyName("spotify_artist_id(s)") @set:PropertyName("spotify_artist_id(s)") var spotifyArtistIds: List<String>? = listOf(),
     @get:PropertyName("spotify_track_id") @set:PropertyName("spotify_track_id") var spotifyTrackId: String? = "",
@@ -1658,58 +1670,6 @@ class SongsViewModel : ViewModel() {
     }
 }
 
-@Composable
-fun SongListScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
-    val songs by viewModel.songs.observeAsState(initial = emptyList())
-
-    if (songs.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Center) {
-            CircularProgressIndicator()
-        }
-    } else {
-        LazyColumn {
-            items(songs) { song ->
-                SongListItem(song) {
-                    Log.d("SongDetailViewer", "Attempting to view song: ${song.id}")
-                    navController.navigate("songDetail/${song.id}")
-                }
-            }
-        }
-    }
-}
-@Composable
-fun SongListItem(song: Song, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(8.dp)
-            .fillMaxWidth()
-    ) {
-        Text(
-            text = song.trackName ?: "Unknown",
-            style = MaterialTheme.typography.h6.copy(color = Color.White)
-        )
-        Text(
-            text = "Artists: ${song.artists?.joinToString(", ") ?: "Unknown Artist"}",
-            style = MaterialTheme.typography.subtitle1.copy(color = Color.White)
-        )
-        Text(
-            text = "Album: ${song.albumName ?: "Unknown Album"}",
-            style = MaterialTheme.typography.body2.copy(color = Color.White)
-        )
-        Text(
-            text = "Release Date: ${song.albumReleaseDate ?: "Unknown Release Date"}",
-            style = MaterialTheme.typography.body2.copy(color = Color.White)
-        )
-        // Add more fields as desired...
-    }
-    Divider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(2.dp) // Adjust the divider height as needed
-            .background(Color.LightGray.copy(alpha = 0.34f)) // Set the divider color here
-    )
-}
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
     val userDocument = Firebase.firestore
@@ -1773,17 +1733,177 @@ private fun removeLikedSongFromFirestore(userId: String, songId: String) {
         newLikes
     }
 }
+@Composable
+fun StarRating(
+    rating: Float,
+    onRatingChanged: (Float) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Display stars
+        (1..10).forEach { index ->
+            Icon(
+                painter = painterResource(
+                    id = if (index <= rating) R.drawable.rated else R.drawable.not_rated
+                ),
+                contentDescription = "Star Rating",
+                modifier = Modifier
+                    .clickable { onRatingChanged(index.toFloat()) }
+                    .size(24.dp)
+            )
+        }
+
+        // Display rating text
+        Text(
+            text = "${rating.toInt()}/10",
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            ),
+            modifier = Modifier
+                .padding(start = 8.dp)
+        )
+    }
+}
+
+
+
+@Suppress("UNCHECKED_CAST")
+fun handleRatingUpdate(song: Song, newRating: Double, userId: String, viewModel: SongsViewModel) {
+    val songRef = Firebase.firestore.collection("Tracks").document(song.id)
+    val userRef = Firebase.firestore.collection("Users").document(userId)
+    var formattedRating: Double = 0.0
+
+    Firebase.firestore.runTransaction { transaction ->
+        val songSnapshot = transaction.get(songRef)
+        val userSnapshot = transaction.get(userRef)
+
+        val currentRating = songSnapshot.getDouble("rating") ?: 0.0
+        var ratingCount = songSnapshot.getLong("rating_count") ?: 0
+
+        val ratedSongList = userSnapshot.get("rated_song_list") as? Map<String, Map<String, Any>> ?: emptyMap()
+        val userPreviousRating = ratedSongList[song.id]?.get("rating") as? Double
+
+        val updatedRating: Double
+        if (userPreviousRating != null) {
+            // User has previously rated, adjust existing rating
+            updatedRating = ((currentRating * ratingCount) - userPreviousRating + newRating) / ratingCount
+        } else {
+            // New user rating, increment rating count
+            ratingCount += 1
+            updatedRating = ((currentRating * (ratingCount - 1)) + newRating) / ratingCount
+        }
+        formattedRating = "%.2f".format(updatedRating).toDouble()
+        transaction.update(songRef, "rating", formattedRating)
+        transaction.update(songRef, "rating_count", ratingCount)
+
+
+        val updatedRatedSongList = ratedSongList.toMutableMap()
+        updatedRatedSongList[song.id] = mapOf("rating" to newRating, "timestamp" to FieldValue.serverTimestamp())
+        transaction.update(userRef, "rated_song_list", updatedRatedSongList)
+    }.addOnSuccessListener {
+        viewModel.updateSongs(viewModel.songs.value?.map { if (it.id == song.id) it.copy(rating = formattedRating) else it } ?: listOf())
+    }
+}
+
+
+@Suppress("UNCHECKED_CAST")
+suspend fun getUserRatingForSong(userId: String?, songId: String): Double? {
+    if (userId == null) {
+        Log.w("getUserRatingForSong", "UserId is null")
+        return null
+    }
+
+    val firestore = FirebaseFirestore.getInstance()
+    val userRef = firestore.collection("Users").document(userId)
+
+    return try {
+        val userSnapshot = userRef.get().await()
+        val ratedSongList = userSnapshot.get("rated_song_list") as? Map<String, Map<String, Any>>
+
+        val rating = ratedSongList?.get(songId)?.get("rating") as? Double
+        Log.w("getUserRatingForSong", "Current User rating: $rating")
+        rating
+    } catch (e: Exception) {
+        Log.e("getUserRatingForSong", "Error fetching user rating", e)
+        null
+    }
+}
+
+//TODO: REMOVE THIS
+//TEST FUNCTION
+@Suppress("UNCHECKED_CAST")
+fun fetchAndLogUserRatingForSong(userId: String, songId: String) {
+    val firestore = FirebaseFirestore.getInstance()
+    val userRef = firestore.collection("Users").document(userId)
+
+    userRef.get()
+        .addOnSuccessListener { document ->
+            if (document != null) {
+                val ratedSongList = document.get("rated_song_list") as? Map<String, Map<String, Any>>
+                val rating = ratedSongList?.get(songId)?.get("rating") as? Int
+                Log.d("UserRating", "Rating for songId $songId: $rating")
+            } else {
+                Log.d("UserRating", "No such document")
+            }
+        }
+        .addOnFailureListener { exception ->
+            Log.d("UserRating", "get failed with ", exception)
+        }
+}
+
+
+
+
 
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun SongDetailScreen(navController: NavController, songId: String, viewModel: SongsViewModel = viewModel()) {
 
-
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val songs by viewModel.songs.observeAsState(initial = emptyList())
     val song = songs.firstOrNull { it.id == songId }
     val user = Firebase.auth.currentUser
     val userId = user?.uid
+    var currentRating by remember { mutableFloatStateOf(0f) }
+
+
+
+    LaunchedEffect(songId, userId) {
+        coroutineScope.launch {
+            // Log the userId and songId
+
+
+            // Retry logic
+            while (isActive) {
+                try {
+                    val userRating = getUserRatingForSong(userId, songId)
+                    Log.d("RatingFetch", "Attempting to fetch rating for userId: $userId and songId: $songId")
+                    Log.d("RatingFetch", "Fetched User rating: $userRating for songId: $songId")
+                    if (userRating != null) {
+                        currentRating = userRating.toFloat()
+                        break
+                    }
+                } catch (e: Exception) {
+                    Log.e("RatingFetch", "Error fetching rating", e)
+                }
+                if (userId != null) {
+                   // fetchAndLogUserRatingForSong(userId, songId)
+                }
+
+                delay(2000) // wait for 2 seconds before retrying
+            }
+        }
+    }
+
+
 
     fun updateLikeCountLocally(countChange: Int) {
         val updatedSongs = songs.map {
@@ -1940,7 +2060,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                             .align(Center),
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.icon),
+                            painter = painterResource(id = R.drawable.rated),
                             contentDescription = "icon",
                             contentScale = ContentScale.FillBounds,
                             modifier = Modifier
@@ -2009,6 +2129,22 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                 }
 
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+
+// Star Rating UI for user input
+            StarRating(rating = currentRating) { newRating ->
+                coroutineScope.launch {
+                    userId?.let { uid ->
+                        if (song != null) {
+                            handleRatingUpdate(song, newRating.toDouble(), uid, viewModel)
+                            Toast.makeText(context, "Rating updated to $newRating", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -2151,4 +2287,3 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 
     }
 }
-

@@ -136,9 +136,9 @@ drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
 drawable ic_google
-drawable icon
 drawable likebutton
 drawable likedbutton
+drawable not_rated
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low
@@ -154,6 +154,7 @@ drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
 drawable plus
 drawable profile_placeholder
+drawable rated
 drawable recommendation
 drawable save
 drawable search
