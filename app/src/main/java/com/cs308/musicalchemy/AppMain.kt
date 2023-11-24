@@ -77,8 +77,12 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
+import coil.compose.rememberImagePainter
+
+
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 
 //~~~~~~~~~~
@@ -345,6 +349,7 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("screen1") { Screen1(navController) }
         composable("screen2") { Screen2(navController) }
+        composable("search") { Search(navController) }
         composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
@@ -853,6 +858,91 @@ fun Screen2(navController: NavController) {
         }
     }
 }
+
+@Composable
+fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        TopNav(navController = navController)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        var searchText by remember { mutableStateOf("") }
+        var displaySongs by remember { mutableStateOf(false) }
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
+        TextField(
+            value = searchText,
+            onValueChange = { newText ->
+                searchText = newText
+                displaySongs = newText.isNotBlank()
+                if (displaySongs) {
+                    viewModel.loadSongsWithSubstring(newText)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp))
+                .height(56.dp),
+            textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+            placeholder = { Text("Search Songs...", color = Color.Gray) },
+            singleLine = true,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
+        )
+
+        // Results Section
+        if (displaySongs && !isLoading) {
+            val songs by viewModel.songs.observeAsState(initial = emptyList())
+            if (songs.isEmpty() && searchText.isNotBlank()) {
+                Text(
+                    "No results found",
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 16.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            } else if (songs.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(songs) { song ->
+                        SongListItem(song) {
+                            // Navigate to song details or handle the click event
+                            navController.navigate("songDetail/${song.id}")
+                        }
+                    }
+                }
+                /*Spacer(modifier = Modifier.weight(1f))*/
+            }
+        } else if (isLoading) {
+            // Display a loading indicator or similar here
+            Text(
+                "Loading...",
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 16.dp),
+
+            )
+            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        CommonBottomBar(navController = navController)
+    }
+}
+
+
 
 
 
@@ -1555,6 +1645,69 @@ class SongsViewModel : ViewModel() {
                 _addSongStatus.value = "Error adding song: ${e.message}"
             }
     }
+
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+    fun loadSongsWithSubstring(substring: String) {
+        val db = FirebaseFirestore.getInstance()
+        _isLoading.value = true
+
+        db.collection("Tracks")
+            .get()
+            .addOnSuccessListener { documents ->
+                val filteredSongs = documents.mapNotNull { documentSnapshot ->
+                    try {
+                        val song = documentSnapshot.toObject(Song::class.java)
+                        song?.apply {
+                            // Handle the conversion of rating to Double
+                            rating = try {
+                                rating?.toString()?.toDoubleOrNull() ?: 0.0
+                            } catch (e: NumberFormatException) {
+                                Log.e("SongsViewModel", "Error converting rating to double for song ${id}", e)
+                                0.0
+                            }
+                            id = documentSnapshot.id
+                        }
+                    } catch (e: Exception) {
+                        Log.e("SongsViewModel", "Error parsing song data", e)
+                        null
+                    }
+                }.filter { song ->
+                    // Perform a case-insensitive check if trackName contains the substring
+                    song.trackName?.lowercase(Locale.getDefault())
+                        ?.contains(substring.lowercase(Locale.getDefault())) == true
+                }
+                _songs.value = filteredSongs
+                _isLoading.value = false
+            }
+            .addOnFailureListener { exception ->
+                Log.e("SongsViewModel", "Error loading songs", exception)
+            }
+
+    }
+
+
+
+    private fun documentsToSongsList(documents: QuerySnapshot): List<Song> {
+        return documents.mapNotNull { documentSnapshot ->
+            try {
+                val song = documentSnapshot.toObject(Song::class.java)
+                song?.let {
+                    it.rating = try {
+                        it.rating?.toString()?.toDoubleOrNull() ?: 0.0
+                    } catch (e: NumberFormatException) {
+                        Log.e("SongsViewModel", "Error converting rating to double for song ${it.id}", e)
+                        0.0
+                    }
+                    it.id = documentSnapshot.id
+                    it // Return the song object
+                }
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "Error deserializing song", e)
+                null
+            }
+        }
+    }
 }
 
 @Composable
@@ -1584,13 +1737,30 @@ fun SongListItem(song: Song, onClick: () -> Unit) {
             .padding(8.dp)
             .fillMaxWidth()
     ) {
-        Text(song.trackName ?: "Unknown", style = MaterialTheme.typography.h6)
-        Text("Artists: ${song.artists?.joinToString(", ") ?: "Unknown Artist"}", style = MaterialTheme.typography.subtitle1)
-        Text("Album: ${song.albumName ?: "Unknown Album"}", style = MaterialTheme.typography.body2)
-        Text("Release Date: ${song.albumReleaseDate ?: "Unknown"}", style = MaterialTheme.typography.body2)
+        Text(
+            text = song.trackName ?: "Unknown",
+            style = MaterialTheme.typography.h6.copy(color = Color.White)
+        )
+        Text(
+            text = "Artists: ${song.artists?.joinToString(", ") ?: "Unknown Artist"}",
+            style = MaterialTheme.typography.subtitle1.copy(color = Color.White)
+        )
+        Text(
+            text = "Album: ${song.albumName ?: "Unknown Album"}",
+            style = MaterialTheme.typography.body2.copy(color = Color.White)
+        )
+        Text(
+            text = "Release Date: ${song.albumReleaseDate ?: "Unknown Release Date"}",
+            style = MaterialTheme.typography.body2.copy(color = Color.White)
+        )
         // Add more fields as desired...
     }
-    Divider()
+    Divider(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(2.dp) // Adjust the divider height as needed
+            .background(Color.LightGray.copy(alpha = 0.34f)) // Set the divider color here
+    )
 }
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
