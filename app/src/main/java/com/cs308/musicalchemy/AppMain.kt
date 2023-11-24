@@ -77,7 +77,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
-import coil.compose.rememberImagePainter
+import com.google.firebase.firestore.QuerySnapshot
 
 
 import com.google.firebase.firestore.firestore
@@ -94,7 +94,7 @@ import java.util.Locale
 //~~~~~~~~~~
 //~~~~~THEME~~~~~
 //Design colors, App theme and Logo
-val PastelLavender = Color(0xFFCEB2FC)
+val PastelLavender = Color(0xFF1D2123)
 
 private val appThemeColors = lightColors(
     primary = PastelLavender,
@@ -347,8 +347,6 @@ fun App(startGoogleSignIn: () -> Unit) {
             val viewModel = viewModel<SongsViewModel>() // Instantiate your SongsViewModel here
             MainMenu(navController, viewModel)
         }
-        composable("screen1") { Screen1(navController) }
-        composable("screen2") { Screen2(navController) }
         composable("search") { Search(navController) }
         composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
@@ -597,7 +595,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { /* Handle click if needed */ }
+                .clickable { navController.navigate("search") }
         )
 
         Image(
@@ -617,7 +615,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { /* Handle click if needed */ }
+                .clickable {  navController.navigate("settings") }
         )
     }
 }
@@ -818,47 +816,6 @@ fun SongItem(song: Song) {
 }
 
 
-
-
-
-
-
-
-@Composable
-fun Screen1(navController: NavController) {
-    Scaffold(
-        bottomBar = { CommonBottomBar(navController) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding), // Apply the innerPadding here
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("This is the Screen 1")
-        }
-    }
-}
-
-
-@Composable
-fun Screen2(navController: NavController) {
-    Scaffold(
-        bottomBar = { CommonBottomBar(navController) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding), // Apply the innerPadding here
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("This is the Screen 2")
-        }
-    }
-}
-
 @Composable
 fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     Column(
@@ -908,7 +865,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     "No results found",
                     color = Color.White,
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
+                        .align(CenterHorizontally)
                         .padding(top = 16.dp)
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -929,7 +886,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                 "Loading...",
                 color = Color.White,
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                    .align(CenterHorizontally)
                     .padding(top = 16.dp),
 
             )
@@ -1074,8 +1031,8 @@ data class FriendData(
 @Composable
 fun ProfileScreen(navController: NavController) {
     val viewModel: ProfileViewModel = viewModel()
-    val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
-    var newUsername by remember { mutableStateOf("") }
+    //val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
+    //var newUsername by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     val currentUsername by viewModel.username.observeAsState("Unknown")
     val profilePictureUrl by viewModel.profilePictureURL.observeAsState("Unknown")
@@ -1658,12 +1615,12 @@ class SongsViewModel : ViewModel() {
                 val filteredSongs = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song?.apply {
+                        song.apply {
                             // Handle the conversion of rating to Double
                             rating = try {
                                 rating?.toString()?.toDoubleOrNull() ?: 0.0
                             } catch (e: NumberFormatException) {
-                                Log.e("SongsViewModel", "Error converting rating to double for song ${id}", e)
+                                Log.e("SongsViewModel", "Error converting rating to double for song $id", e)
                                 0.0
                             }
                             id = documentSnapshot.id
@@ -1684,29 +1641,6 @@ class SongsViewModel : ViewModel() {
                 Log.e("SongsViewModel", "Error loading songs", exception)
             }
 
-    }
-
-
-
-    private fun documentsToSongsList(documents: QuerySnapshot): List<Song> {
-        return documents.mapNotNull { documentSnapshot ->
-            try {
-                val song = documentSnapshot.toObject(Song::class.java)
-                song?.let {
-                    it.rating = try {
-                        it.rating?.toString()?.toDoubleOrNull() ?: 0.0
-                    } catch (e: NumberFormatException) {
-                        Log.e("SongsViewModel", "Error converting rating to double for song ${it.id}", e)
-                        0.0
-                    }
-                    it.id = documentSnapshot.id
-                    it // Return the song object
-                }
-            } catch (e: Exception) {
-                Log.e("SongsViewModel", "Error deserializing song", e)
-                null
-            }
-        }
     }
 }
 
