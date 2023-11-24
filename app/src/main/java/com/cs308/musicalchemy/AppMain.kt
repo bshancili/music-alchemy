@@ -1835,27 +1835,7 @@ suspend fun getUserRatingForSong(userId: String?, songId: String): Double? {
     }
 }
 
-//TODO: REMOVE THIS
-//TEST FUNCTION
-@Suppress("UNCHECKED_CAST")
-fun fetchAndLogUserRatingForSong(userId: String, songId: String) {
-    val firestore = FirebaseFirestore.getInstance()
-    val userRef = firestore.collection("Users").document(userId)
 
-    userRef.get()
-        .addOnSuccessListener { document ->
-            if (document != null) {
-                val ratedSongList = document.get("rated_song_list") as? Map<String, Map<String, Any>>
-                val rating = ratedSongList?.get(songId)?.get("rating") as? Int
-                Log.d("UserRating", "Rating for songId $songId: $rating")
-            } else {
-                Log.d("UserRating", "No such document")
-            }
-        }
-        .addOnFailureListener { exception ->
-            Log.d("UserRating", "get failed with ", exception)
-        }
-}
 
 
 
@@ -1893,9 +1873,6 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                     }
                 } catch (e: Exception) {
                     Log.e("RatingFetch", "Error fetching rating", e)
-                }
-                if (userId != null) {
-                   // fetchAndLogUserRatingForSong(userId, songId)
                 }
 
                 delay(2000) // wait for 2 seconds before retrying
