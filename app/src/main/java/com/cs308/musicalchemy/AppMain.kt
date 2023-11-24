@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
@@ -644,7 +645,7 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
         ){
 
             Spacer(modifier = Modifier.height(16.dp))
-
+            /*
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -653,6 +654,8 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
             ) {
                 // Add content inside the Box as needed
             }
+
+             */
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -728,6 +731,7 @@ fun DisplaySong(song: Song, navController: NavController) {
     imageUrl?.let {
         Column(
             modifier = Modifier
+                .width(185.dp)
                 .clickable { navController.navigate("songDetail/${song.id}") }
                 .padding(bottom = 24.dp)
         ) {
@@ -736,7 +740,8 @@ fun DisplaySong(song: Song, navController: NavController) {
                 painter = rememberImagePainter(data = it),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(185.dp)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
                     .clip(shape = RoundedCornerShape(20.dp)),
                 contentScale = ContentScale.FillBounds
             )
@@ -747,13 +752,19 @@ fun DisplaySong(song: Song, navController: NavController) {
                 text = "${song.trackName}",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
             // Text for artist
             Text(
                 text = "${song.artists}",
                 color = Color.White,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -857,31 +868,35 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
             )
         )
 
-        // Results Section
         if (displaySongs && !isLoading) {
             val songs by viewModel.songs.observeAsState(initial = emptyList())
             if (songs.isEmpty() && searchText.isNotBlank()) {
                 Text(
-                    "No results found",
+                    "No result!",
                     color = Color.White,
                     modifier = Modifier
                         .align(CenterHorizontally)
-                        .padding(top = 16.dp)
-                )
-                Spacer(modifier = Modifier.weight(1f))
+                        .padding(top = 16.dp),
+
+                    )
             } else if (songs.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(songs) { song ->
-                        SongListItem(song) {
-                            // Navigate to song details or handle the click event
-                            navController.navigate("songDetail/${song.id}")
+                    items(songs.chunked(2)) { songPair ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            DisplaySong(song = songPair[0], navController = navController)
+                            if (songPair.size > 1) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                DisplaySong(song = songPair[1], navController = navController)
+                            }
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-                /*Spacer(modifier = Modifier.weight(1f))*/
             }
-        } else if (isLoading) {
-            // Display a loading indicator or similar here
+        }else if (isLoading) {
             Text(
                 "Loading...",
                 color = Color.White,
@@ -889,7 +904,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     .align(CenterHorizontally)
                     .padding(top = 16.dp),
 
-            )
+                )
             Spacer(modifier = Modifier.weight(1f))
         } else {
             Spacer(modifier = Modifier.weight(1f))
@@ -994,7 +1009,6 @@ fun SettingsScreen(navController: NavController) {
     ) {
         Text(text = "Settings", style = MaterialTheme.typography.h4)
 
-        // Other settings options...
 
         Spacer(modifier = Modifier.height(16.dp))
 
