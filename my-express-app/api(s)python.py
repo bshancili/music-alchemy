@@ -20,6 +20,45 @@ cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuni
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+
+
+
+@app.route('/search_song', methods=['GET'])
+def search_song():
+    track_name = request.args.get('track_name')
+    artist_name = request.args.get('artist_name')
+
+    if not track_name or not artist_name:
+        return jsonify({'error': 'Missing track_name or artist_name parameter'})
+
+    # Search for the song in the Firestore database
+    results = search_in_firestore(track_name, artist_name)
+
+    return jsonify({'results': results})
+
+def search_in_firestore(track_name, artist_name):
+    # Perform a case-insensitive search in the 'Tracks' collection
+    track_name_l = track_name.lower()
+    artist_name_l = artist_name.lower()
+    results = []
+
+    tracks_ref = db.collection('Tracks')
+    query_result = tracks_ref.where('lowercased_track_name', '==', track_name_l).where('lowercased_artists', 'array_contains', artist_name_l).limit(10).stream()
+
+    for doc in query_result:
+        track_data = doc.to_dict()
+        results.append({
+            'track_id': doc.id,
+            'name': track_data['track_name'],
+            'artist(s)': track_data['artists'],  
+        })
+
+    return results
+
+
+
+
+
 @app.route('/autocomplete', methods=['GET'])
 def autocomplete():
     query = request.args.get('song')
