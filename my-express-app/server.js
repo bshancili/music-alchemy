@@ -9,7 +9,7 @@ const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0"
 const OpenAIApi = require('openai');
 
 const openai = new OpenAIApi({
-  api_key: 'API_KEY_HERE'
+  apiKey: 'MY_API_KEY'
 });
 
 
@@ -162,6 +162,25 @@ app.post('/find_song_name', async (req,res) =>{
     res.status(500).send({ message: 'Error retrieving document', error });
   }
 });
+async function find_recommended_track(prompt_chatgpt) {
+  let tracks = prompt_chatgpt.split('\n').map(line => {
+      let parts = line.split(' - ');
+      return { track_name: parts[0].trim(), artist_name: parts[1].trim() };
+  });
+
+  try {
+      let response = await axios.post('http://localhost:8080/search_songs', { tracks });
+      if (response.data && response.data.results) {
+          //console.log(response.data.results)
+          return response.data.results;
+      }
+  } catch (error) {
+      console.error('Error fetching data for tracks:', error);
+  }
+
+  return [];
+}
+
 
 app.get('/find_recommended_tracks', async (req,res) =>{
   const userUid = req.body['uid']; // Extract the user's UID from the URL parameter
@@ -193,18 +212,21 @@ app.get('/find_recommended_tracks', async (req,res) =>{
     let myList = combinedList.join('\n');
 
 
-    const prompt = 'I want you to give me 10 songs according to my list of songs which some are rated by me some not. Here is list of songs of mine:\n' + myList;
+    const prompt = 'I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me. Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs:\n' + myList;
     const openai_response = await openai.chat.completions.create({
       model: "gpt-4", // or another model
       messages: [{"role": "user", "content": prompt}],
     });
 
-    //console.log(openai_response['choices'][0]['message']);
-    res.status(200).send(openai_response['choices'][0]['message']['content']);
-  } catch (error) {
-    // Handle errors, such as if the 'retrieve_user_tracks' endpoint is not reachable
+    console.log(openai_response['choices'][0]['message']['content']);
+    //res.status(200).send(openai_response['choices'][0]['message']['content']);
+    const recommendations = await find_recommended_track(openai_response['choices'][0]['message']['content']);
+    res.status(200).send(recommendations);
+  }catch (error) {
+    // Handle errors
     console.error('Error when trying to retrieve user tracks:', error);
     res.status(error.response?.status || 500).json({ message: 'Error retrieving user tracks' });
   }
+
 });
 
