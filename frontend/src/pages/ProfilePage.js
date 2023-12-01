@@ -3,7 +3,6 @@ import Profile from "../components/Profile";
 import { Box, useToast } from "@chakra-ui/react";
 import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
-import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
 
@@ -18,6 +17,7 @@ import {
 function ProfilePage() {
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
+  const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const { id } = useParams();
   //const { userID } = useAuthStore();
   const userID = localStorage.getItem("userID");
@@ -41,6 +41,29 @@ function ProfilePage() {
     }
   };
 
+  const fetchNonRatedSongs = async () => {
+    try {
+      const userDocRef = doc(db, "Users", id);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap) {
+        const userData = userSnap.data();
+        const likedSongs = Object.keys(userData.liked_song_list || {});
+        const ratedSongs = Object.keys(userData.rated_song_list || {});
+
+        const nonRated = likedSongs.filter(
+          (likedSong) => !ratedSongs.includes(likedSong)
+        );
+        console.log(nonRated);
+        const tracksDetails = await Promise.all(
+          nonRated.map((trackId) => fetchTrackDetails(trackId))
+        );
+        setNonRatedSongs(tracksDetails);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const fetchTrackDetails = async (id) => {
     const trackRef = doc(db, "Tracks", id);
     try {
@@ -51,7 +74,6 @@ function ProfilePage() {
           id: trackSnap.id,
           ...trackSnap.data(),
         };
-        console.log(trackDetails);
         return trackDetails;
       } else {
         console.error("Track not found");
@@ -127,10 +149,9 @@ function ProfilePage() {
     }
   };
   useEffect(() => {
-    console.log(id);
-
     fetchUser();
     fetchAllLikedSongs();
+    fetchNonRatedSongs();
   }, [id]);
 
   return (
@@ -143,7 +164,7 @@ function ProfilePage() {
         isUserProfile={isUserProfile}
       />
 
-      <ProfileMusicList tracks={likedSongs} />
+      <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
     </Box>
   );
 }

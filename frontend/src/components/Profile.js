@@ -36,28 +36,6 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
     onunfriend();
   };
 
-  const fetchUser = async () => {
-    try {
-      const userDocRef = doc(db, "Users", userID);
-      const userSnap = await getDoc(userDocRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        // Do something with the user data, e.g., set it in the component state
-      } else {
-        console.log("User not found");
-        // Handle the case where the user document does not exist
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      // Handle the error appropriately
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
   if (!user) {
     return (
       <Container>

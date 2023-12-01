@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, Text, extendTheme } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import TopChartItem from "./TopChartItem";
 
 const MainSection = ({ topTracks }) => {
