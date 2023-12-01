@@ -24,7 +24,7 @@ const MainSection = ({ topTracks }) => {
       </Box>
       <Flex direction="column">
         <Text
-          fontSize="md"
+          fontSize="lg"
           color="white"
           fontWeight="bold"
           lineHeight={1.3}

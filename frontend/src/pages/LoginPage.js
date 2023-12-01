@@ -17,9 +17,11 @@ const LoginPage = () => {
   return (
     <Container
       maxW="100%"
+      h="100vh"
       display="flex"
       flexDirection="column"
       alignItems="center"
+      bg="#1D2123"
     >
       <Flex
         as="header"
