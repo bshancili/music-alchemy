@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import os
 
 app = Flask(__name__)
 
@@ -15,26 +16,42 @@ SPOTIPY_CLIENT_SECRET = 'ee8e317543da4aa59bb351217a476e14'
 client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(base_dir, 'music-alchemy-firebase-adminsdk.json')
+cred = credentials.Certificate(json_path)
+
 # Firebase credentials and initialization
-cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuniv.edu\\Desktop\\CS308\\code\\ayca_backend\\music-alchemy\\my-express-app\\music-alchemy-firebase-adminsdk.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+@app.route('/search_songs', methods=['POST'])
+def search_songs():
+    data = request.get_json()
+    tracks = data.get('tracks')
 
+    if not tracks:
+        return jsonify({'error': 'No tracks provided'}), 400
 
+    all_results = []
 
-@app.route('/search_song', methods=['GET'])
-def search_song():
-    track_name = request.args.get('track_name')
-    artist_name = request.args.get('artist_name')
+    for track in tracks:
+        track_name = track.get('track_name')
+        artist_name = track.get('artist_name')
 
-    if not track_name or not artist_name:
-        return jsonify({'error': 'Missing track_name or artist_name parameter'})
+        if track_name and artist_name:
+            results = search_in_firestore(track_name, artist_name)
+            all_results.extend(results)
+        else:
+            all_results.append({'error': f'Missing track_name or artist_name for track {track}'})
+    
+    # if recommended songs are not included in Tracks
+    message = "Not a lucky time! Please try again!!"
+    if len(all_results) == 0:
+        return jsonify({'results': message})
+    
+    print(all_results)
 
-    # Search for the song in the Firestore database
-    results = search_in_firestore(track_name, artist_name)
-
-    return jsonify({'results': results})
+    return jsonify({'results': all_results})
 
 def search_in_firestore(track_name, artist_name):
     # Perform a case-insensitive search in the 'Tracks' collection
@@ -48,15 +65,10 @@ def search_in_firestore(track_name, artist_name):
     for doc in query_result:
         track_data = doc.to_dict()
         results.append({
-            'track_id': doc.id,
-            'name': track_data['track_name'],
-            'artist(s)': track_data['artists'],  
+            'track_id': doc.id
         })
 
     return results
-
-
-
 
 
 @app.route('/autocomplete', methods=['GET'])
