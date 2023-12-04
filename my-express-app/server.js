@@ -9,7 +9,7 @@ const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0"
 const OpenAIApi = require('openai');
 
 const openai = new OpenAIApi({
-  apiKey: 'MY_API_KEY'
+  apiKey: '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'
 });
 
 
@@ -212,7 +212,7 @@ app.get('/find_recommended_tracks', async (req,res) =>{
     let myList = combinedList.join('\n');
 
 
-    const prompt = 'I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me. Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs:\n' + myList;
+    const prompt = 'I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me. Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like "sang by" or anyting else here is the example format: All I want - Adele:\n' + myList;
     const openai_response = await openai.chat.completions.create({
       model: "gpt-4", // or another model
       messages: [{"role": "user", "content": prompt}],
