@@ -1,3 +1,4 @@
 {
+  "cmake.configureOnOpen": true,
   "git.ignoreLimitWarning": true
 }
