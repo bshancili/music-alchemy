@@ -356,6 +356,7 @@ fun App(startGoogleSignIn: () -> Unit) {
             MainMenu(navController, viewModel)
         }
         composable("search") { Search(navController) }
+        composable("searchUser") { SearchUser(navController)}
         composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
@@ -622,7 +623,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable {  navController.navigate("settings") }
+                .clickable { navController.navigate("settings") }
         )
     }
 }
@@ -849,30 +850,52 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         var displaySongs by remember { mutableStateOf(false) }
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
 
-        TextField(
-            value = searchText,
-            onValueChange = { newText ->
-                searchText = newText
-                displaySongs = newText.isNotBlank()
-                if (displaySongs) {
-                    viewModel.loadSongsWithSubstring(newText)
-                }
-            },
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
-                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp))
-                .height(56.dp),
-            textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
-            placeholder = { Text("Search Songs...", color = Color.Gray) },
-            singleLine = true,
-            colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = Color.Transparent,
-                cursorColor = Color.Black,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+        ) {
+
+
+            TextField(
+                value = searchText,
+                onValueChange = { newText ->
+                    searchText = newText
+                    displaySongs = newText.isNotBlank()
+                    if (displaySongs) {
+                        viewModel.loadSongsWithSubstring(newText)
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+                textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+                placeholder = { Text("Search Songs...", color = Color.Gray) },
+                singleLine = true,
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color.Transparent,
+                    cursorColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
             )
-        )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = { navController.navigate("searchUser") },
+                modifier = Modifier
+                    .width(90.dp) // Set the width to your desired value
+                    .height(56.dp), // Match the height of the TextField
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
+                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
+            ) {
+                Text("Search User")
+            }
+
+
+        }
 
         if (displaySongs && !isLoading) {
             val songs by viewModel.songs.observeAsState(initial = emptyList())
@@ -921,7 +944,114 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
 }
 
 
+@Composable
+fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        TopNav(navController = navController)
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        var searchText by remember { mutableStateOf("") }
+        var displaySongs by remember { mutableStateOf(false) }
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+
+
+            TextField(
+                value = searchText,
+                onValueChange = { newText ->
+                    searchText = newText
+                    displaySongs = newText.isNotBlank()
+                    if (displaySongs) {
+                        viewModel.loadSongsWithSubstring(newText)
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+                textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+                placeholder = { Text("Search Songs...", color = Color.Gray) },
+                singleLine = true,
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color.Transparent,
+                    cursorColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                onClick = { navController.navigate("search") },
+                modifier = Modifier
+                    .width(90.dp) // Set the width to your desired value
+                    .height(56.dp), // Match the height of the TextField
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
+                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
+            ) {
+                Text("Search User")
+            }
+
+
+        }
+
+        if (displaySongs && !isLoading) {
+            val songs by viewModel.songs.observeAsState(initial = emptyList())
+            if (songs.isEmpty() && searchText.isNotBlank()) {
+                Text(
+                    "No result!",
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(CenterHorizontally)
+                        .padding(top = 16.dp),
+
+                    )
+            } else if (songs.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(songs.chunked(2)) { songPair ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            DisplaySong(song = songPair[0], navController = navController)
+                            if (songPair.size > 1) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                DisplaySong(song = songPair[1], navController = navController)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        }else if (isLoading) {
+            Text(
+                "Loading...",
+                color = Color.White,
+                modifier = Modifier
+                    .align(CenterHorizontally)
+                    .padding(top = 16.dp),
+
+                )
+            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        CommonBottomBar(navController = navController)
+    }
+}
 
 
 @Composable
@@ -1404,6 +1534,7 @@ class FriendProfileViewModel : ViewModel() {
 
 
             val friends = mutableListOf<FriendData>()
+
 
 
             for (id in friendIds) {
@@ -2262,5 +2393,52 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 
         CommonBottomBar(navController = navController)
 
+    }
+}
+
+
+
+
+
+//~~~~~~~~~~
+//~~~~~~~~~~USERS~~~~~~~~~~
+//
+data class User(
+    var uid: String = "",
+
+    @get:PropertyName("username") @set:PropertyName("username") var username: String? = "",
+    @get:PropertyName("profile_picture_url") @set:PropertyName("profile_picture_url") var profilePictureUrl: String? = "",
+
+    // Since liked_song_list is a map, we will use a Map to represent it.
+    // You should define the value type according to what's stored in this map.
+    // Here I'm assuming the values are Strings for simplicity.
+    @get:PropertyName("liked_song_list") @set:PropertyName("liked_song_list") var likedSongList: Map<String, String>? = mapOf(),
+
+    // rated_song_list is also a map.
+    @get:PropertyName("rated_song_list") @set:PropertyName("rated_song_list") var ratedSongList: Map<String, String>? = mapOf(),
+
+    // Assuming friends_list is an array of Strings (user IDs or usernames).
+    @get:PropertyName("friends_list") @set:PropertyName("friends_list") var friendsList: List<String>? = listOf(),
+
+    // Assuming comments is an array. You might have to create a separate data class for Comment if it's a complex type.
+    @get:PropertyName("comments") @set:PropertyName("comments") var comments: List<String>? = listOf(),
+
+    // Add other fields as necessary
+)
+class UsersViewModel : ViewModel() {
+    private val _users = MutableLiveData<List<User>>()
+    val users: LiveData<List<User>> = _users
+
+    private val _isLoadingUsers = MutableLiveData<Boolean>()
+    val isLoadingUsers: LiveData<Boolean> = _isLoadingUsers
+
+    // Function to load users, similar to loadSongs()
+    fun loadUsers() {
+        // Implement Firebase Firestore logic to fetch users
+    }
+
+    // Function to search users by a substring
+    fun loadUsersWithSubstring(substring: String) {
+        // Implement logic to fetch and filter users by the given substring
     }
 }
