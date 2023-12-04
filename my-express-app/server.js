@@ -9,7 +9,7 @@ const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0"
 const OpenAIApi = require('openai');
 
 const openai = new OpenAIApi({
-  apiKey: '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'
+  apiKey: 'MY_API_KEY'
 });
 
 
