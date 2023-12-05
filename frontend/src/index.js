@@ -1,15 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css";
-import App from "./App";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import { ChakraProvider } from "@chakra-ui/react";
-import ProfilePage from "./pages/ProfilePage";
-import MusicDetailPage from "./pages/MusicDetailPage";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
+import { ChakraProvider } from '@chakra-ui/react';
+import ProfilePage from './pages/ProfilePage';
+import MusicDetailPage from './pages/MusicDetailPage';
+import RecommendPage from './pages/RecommendPage';
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <BrowserRouter>
@@ -17,10 +18,11 @@ root.render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to={"login"} />} />
+        <Route path="*" element={<Navigate to={'login'} />} />
         <Route path="home" element={<HomePage />} />
         <Route exact path="profile/:id" element={<ProfilePage />} />
         <Route path="music/:id" element={<MusicDetailPage />} />
+        <Route path="recommend_songs" element={<RecommendPage />} />
       </Routes>
     </ChakraProvider>
   </BrowserRouter>

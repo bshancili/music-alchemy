@@ -34,6 +34,9 @@ const MusicDetail = ({ t }) => {
     setRating(star);
   };
   const userID = localStorage.getItem("userID");
+  const handleExternalLink = () => {
+    window.open(t.track_url, "_blank");
+  };
   const handleRateButtonClick = async () => {
     if (userID && !loading) {
       setLoading(true);
@@ -290,6 +293,7 @@ const MusicDetail = ({ t }) => {
             p={4}
             icon={<Image src={spotify_logo} />}
             _hover={{ bg: "#147040" }}
+            onClick={handleExternalLink}
           />
           <IconButton
             borderRadius="15px"

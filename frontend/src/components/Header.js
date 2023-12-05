@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Box,
   Flex,
@@ -6,49 +6,45 @@ import {
   IconButton,
   Image,
   Menu,
-  MenuButton,
-  MenuList,
   MenuItem,
-  HStack,
-  VStack,
   Text,
   SimpleGrid,
-} from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
-import Fuse from "fuse.js";
-import MusicListItem from "./MusicListItem";
-import heart from "../utils/heart.svg";
-import home from "../utils/home.svg";
-import fire from "../utils/fire.svg";
-import add from "../utils/add.svg";
-import profile from "../utils/profile.svg";
-import chat from "../utils/chat.svg";
-import { useNavigate } from "react-router-dom";
-import { db } from "../firebase";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
-import useAuthStore from "../stores/authStore";
+} from '@chakra-ui/react';
+import { SearchIcon } from '@chakra-ui/icons';
+import Fuse from 'fuse.js';
+import MusicListItem from './MusicListItem';
+import heart from '../utils/heart.svg';
+import home from '../utils/home.svg';
+import fire from '../utils/fire.svg';
+import add from '../utils/add.svg';
+import profile from '../utils/profile.svg';
+import chat from '../utils/chat.svg';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import useAuthStore from '../stores/authStore';
 
 const Header = () => {
   //const { userID } = useAuthStore();
-  const userID = localStorage.getItem("userID");
+  const userID = localStorage.getItem('userID');
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const handleKeyPress = (event) => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       handleSearch();
     }
   };
   const handleSearch = async () => {
-    console.log("Search Query:", searchQuery);
+    console.log('Search Query:', searchQuery);
 
     if (!searchQuery.trim()) {
       setSearchResults([]);
       return;
     }
 
-    const tracksCollection = collection(db, "Tracks");
-    const usersCollection = collection(db, "Users");
+    const tracksCollection = collection(db, 'Tracks');
+    const usersCollection = collection(db, 'Users');
 
     try {
       const [tracksSnap, usersSnap] = await Promise.all([
@@ -67,13 +63,13 @@ const Header = () => {
 
       // Create a new instance of Fuse with your tracks and users data and search options
       const fuseTracks = new Fuse(allTracks, {
-        keys: ["track_name"],
+        keys: ['track_name'],
         includeScore: true,
         threshold: 0.3,
       });
 
       const fuseUsers = new Fuse(allUsers, {
-        keys: ["username"],
+        keys: ['username'],
         includeScore: true,
         threshold: 0.3,
       });
@@ -84,11 +80,11 @@ const Header = () => {
 
       // Extract the actual search results from the Fuse matches
       const resultsTracks = fuseResultsTracks.map((result) => ({
-        type: "track",
+        type: 'track',
         ...result.item,
       }));
       const resultsUsers = fuseResultsUsers.map((result) => ({
-        type: "user",
+        type: 'user',
         ...result.item,
       }));
 
@@ -101,8 +97,8 @@ const Header = () => {
         // You can implement logic here to fill remaining results based on your requirements
         // For simplicity, this example fills the remaining results with close matches or random results
         const closeMatches = fuseTracks
-          .search("some_default_query")
-          .map((result) => ({ type: "track", ...result.item }));
+          .search('some_default_query')
+          .map((result) => ({ type: 'track', ...result.item }));
         const randomResults = allTracks
           .sort(() => 0.5 - Math.random())
           .slice(0, remainingResultsCount);
@@ -110,17 +106,17 @@ const Header = () => {
         remainingResults.push(...closeMatches, ...randomResults);
       }
 
-      console.log("Fetched Results:", allResults);
+      console.log('Fetched Results:', allResults);
       setSearchResults(allResults.concat(remainingResults).slice(0, 10));
     } catch (error) {
-      console.error("Error fetching search results:", error);
+      console.error('Error fetching search results:', error);
     }
   };
 
   const handleResultClick = (result, type) => {
     // Implement what happens when a search result is clicked
-    console.log("Clicked on result:", result);
-    if (type === "user") {
+    console.log('Clicked on result:', result);
+    if (type === 'user') {
       navigate(`/profile/${result.id}`);
     }
   };
@@ -140,18 +136,18 @@ const Header = () => {
       <Flex align="center" gap="12px">
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: '#000' }}
           color="#FFFFFF"
           w="64px"
           h="64px"
           icon={<Image src={home} />}
           onClick={() => {
-            navigate("/home");
+            navigate('/home');
           }}
         />
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: '#000' }}
           color="#FFFFFF"
           w="64px"
           h="64px"
@@ -170,11 +166,11 @@ const Header = () => {
             onKeyPress={handleKeyPress} // Trigger search on blur (you can change this behavior)
             variant="unstyled"
             placeholder="Search..."
-            _focus={{ outline: "none" }}
+            _focus={{ outline: 'none' }}
           />
           <IconButton
             bg="#33373B5E"
-            _hover={{ bg: "#000" }}
+            _hover={{ bg: '#000' }}
             w="64px"
             h="64px"
             icon={<SearchIcon />}
@@ -194,11 +190,11 @@ const Header = () => {
             >
               {/* Display User results */}
               {searchResults
-                .filter((result) => result.type === "user")
+                .filter((result) => result.type === 'user')
                 .map((userResult) => (
                   <MenuItem
                     key={userResult.id}
-                    onClick={() => handleResultClick(userResult, "user")}
+                    onClick={() => handleResultClick(userResult, 'user')}
                   >
                     <Flex
                       direction="column"
@@ -209,7 +205,7 @@ const Header = () => {
                       boxShadow="md"
                       cursor="pointer"
                       transition="transform 0.2s"
-                      _hover={{ transform: "scale(1.05)" }}
+                      _hover={{ transform: 'scale(1.05)' }}
                     >
                       {/* Category label for "User" */}
                       <Text
@@ -241,7 +237,7 @@ const Header = () => {
 
               {/* Display Song results */}
               {searchResults
-                .filter((result) => result.type === "track")
+                .filter((result) => result.type === 'track')
                 .map((songResult) => (
                   <MenuItem
                     key={songResult.id}
@@ -259,15 +255,18 @@ const Header = () => {
       <Flex align="center" gap="10px">
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: '#000' }}
           color="#FFFFFF"
           w="64px"
           h="64px"
           icon={<Image src={add} />}
+          onClick={() => {
+            navigate('/recommend_songs');
+          }}
         />
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: '#000' }}
           color="#FFFFFF"
           w="64px"
           h="64px"
@@ -275,7 +274,7 @@ const Header = () => {
         />
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: '#000' }}
           color="#FFFFFF"
           w="64px"
           h="64px"
