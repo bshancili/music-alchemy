@@ -126,15 +126,6 @@ const SignUp = () => {
       return;
     }
     if (!passwordCheck(formData.password)) {
-      toast({
-        title:
-          "Password must be at least 8 characters long, with at least one lowercase letter, one uppercase letter, and one special character (@$!%*?&=+#.,)",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
-
       // Password check failed, return without signing up
       return;
     }
@@ -151,16 +142,18 @@ const SignUp = () => {
       );
       const userID = response.user.uid.toString();
       const token = response._tokenResponse.idToken;
-
-      const userDocRef = doc(db, "Users", response.user.uid);
-      await setDoc(userDocRef, {
+      const userDocData = {
         username: formData.username,
-        profile_picture_url: pic, // Assuming pic contains the URL of the profile picture
-        liked_song_list: [], // An array to store liked songs
-        friends_list: [], // An array to store friends
-        comments: [], // An array to store comments
+        profile_picture_url:
+          pic ||
+          "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg", // Set to the URL of the picture or an empty string
+        liked_song_list: [],
+        friends_list: [],
+        comments: [],
         uid: userID,
-      });
+      };
+      const userDocRef = doc(db, "Users", response.user.uid);
+      await setDoc(userDocRef, userDocData);
 
       signup(userData, userID, token);
       localStorage.setItem("userID", userID);
