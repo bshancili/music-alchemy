@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Box, List, ListItem, Button, Spinner } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  ListItem,
+  Button,
+  Spinner,
+  Grid,
+  GridItem,
+} from "@chakra-ui/react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicListItem from "../components/MusicListItem";
@@ -59,13 +67,13 @@ const RecommendPage = () => {
   }, []);
 
   return (
-    <Box>
+    <Box bg="#1D2123" h="100vh">
       <Header />
-      <Box p="4" textAlign="center">
+      <Box p="4" color="white" textAlign="center">
         {loading ? (
           <Box>
             <Spinner size="xl" />
-            <p>Recommending for your music taste...</p>
+            <Text>Recommending for your music taste...</Text>
           </Box>
         ) : (
           <Box
@@ -74,14 +82,14 @@ const RecommendPage = () => {
             flexDirection="column"
             alignItems="center"
           >
-            <List spacing={3}>
+            <Grid templateColumns="repeat(4, 1fr)" gap={3}>
               {recommendedTracks.map((track) => (
-                <ListItem key={track.id}>
+                <GridItem key={track.id}>
                   <MusicListItem track={track} />
-                </ListItem>
+                </GridItem>
               ))}
-            </List>
-            <Button mt={6} onClick={getRecommendedSongs}>
+            </Grid>
+            <Button mt="30px" onClick={getRecommendedSongs}>
               Get Recommendations
             </Button>
           </Box>
