@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   Flex,
@@ -24,12 +24,39 @@ import { db } from "../firebase";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import useAuthStore from "../stores/authStore";
 
+import { useEffect } from "react";
+
+const useClickOutside = (ref, callback) => {
+  const handleClick = (event) => {
+    if (ref.current && !ref.current.contains(event.target)) {
+      callback();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("click", handleClick);
+
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, [ref, callback]);
+};
+
 const Header = () => {
   //const { userID } = useAuthStore();
   const userID = localStorage.getItem("userID");
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [isSearchActive, setIsSearchActive] = useState(false);
+
+  const dropdownRef = useRef(null);
+
+  // Custom hook to handle clicks outside the dropdown
+  useClickOutside(dropdownRef, () => {
+    setIsSearchActive(false);
+  });
+
   const handleKeyPress = (event) => {
     if (event.key === "Enter") {
       handleSearch();
@@ -40,6 +67,7 @@ const Header = () => {
 
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setIsSearchActive(false); // Don't set isSearchActive to true when the query is empty
       return;
     }
 
@@ -111,6 +139,8 @@ const Header = () => {
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
+
+    setIsSearchActive(true);
   };
 
   const handleResultClick = (result, type) => {
@@ -119,6 +149,8 @@ const Header = () => {
     if (type === "user") {
       navigate(`/profile/${result.id}`);
     }
+
+    setIsSearchActive(false);
   };
 
   return (
@@ -160,13 +192,12 @@ const Header = () => {
 
       {/* Center of the header with a search bar */}
       <Box flex="1" ml="4">
-        <Flex flexDirection="row" align="center">
+        <Flex flexDirection="row" align="center" ref={dropdownRef}>
           <Input
             ml={4}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onBlur={handleSearch}
-            onKeyPress={handleKeyPress} // Trigger search on blur (you can change this behavior)
+            onKeyPress={handleKeyPress}
             variant="unstyled"
             placeholder="Search..."
             _focus={{ outline: "none" }}
@@ -177,11 +208,14 @@ const Header = () => {
             w="64px"
             h="64px"
             icon={<SearchIcon />}
-            onClick={handleSearch} // Trigger search on button click
+            onClick={() => {
+              handleSearch();
+              setIsSearchActive(true); // Set isSearchActive to true only on button click
+            }}
           />
         </Flex>
         {/* Dropdown Menu for search results */}
-        {searchResults.length > 0 && (
+        {isSearchActive && (
           <Menu>
             <SimpleGrid
               columns={5}
@@ -190,6 +224,9 @@ const Header = () => {
               bg="#1A1E1F"
               borderRadius="md"
               p={0}
+              zIndex={10} // Set a higher zIndex value
+              left="100px" // Adjust the left position as needed
+              top="120"
             >
               {/* Display User results */}
               {searchResults
@@ -246,7 +283,37 @@ const Header = () => {
                     key={songResult.id}
                     onClick={() => handleResultClick(songResult)}
                   >
-                    <MusicListItem track={songResult} />
+                    <Flex
+                      direction="column"
+                      align="center"
+                      p={1}
+                      bg="#1A1E1F"
+                      borderRadius="md"
+                      boxShadow="md"
+                      cursor="pointer"
+                      transition="transform 0.2s"
+                      _hover={{ transform: "scale(1.05)" }}
+                      position="relative"
+                    >
+                      {/* Category label for "Song" */}
+                      <Text
+                        position="absolute"
+                        top={2}
+                        left={2}
+                        fontSize="xs"
+                        fontWeight="bold"
+                        color="white"
+                        zIndex={1}
+                        bg="#1A1E1F" // Set the correct background color
+                        px={2} // Add some padding for better visibility
+                        borderRadius="md" // Set border radius
+                      >
+                        Song
+                      </Text>
+
+                      {/* Use the existing MusicListItem component without modification */}
+                      <MusicListItem track={songResult} />
+                    </Flex>
                   </MenuItem>
                 ))}
             </SimpleGrid>

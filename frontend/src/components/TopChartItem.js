@@ -167,6 +167,7 @@ const TopChartItem = ({ track }) => {
         width="48px"
         height="48px"
         borderRadius="15px"
+        position="relative"
         bg={isLiked ? "#085e32" : "#33373B5E"}
         icon={<Image src={heart} />}
         onClick={(e) => {
