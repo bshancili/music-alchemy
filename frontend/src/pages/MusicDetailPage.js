@@ -1,9 +1,9 @@
-import { Box } from "@chakra-ui/react";
-import React, { useEffect, useMemo } from "react";
-import Header from "../components/Header";
-import MusicDetail from "../components/MusicDetail";
-import Comments from "../components/Comments";
-import { useLocation } from "react-router-dom";
+import { Box } from '@chakra-ui/react';
+import React, { useMemo } from 'react';
+import Header from '../components/Header';
+import MusicDetail from '../components/MusicDetail';
+import Comments from '../components/Comments';
+import { useLocation } from 'react-router-dom';
 
 const MusicDetailPage = () => {
   const location = useLocation();

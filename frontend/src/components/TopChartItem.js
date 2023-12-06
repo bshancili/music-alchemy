@@ -1,23 +1,119 @@
 // TopChartItem.js
 
-import React from "react";
-import { Box, Text, IconButton, VStack, Image, HStack } from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Text,
+  IconButton,
+  VStack,
+  Image,
+  HStack,
+  useToast,
+} from "@chakra-ui/react";
 import heart from "../utils/heart.svg";
+import { useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 const TopChartItem = ({ track }) => {
-  const t = {
-    album_images: [
-      {
-        height: 640,
-        url: "https://i.scdn.co/image/ab67616d0000b273904445d70d04eb24d6bb79ac",
-        width: 640,
-      },
-    ],
-    album_name: "1989 (Taylor's Version)",
-    artists: ["Taylor Swift"],
-    track_name: "Out Of The Woods (Taylor's Version)",
-    spotify_track_id: "64LU4c1nfjz1t4VnGhagcg",
-    id: "05tVryr3s4GtbGMjLyB7",
+  const navigate = useNavigate();
+  const handleItemClick = () => {
+    navigate(`/music/${track.id}`, {
+      state: { trackData: track },
+    });
   };
+  const [isLiked, setIsLiked] = useState(false);
+  const toast = useToast();
+
+  const [likeCount, setLikeCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const userID = localStorage.getItem("userID");
+
+  const likeSong = async () => {
+    if ((userID || !isLiked) && !loading) {
+      setLoading(true);
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const likedSongsArray = userDoc.data().liked_song_list || [];
+
+      const timestamp = new Date();
+      const updatedLikedSongs = {
+        ...likedSongsArray,
+        [track.id]: { timestamp },
+      };
+
+      await updateDoc(userRef, {
+        liked_song_list: updatedLikedSongs,
+      });
+
+      toast({
+        title: "Song is liked",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      // Now, update the like_count field
+      const songRef = doc(db, "Tracks", track.id);
+      const songDoc = await getDoc(songRef);
+      const currentLikes = songDoc.data().like_count || 0;
+      setLikeCount(likeCount + 1);
+      setIsLiked(true);
+      await updateDoc(songRef, {
+        like_count: currentLikes + 1,
+      });
+      setLoading(false);
+    }
+  };
+  const unlikeSong = async () => {
+    if ((userID || isLiked) && !loading) {
+      setLoading(true);
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const likedSongsArray = userDoc.data().liked_song_list || {};
+
+      if (likedSongsArray[track.id]) {
+        delete likedSongsArray[track.id];
+      }
+
+      await updateDoc(userRef, {
+        liked_song_list: likedSongsArray,
+      });
+      toast({
+        title: "Song is unliked",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      const songRef = doc(db, "Tracks", track.id);
+      const songDoc = await getDoc(songRef);
+      const currentLikes = songDoc.data().like_count || 0;
+      setLikeCount(likeCount - 1);
+      setIsLiked(false);
+
+      await updateDoc(songRef, {
+        like_count: currentLikes - 1,
+      });
+      setLoading(false);
+    }
+  };
+  const fetchIsLiked = async () => {
+    if (userID) {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+      const likedSongList = { ...(userData.liked_song_list || {}) };
+      if (likedSongList[track.id]) {
+        setIsLiked(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchIsLiked();
+    console.log(isLiked);
+  }, [likeSong]);
 
   return (
     <Box
@@ -31,6 +127,12 @@ const TopChartItem = ({ track }) => {
       flexDir="row"
       justifyContent="space-between"
       mb={5}
+      onClick={handleItemClick}
+      cursor="pointer"
+      _hover={{
+        backgroundColor: "#0a0a0a", // Change the background color on hover
+        boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.8)", // Add a subtle box shadow on hover
+      }}
     >
       <HStack>
         <Image
@@ -65,10 +167,15 @@ const TopChartItem = ({ track }) => {
         width="48px"
         height="48px"
         borderRadius="15px"
-        bg="#33373B5E"
+        bg={isLiked ? "#085e32" : "#33373B5E"}
         icon={<Image src={heart} />}
-        onClick={() => {
+        onClick={(e) => {
           // Handle like button click logic here
+          e.stopPropagation();
+          isLiked ? unlikeSong() : likeSong();
+        }}
+        _hover={{
+          transform: "scale(1.25)",
         }}
       ></IconButton>
     </Box>

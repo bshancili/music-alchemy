@@ -6,11 +6,7 @@ import {
   IconButton,
   Image,
   Menu,
-  MenuButton,
-  MenuList,
   MenuItem,
-  HStack,
-  VStack,
   Text,
   SimpleGrid,
 } from "@chakra-ui/react";
@@ -162,6 +158,9 @@ const Header = () => {
           w="64px"
           h="64px"
           icon={<Image src={fire} />}
+          onClick={() => {
+            navigate("/add_song");
+          }}
         />
       </Flex>
 
@@ -300,6 +299,9 @@ const Header = () => {
           w="64px"
           h="64px"
           icon={<Image src={add} />}
+          onClick={() => {
+            navigate("/recommend_songs");
+          }}
         />
         <IconButton
           bg="#33373B5E"

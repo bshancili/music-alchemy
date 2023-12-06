@@ -27,12 +27,16 @@ const MusicDetail = ({ t }) => {
   const [isLiked, setIsLiked] = useState(false);
   const toast = useToast();
   const [rating, setRating] = useState(0);
+  const [ratingText, setRatingText] = useState(0.0);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const handleStarClick = (star) => {
     setRating(star);
   };
   const userID = localStorage.getItem("userID");
+  const handleExternalLink = () => {
+    window.open(t.track_url, "_blank");
+  };
   const handleRateButtonClick = async () => {
     if (userID && !loading) {
       setLoading(true);
@@ -56,9 +60,8 @@ const MusicDetail = ({ t }) => {
           (currentTrackRating * ratingCount - currentUserRating + rating) /
           ratingCount;
 
-        setRating(newRating.toFixed(1));
         await updateDoc(songRef, {
-          rating: newRating.toFixed(1),
+          rating: parseFloat(newRating.toFixed(1)),
         });
         updatedRatedSongList[t.id].rating = rating;
         updatedRatedSongList[t.id].timestamp = timestamp;
@@ -81,9 +84,10 @@ const MusicDetail = ({ t }) => {
         const newCount = currentCount + 1;
         const newRating = (currentRating * currentCount + rating) / newCount;
 
+        setRatingText(newRating.toFixed(1));
         // Update the track data in the database
         await updateDoc(songRef, {
-          rating: newRating.toFixed(1),
+          rating: parseFloat(newRating.toFixed(1)),
           rating_count: newCount,
         });
 
@@ -195,6 +199,8 @@ const MusicDetail = ({ t }) => {
       const trackDoc = await getDoc(trackRef);
       const trackData = trackDoc.data();
       const lC = trackData.like_count;
+      const rate = trackData.rating;
+      setRatingText(rate);
       setLikeCount(lC);
     }
   };
@@ -255,7 +261,7 @@ const MusicDetail = ({ t }) => {
           >
             <Icon as={StarIcon} boxSize={6} />
             <Text fontSize="24px" fontWeight="bold">
-              {t.rating}
+              {ratingText}
             </Text>
           </Box>
           <Box
@@ -287,6 +293,7 @@ const MusicDetail = ({ t }) => {
             p={4}
             icon={<Image src={spotify_logo} />}
             _hover={{ bg: "#147040" }}
+            onClick={handleExternalLink}
           />
           <IconButton
             borderRadius="15px"

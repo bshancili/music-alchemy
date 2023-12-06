@@ -16,27 +16,22 @@ const HomePageMusicList = () => {
   const [allTracks, setAllTracks] = useState([]);
   const [loading, setLoading] = useState(false);
   const observer = useRef();
+  const [lastVisible, setLastVisible] = useState();
+  const [hasMore, setHasMore] = useState(true); // New state variable
 
-  const fetchAllTracks = async (startAfterDoc) => {
-    //const tracksCollection = collection(db, "Tracks");
+  const fetchInitialTracks = async () => {
     let queryOptions = query(
       collection(db, "Tracks"),
-      limit(42),
+      limit(24),
       orderBy("rating", "desc")
     );
-
-    if (startAfterDoc && !setLoading) {
-      queryOptions = query(
-        collection(db, "Tracks"),
-        orderBy("rating", "desc"),
-        startAfter(startAfterDoc),
-        limit(12)
-      );
-    }
-    setLoading(true);
-
     try {
       const snap = await getDocs(queryOptions);
+      const lastDoc = snap.docs[snap.docs.length - 1];
+
+      if (!lastVisible || lastDoc.id !== lastVisible.id) {
+        setLastVisible(lastDoc);
+      }
       const trackData = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -48,23 +43,61 @@ const HomePageMusicList = () => {
     }
   };
 
+  const fetchAllTracks = async () => {
+    if (loading || !lastVisible | !hasMore) return;
+
+    let queryOptions = query(
+      collection(db, "Tracks"),
+      orderBy("rating", "desc"),
+      limit(18),
+      startAfter(lastVisible)
+    );
+
+    setLoading(true);
+
+    try {
+      const snap = await getDocs(queryOptions);
+      if (snap.docs.length === 0) {
+        setHasMore(false);
+      } else {
+        const lastDoc = snap.docs[snap.docs.length - 1];
+
+        if (!lastVisible || lastDoc.id !== lastVisible.id) {
+          setLastVisible(lastDoc);
+        }
+        const trackData = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAllTracks((prevTracks) => [...prevTracks, ...trackData]);
+        console.log(allTracks);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching tracks:", error);
+    }
+  };
+
   const lastTrack = useCallback(
     (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          fetchAllTracks(allTracks[allTracks.length - 1]);
-        }
-      });
-      if (node) observer.current.observe(node);
-      console.log(node);
+      if (!loading && node) {
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            fetchAllTracks();
+          }
+        });
+
+        observer.current.observe(node);
+      }
     },
     [loading, allTracks]
   );
 
   useEffect(() => {
-    fetchAllTracks();
+    fetchInitialTracks();
+    console.log("errror");
   }, []);
 
   return (

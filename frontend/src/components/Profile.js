@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -8,55 +7,32 @@ import {
   Spacer,
   Image,
   IconButton,
+  Button,
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
-import { db } from "../firebase";
-import {
-  collection,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-} from "firebase/firestore";
 import settings from "../utils/settings.svg";
 import friend from "../utils/addFriend.png";
 import cross from "../utils/cross.png";
-
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
   const { userID } = useAuthStore();
+  const navigate = useNavigate();
+  const [showLogoutButton, setShowLogoutButton] = useState(false);
 
+  const handleSettingsClick = () => {
+    setShowLogoutButton(!showLogoutButton);
+  };
   const handleAddFriend = () => {
     onaddFriend();
   };
   const handleUnfriend = () => {
     onunfriend();
   };
-
-  const fetchUser = async () => {
-    try {
-      const userDocRef = doc(db, "Users", userID);
-      const userSnap = await getDoc(userDocRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        // Do something with the user data, e.g., set it in the component state
-      } else {
-        console.log("User not found");
-        // Handle the case where the user document does not exist
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      // Handle the error appropriately
-    }
+  const handleLogout = () => {
+    navigate("/login");
+    localStorage.clear();
   };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
 
   if (!user) {
     return (
@@ -128,14 +104,28 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
         )}
       </Box>
       <Spacer />
-      <IconButton
-        bg="#33373B5E"
-        _hover={{ bg: "#000" }}
-        color="#FFFFFF"
-        w="64px"
-        h="64px"
-        icon={<Image src={settings} />}
-      />
+      {!showLogoutButton && (
+        <IconButton
+          bg="#33373B5E"
+          _hover={{ bg: "#000" }}
+          color="#FFFFFF"
+          w="64px"
+          h="64px"
+          icon={<Image src={settings} />}
+          onClick={handleSettingsClick}
+        />
+      )}
+      {showLogoutButton && (
+        <Button
+          mt={2}
+          bg="#33373B5E"
+          _hover={{ bg: "#000" }}
+          color="#FFFFFF"
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+      )}
     </Flex>
   );
 }

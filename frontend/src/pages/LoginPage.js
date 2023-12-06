@@ -8,18 +8,19 @@ import {
   TabList,
   Flex,
   Text,
-  Spacer,
-} from "@chakra-ui/react";
-import Login from "../components/Login";
-import SignUp from "../components/SignUp";
+} from '@chakra-ui/react';
+import Login from '../components/Login';
+import SignUp from '../components/SignUp';
 
 const LoginPage = () => {
   return (
     <Container
       maxW="100%"
+      h="100vh"
       display="flex"
       flexDirection="column"
       alignItems="center"
+      bg="#1D2123"
     >
       <Flex
         as="header"
@@ -33,7 +34,7 @@ const LoginPage = () => {
       >
         <Text
           display="flex"
-          flexDirection={"column"}
+          flexDirection={'column'}
           alignItems="center"
           fontSize="2xl"
           fontWeight="bold"

@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, Text, extendTheme } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import TopChartItem from "./TopChartItem";
 
 const MainSection = ({ topTracks }) => {
@@ -24,7 +24,7 @@ const MainSection = ({ topTracks }) => {
       </Box>
       <Flex direction="column">
         <Text
-          fontSize="md"
+          fontSize="lg"
           color="white"
           fontWeight="bold"
           lineHeight={1.3}
