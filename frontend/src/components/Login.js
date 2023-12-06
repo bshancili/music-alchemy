@@ -64,32 +64,36 @@ const Login = () => {
   return (
     <VStack spacing="5px">
       <FormControl isRequired>
-        <FormLabel>Email</FormLabel>
+        <FormLabel color="white">Email</FormLabel>
         <Input
           type="text"
-          border
           value={formData.email}
           onChange={(e) => handleInputChange(e, "email")}
           placeholder="Email"
-          colorScheme="blue"
-          bg="purple.100"
+          border="2px"
+          textColor="white"
+          focusBorderColor="yellow.400"
+          _placeholder={{ color: "whiteAlpha.700" }}
         />
       </FormControl>
 
       <FormControl isRequired mt="20px">
-        <FormLabel>Password</FormLabel>
+        <FormLabel color="white">Password</FormLabel>
         <Input
           type="password"
           value={formData.password}
+          border="2px"
           onChange={(e) => handleInputChange(e, "password")}
           placeholder="Password"
-          bg="purple.100"
+          textColor="white"
+          focusBorderColor="yellow.400"
+          _placeholder={{ color: "whiteAlpha.700" }}
         />
       </FormControl>
       <Button
         mb="30"
         width="80%"
-        colorScheme="purple"
+        colorScheme="yellow"
         border="none"
         onClick={handleLogin}
         style={{

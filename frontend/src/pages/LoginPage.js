@@ -8,9 +8,9 @@ import {
   TabList,
   Flex,
   Text,
-} from '@chakra-ui/react';
-import Login from '../components/Login';
-import SignUp from '../components/SignUp';
+} from "@chakra-ui/react";
+import Login from "../components/Login";
+import SignUp from "../components/SignUp";
 
 const LoginPage = () => {
   return (
@@ -22,40 +22,34 @@ const LoginPage = () => {
       alignItems="center"
       bg="#1D2123"
     >
-      <Flex
-        as="header"
-        width="90%"
-        justifyContent="center"
-        bg="yellow.400"
-        color="purple.700"
-        borderRadius="15px 0"
-        mt={2}
-        p={5}
+      <Text
+        display="flex"
+        flexDirection={"column"}
+        alignItems="center"
+        fontSize="3xl"
+        fontWeight="bold"
+        color="white"
+        mt={8}
       >
-        <Text
-          display="flex"
-          flexDirection={'column'}
-          alignItems="center"
-          fontSize="2xl"
-          fontWeight="bold"
-        >
-          Welcome to Music Alchemy
-        </Text>
-      </Flex>
+        Welcome to Music Alchemy
+      </Text>
 
       <Box
-        m="40px 0"
+        m="20px 0"
         p={5}
         borderRadius="15px 0 15px 15px"
         borderWidth="3px"
         w="40%"
-        borderColor="purple.100"
-        bgColor="#FFF"
+        bgColor="#33373B"
       >
         <Tabs align="center" variant="soft-rounded" colorScheme="yellow">
           <TabList mb="1em">
-            <Tab width="50%">Login</Tab>
-            <Tab width="50%">SignUp</Tab>
+            <Tab width="50%" color="whiteAlpha.700">
+              Login
+            </Tab>
+            <Tab width="50%" color="whiteAlpha.700">
+              SignUp
+            </Tab>
           </TabList>
 
           <TabPanels>
