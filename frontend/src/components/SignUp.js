@@ -173,32 +173,35 @@ const SignUp = () => {
   return (
     <VStack spacing="5px">
       <FormControl isRequired>
-        <FormLabel>Username</FormLabel>
+        <FormLabel color="white">Username</FormLabel>
         <Input
-          _placeholder={{ opacity: 0.8, color: "black" }}
-          focusBorderColor="purple"
-          backgroundColor="purple.100"
+          border="2px"
+          textColor="white"
+          focusBorderColor="yellow.400"
+          _placeholder={{ color: "whiteAlpha.700" }}
           placeholder="Enter your name"
           onChange={(e) => handleInputChange(e, "username")}
         />
       </FormControl>
       <FormControl id="email" isRequired>
-        <FormLabel>Email</FormLabel>
+        <FormLabel color="white">Email</FormLabel>
         <Input
-          _placeholder={{ opacity: 0.8, color: "black" }}
-          focusBorderColor="lime."
-          bg="purple.100"
+          border="2px"
+          textColor="white"
+          focusBorderColor="yellow.400"
+          _placeholder={{ color: "whiteAlpha.700" }}
           placeholder="Enter your email"
           onChange={(e) => handleInputChange(e, "email")}
         />
       </FormControl>
       <FormControl id="password" isRequired>
-        <FormLabel>Password</FormLabel>
+        <FormLabel color="white">Password</FormLabel>
         <InputGroup>
           <Input
-            _placeholder={{ opacity: 0.8, color: "black" }}
-            focusBorderColor="lime."
-            bg="purple.100"
+            border="2px"
+            textColor="white"
+            focusBorderColor="yellow.400"
+            _placeholder={{ color: "whiteAlpha.700" }}
             placeholder="Enter your password"
             type={show ? "text" : "password"}
             onChange={(e) => handleInputChange(e, "password")}
@@ -216,12 +219,13 @@ const SignUp = () => {
         </InputGroup>
       </FormControl>
       <FormControl id="confirm-password" isRequired>
-        <FormLabel>Confirm Password</FormLabel>
+        <FormLabel color="white">Confirm Password</FormLabel>
         <InputGroup>
           <Input
-            _placeholder={{ opacity: 0.8, color: "black" }}
-            focusBorderColor="lime."
-            bg="purple.100"
+            border="2px"
+            textColor="white"
+            focusBorderColor="yellow.400"
+            _placeholder={{ color: "whiteAlpha.700" }}
             placeholder="Confirm your password"
             type={show ? "text" : "password"}
             onChange={(e) => handleInputChange(e, "checkPassword")}
@@ -240,12 +244,14 @@ const SignUp = () => {
       </FormControl>
 
       <FormControl id="pic">
-        <FormLabel>Upload your Picture</FormLabel>
+        <FormLabel color="white">Upload your Picture</FormLabel>
         <InputGroup>
           <Input
-            _placeholder={{ opacity: 0.8, color: "black" }}
+            border="2px"
+            textColor="white"
+            focusBorderColor="yellow.400"
+            _placeholder={{ color: "whiteAlpha.700" }}
             p={1.5}
-            focusBorderColor="lime."
             type="file"
             accept="image/*"
             onChange={(e) => {
@@ -256,7 +262,7 @@ const SignUp = () => {
       </FormControl>
 
       <Button
-        colorScheme="purple"
+        colorScheme="yellow"
         width="60%"
         style={{ marginTop: "40px" }}
         onClick={handleSignUp}
