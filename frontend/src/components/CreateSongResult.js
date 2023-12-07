@@ -12,7 +12,7 @@ const CreateSongResult = ({ track }) => {
       });
       if (response) {
         toast({
-          title: `track.track_name added to database`,
+          title: `${track.track_name} added to database`,
           status: "success",
           duration: 5000,
           isClosable: true,
