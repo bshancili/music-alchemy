@@ -13,7 +13,6 @@ import {
 import { SearchIcon } from "@chakra-ui/icons";
 import Fuse from "fuse.js";
 import MusicListItem from "./MusicListItem";
-import heart from "../utils/heart.svg";
 import home from "../utils/home.svg";
 import fire from "../utils/fire.svg";
 import add from "../utils/add.svg";
@@ -21,8 +20,7 @@ import profile from "../utils/profile.svg";
 import chat from "../utils/chat.svg";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
-import useAuthStore from "../stores/authStore";
+import { collection, getDocs } from "firebase/firestore";
 
 import { useEffect } from "react";
 

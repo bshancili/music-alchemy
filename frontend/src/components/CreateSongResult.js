@@ -10,10 +10,20 @@ const CreateSongResult = ({ track }) => {
       const response = await pythonApi.post("/create_song", {
         track_name: track.track_name,
       });
-      if (response) {
+      console.log(response);
+
+      if (response.data.success) {
         toast({
           title: `${track.track_name} added to database`,
           status: "success",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom",
+        });
+      } else {
+        toast({
+          title: `${track.track_name} is already in the database`,
+          status: "warning",
           duration: 5000,
           isClosable: true,
           position: "bottom",

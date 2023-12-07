@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import ProfileMusicList from "../components/ProfileMusicList";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
-
+import { fetchTrackDetails, fetchAllLikedSongs } from "../api/api";
 import {
   doc,
   getDoc,
@@ -64,43 +64,6 @@ function ProfilePage() {
     }
   };
 
-  const fetchTrackDetails = async (id) => {
-    const trackRef = doc(db, "Tracks", id);
-    try {
-      const trackSnap = await getDoc(trackRef);
-
-      if (trackSnap.exists()) {
-        const trackDetails = {
-          id: trackSnap.id,
-          ...trackSnap.data(),
-        };
-        return trackDetails;
-      } else {
-        console.error("Track not found");
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching track details:", error);
-      return null;
-    }
-  };
-
-  const fetchAllLikedSongs = async () => {
-    try {
-      const userDocRef = doc(db, "Users", id);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap) {
-        const userData = userSnap.data();
-        const likedSongs = Object.keys(userData.liked_song_list || {});
-        const tracksDetails = await Promise.all(
-          likedSongs.map((trackId) => fetchTrackDetails(trackId))
-        );
-
-        setLikedSongs(tracksDetails);
-      }
-    } catch (error) {}
-  };
-
   const addFriend = async () => {
     try {
       // Add friendUid to the current user's friend list
@@ -150,8 +113,8 @@ function ProfilePage() {
   };
   useEffect(() => {
     fetchUser();
-    fetchAllLikedSongs();
     fetchNonRatedSongs();
+    fetchAllLikedSongs(userID, setLikedSongs);
   }, [id]);
 
   return (
