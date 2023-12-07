@@ -8,6 +8,7 @@ import {
   Image,
   IconButton,
   Button,
+  HStack,
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
 import settings from "../utils/settings.svg";
@@ -103,33 +104,45 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
           </Box>
         )}
       </Box>
+
       <Spacer />
-      {isUserProfile && (
-        <>
-          {!showLogoutButton && (
-            <IconButton
-              bg="#33373B5E"
-              _hover={{ bg: "#000" }}
-              color="#FFFFFF"
-              w="64px"
-              h="64px"
-              icon={<Image src={settings} />}
-              onClick={handleSettingsClick}
-            />
-          )}
-          {showLogoutButton && (
-            <Button
-              mt={2}
-              bg="#33373B5E"
-              _hover={{ bg: "#000" }}
-              color="#FFFFFF"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          )}
-        </>
-      )}
+      <HStack align="start">
+        <IconButton
+          bg="#33373B5E"
+          _hover={{ bg: "#000" }}
+          color="#FFFFFF"
+          w="64px"
+          h="64px"
+          icon={<Image src={settings} />}
+          onClick={() => navigate("/stats")}
+        />
+        {isUserProfile && (
+          <>
+            {!showLogoutButton && (
+              <IconButton
+                bg="#33373B5E"
+                _hover={{ bg: "#000" }}
+                color="#FFFFFF"
+                w="64px"
+                h="64px"
+                icon={<Image src={settings} />}
+                onClick={handleSettingsClick}
+              />
+            )}
+            {showLogoutButton && (
+              <Button
+                mt={2}
+                bg="#33373B5E"
+                _hover={{ bg: "#000" }}
+                color="#FFFFFF"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
+            )}
+          </>
+        )}
+      </HStack>
     </Flex>
   );
 }
