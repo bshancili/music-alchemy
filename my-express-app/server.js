@@ -9,7 +9,7 @@ const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0"
 const OpenAIApi = require('openai');
 
 const openai = new OpenAIApi({
-  apiKey: 'MY_API_KEY'
+  apiKey: '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'
 });
 
 
@@ -228,5 +228,4 @@ app.get('/find_recommended_tracks', async (req,res) =>{
     res.status(error.response?.status || 500).json({ message: 'Error retrieving user tracks' });
   }
 
-});
-
+})
