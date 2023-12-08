@@ -981,7 +981,7 @@ fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewMod
                     .height(56.dp)
                     .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
                 textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
-                placeholder = { Text("Search Songs...", color = Color.Gray) },
+                placeholder = { Text("Search User...", color = Color.Gray) },
                 singleLine = true,
                 colors = TextFieldDefaults.textFieldColors(
                     backgroundColor = Color.Transparent,
@@ -1001,7 +1001,7 @@ fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewMod
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
                 shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
             ) {
-                Text("Search User")
+                Text("Search Songs")
             }
 
 
