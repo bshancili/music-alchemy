@@ -1152,6 +1152,17 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
     var valence by remember { mutableStateOf("") }
     val addSongStatus by viewModel.addSongStatus.observeAsState("")
 
+    val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
+        textColor = Color.Black, // Text color inside the text field
+        backgroundColor = Color.White, // Background color of the text field
+        focusedBorderColor = Color.White, // Border color when the text field is focused
+        unfocusedBorderColor = Color.Gray, // Border color when the text field is not focused
+        focusedLabelColor = Color.Black, // Label color when the text field is focused
+        unfocusedLabelColor = Color.Gray // Label color when the text field is not focused
+    )
+
+
+
     Scaffold(
         bottomBar = { CommonBottomBar(navController) }
     ) { innerPadding ->
@@ -1164,21 +1175,55 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            OutlinedTextField(value = trackName, onValueChange = { trackName = it }, label = { Text("Track Name") })
-            OutlinedTextField(value = artists, onValueChange = { artists = it }, label = { Text("Artist(s)") })
-            OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Album Name") })
-            OutlinedTextField(value = albumReleaseDate, onValueChange = { albumReleaseDate = it }, label = { Text("Album Release Date") })
-            OutlinedTextField(value = albumType, onValueChange = { albumType = it }, label = { Text("Album Type") })
-            OutlinedTextField(value = danceability, onValueChange = { danceability = it }, label = { Text("Danceability") })
-            OutlinedTextField(value = energy, onValueChange = { energy = it }, label = { Text("Energy") })
-            OutlinedTextField(value = instrumentalness, onValueChange = { instrumentalness = it }, label = { Text("Instrumentalness") })
-            OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key") })
-            OutlinedTextField(value = lengthInSeconds, onValueChange = { lengthInSeconds = it }, label = { Text("Length in Seconds") })
-            OutlinedTextField(value = liveness, onValueChange = { liveness = it }, label = { Text("Liveness") })
-            OutlinedTextField(value = loudness, onValueChange = { loudness = it }, label = { Text("Loudness") })
-            OutlinedTextField(value = mode, onValueChange = { mode = it }, label = { Text("Mode") })
-            OutlinedTextField(value = tempo, onValueChange = { tempo = it }, label = { Text("Tempo") })
-            OutlinedTextField(value = valence, onValueChange = { valence = it }, label = { Text("Valence") })
+            Spacer(modifier = Modifier.height(32.dp))
+            OutlinedTextField(
+                value = trackName,
+                onValueChange = { trackName = it },
+                label = { Text("Track Name") },
+                colors = textFieldColors
+            )
+            OutlinedTextField(value = artists, onValueChange = { artists = it }, label = { Text("Artist(s)") } ,
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Album Name") } ,
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = albumReleaseDate, onValueChange = { albumReleaseDate = it }, label = { Text("Album Release Date") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = albumType, onValueChange = { albumType = it }, label = { Text("Album Type") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = danceability, onValueChange = { danceability = it }, label = { Text("Danceability") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = energy, onValueChange = { energy = it }, label = { Text("Energy") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = instrumentalness, onValueChange = { instrumentalness = it }, label = { Text("Instrumentalness") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = lengthInSeconds, onValueChange = { lengthInSeconds = it }, label = { Text("Length in Seconds") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = liveness, onValueChange = { liveness = it }, label = { Text("Liveness") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = loudness, onValueChange = { loudness = it }, label = { Text("Loudness") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = mode, onValueChange = { mode = it }, label = { Text("Mode") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = tempo, onValueChange = { tempo = it }, label = { Text("Tempo") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(value = valence, onValueChange = { valence = it }, label = { Text("Valence") },
+                colors = textFieldColors)
+            Spacer(modifier = Modifier.height(6.dp))
 
             Button(onClick = {
                 val newSong = Song(
@@ -1199,7 +1244,8 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                     valence = valence.toDoubleOrNull()
                 )
                 viewModel.addSong(newSong)
-            }) {
+            },colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black)
+            ) {
                 Text("Add Song")
             }
             if (addSongStatus.isNotEmpty()) {
@@ -2591,3 +2637,9 @@ class UsersViewModel : ViewModel() {
 
     }
 }
+
+
+
+
+//-------------------------- API ----------------------
+
