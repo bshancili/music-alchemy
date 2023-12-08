@@ -21,41 +21,59 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 
+def search_and_match(song_name):
+    try:
+       
+        # Search for tracks on Spotify
+        spotify_tracks_results = sp.search(q=song_name, type='track', limit=20)
+
+        spotify_tracks=spotify_tracks_results['tracks']['items']
+
+        # Reference to Firestore database
+        tracks_ref = db.collection('Tracks')
+
+        # Find matching documents in Firestore based on Spotify IDs
+        matching_track_ids = []
+        for spotify_track in spotify_tracks:
+
+            spotify_id = spotify_track['id']
+            field = 'spotify_track_id'
+            op = '=='
+            value = spotify_id
+            query = tracks_ref.where(filter=FieldFilter(field, op, value)).limit(1)
+            existing_tracks = query.stream()
+
+            # Convert the generator to a list and check if it's not empty
+            existing_tracks_list = list(existing_tracks)
+            if existing_tracks_list:
+                 matching_track_ids.append(existing_tracks_list[0].id)
 
 
-@app.route('/search_song', methods=['GET'])
-def search_song():
-    track_name = request.args.get('track_name')
-    artist_name = request.args.get('artist_name')
+        return matching_track_ids
 
-    if not track_name or not artist_name:
-        return jsonify({'error': 'Missing track_name or artist_name parameter'})
-
-    # Search for the song in the Firestore database
-    results = search_in_firestore(track_name, artist_name)
-
-    return jsonify({'results': results})
-
-def search_in_firestore(track_name, artist_name):
-    # Perform a case-insensitive search in the 'Tracks' collection
-    track_name_l = track_name.lower()
-    artist_name_l = artist_name.lower()
-    results = []
-
-    tracks_ref = db.collection('Tracks')
-    query_result = tracks_ref.where('lowercased_track_name', '==', track_name_l).where('lowercased_artists', 'array_contains', artist_name_l).limit(10).stream()
-
-    for doc in query_result:
-        track_data = doc.to_dict()
-        results.append({
-            'track_id': doc.id,
-            'name': track_data['track_name'],
-            'artist(s)': track_data['artists'],  
-        })
-
-    return results
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
 
 
+@app.route('/search', methods=['GET'])
+def search():
+    try:
+        song_name = request.args.get('songName')
+
+        if not song_name:
+            return jsonify({'error': 'Song name parameter is required.'}), 400
+
+        matching_ids = search_and_match(song_name)
+
+        if matching_ids:
+            return jsonify({'matchingTrackIds': matching_ids})
+        else:
+            return jsonify({'error': 'No matching documents found.'}), 404
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': 'Internal server error.'}), 500
 
 
 
@@ -68,10 +86,8 @@ def autocomplete():
 
     # Search for tracks similar to the user's input
     suggestions = []
-    tracks = []
-    track_results = sp.search(q=query, type='track', limit=5)
-    for track in track_results['tracks']['items']:
-        tracks.append(track)
+    track_results = sp.search(q=query, type='track', limit=10)
+    tracks = track_results['tracks']['items']
 
     # Extract relevant information about the tracks
     
@@ -101,10 +117,9 @@ def create_song():
     track_name = data.get('track_name')
 
     # Search for the track
-    tracks = []
+
     track_results = sp.search(q=track_name, type='track', limit=1)
-    for track in track_results['tracks']['items']:
-        tracks.append(track)
+    tracks = track_results['tracks']['items']
 
  
     for track in tracks:
@@ -175,7 +190,9 @@ def create_song():
             return jsonify({'success': True, 'message': f'Song "{track_name}" saved to Firestore'})
             
         else:
-            return jsonify({'fail': False, 'message': 'Track already exist in database'})
+            return jsonify({'success': False, 'message': 'Track already exist in database'})
+
+
 
 if __name__ == '__main__':
     app.run(debug=False, port=8080)
