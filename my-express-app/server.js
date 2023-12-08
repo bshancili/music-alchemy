@@ -346,8 +346,7 @@ app.post("/temporal_recommendation", async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
     result = removeEmptyLines(openai_response["choices"][0]["message"]["content"]);
-    console.log(result);
-    //res.status(200).send(openai_response['choices'][0]['message']['content']);
+    //console.log(result);
     const recommendations = await find_recommended_track(
       result
     );
@@ -357,4 +356,8 @@ app.post("/temporal_recommendation", async (req, res) => {
     console.error("Error when trying to retrieve user tracks:", error);
     res.status(error.response?.status || 500).json({ message: "Error retrieving user tracks" });
   }
+});
+
+app.post("/friends_recommendation", async (req, res) => {
+  
 });
