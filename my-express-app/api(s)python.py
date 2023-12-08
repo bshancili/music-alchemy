@@ -60,7 +60,7 @@ def search_in_firestore(track_name, artist_name):
     results = []
 
     tracks_ref = db.collection('Tracks')
-    query_result = tracks_ref.where('lowercased_track_name', '==', track_name_l).where('lowercased_artists', 'array_contains', artist_name_l).limit(10).stream()
+    query_result = tracks_ref.where(field_path='lowercased_track_name', op_string='==', value=track_name_l).where(field_path='lowercased_artists', op_string='array_contains', value=artist_name_l).limit(10).stream()
 
     for doc in query_result:
         track_data = doc.to_dict()
