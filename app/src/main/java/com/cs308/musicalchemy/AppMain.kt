@@ -943,21 +943,106 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun DisplayUser(user: User, navController: NavController) {
+    val imageUrl: String? = user.profilePictureUrl
+    imageUrl?.let {
+        Column(
+            modifier = Modifier
+                .width(185.dp)
+                .clickable { navController.navigate("userDetail/${user.uid}") }
+                .padding(bottom = 24.dp)
+        ) {
+            // Image
+            Image(
+                painter = rememberImagePainter(data = it),
+                contentDescription = "User Profile Picture",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Text for username
+            Text(
+                text = user.username ?: "",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun UserItem(user: User) {
+    Card(
+        modifier = Modifier
+            .width(380.dp)
+            .height(128.dp),
+        shape = RoundedCornerShape(20.dp),
+        backgroundColor = Color(0xFF1A1E1F)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            // Image with proper alignment
+            val imageUrl: String? = user.profilePictureUrl
+            imageUrl?.let {
+                Image(
+                    painter = rememberImagePainter(data = it),
+                    contentDescription = "User Profile Picture",
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(shape = RoundedCornerShape(20.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            // Column for text
+            Column(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .align(Alignment.TopStart),
+                verticalArrangement = Arrangement.Top
+            ) {
+                // Text for username
+                Text(
+                    modifier = Modifier
+                        .padding(start = 128.dp),
+                    text = user.username ?: "",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
+                // Optional: Additional text for user info, if needed
+            }
+        }
+    }
+}
 
 @Composable
-fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF1D2123))
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         TopNav(navController = navController)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         var searchText by remember { mutableStateOf("") }
-        var displaySongs by remember { mutableStateOf(false) }
+        var displayUsers by remember { mutableStateOf(false) }
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
 
         Row(
@@ -965,15 +1050,13 @@ fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewMod
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-
-
             TextField(
                 value = searchText,
                 onValueChange = { newText ->
                     searchText = newText
-                    displaySongs = newText.isNotBlank()
-                    if (displaySongs) {
-                        viewModel.loadSongsWithSubstring(newText)
+                    displayUsers = newText.isNotBlank()
+                    if (displayUsers) {
+                        viewModel.loadUsersWithSubstring(newText)
                     }
                 },
                 modifier = Modifier
@@ -981,7 +1064,7 @@ fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewMod
                     .height(56.dp)
                     .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
                 textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
-                placeholder = { Text("Search User...", color = Color.Gray) },
+                placeholder = { Text("Search Users...", color = Color.Gray) },
                 singleLine = true,
                 colors = TextFieldDefaults.textFieldColors(
                     backgroundColor = Color.Transparent,
@@ -993,57 +1076,44 @@ fun SearchUser(navController: NavController, viewModel: SongsViewModel = viewMod
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Button(
-                onClick = { navController.navigate("search") },
-                modifier = Modifier
-                    .width(90.dp) // Set the width to your desired value
-                    .height(56.dp), // Match the height of the TextField
-                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
-                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
-            ) {
-                Text("Search Songs")
-            }
-
-
+            // Button can be omitted if not navigating to a separate user search screen
         }
 
-        if (displaySongs && !isLoading) {
-            val songs by viewModel.songs.observeAsState(initial = emptyList())
-            if (songs.isEmpty() && searchText.isNotBlank()) {
+        if (displayUsers && !isLoading) {
+            val users by viewModel.users.observeAsState(initial = emptyList())
+            if (users.isEmpty() && searchText.isNotBlank()) {
                 Text(
                     "No result!",
                     color = Color.White,
                     modifier = Modifier
                         .align(CenterHorizontally)
-                        .padding(top = 16.dp),
-
-                    )
-            } else if (songs.isNotEmpty()) {
+                        .padding(top = 16.dp)
+                )
+            } else if (users.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(songs.chunked(2)) { songPair ->
+                    items(users.chunked(2)) { userPair ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            DisplaySong(song = songPair[0], navController = navController)
-                            if (songPair.size > 1) {
+                            DisplayUser(user = userPair[0], navController = navController)
+                            if (userPair.size > 1) {
                                 Spacer(modifier = Modifier.width(8.dp))
-                                DisplaySong(song = songPair[1], navController = navController)
+                                DisplayUser(user = userPair[1], navController = navController)
                             }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
-        }else if (isLoading) {
+        } else if (isLoading) {
             Text(
                 "Loading...",
                 color = Color.White,
                 modifier = Modifier
                     .align(CenterHorizontally)
-                    .padding(top = 16.dp),
-
-                )
+                    .padding(top = 16.dp)
+            )
             Spacer(modifier = Modifier.weight(1f))
         } else {
             Spacer(modifier = Modifier.weight(1f))
@@ -2403,19 +2473,19 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 //~~~~~~~~~~
 //~~~~~~~~~~USERS~~~~~~~~~~
 //
+
 data class User(
     var uid: String = "",
 
     @get:PropertyName("username") @set:PropertyName("username") var username: String? = "",
     @get:PropertyName("profile_picture_url") @set:PropertyName("profile_picture_url") var profilePictureUrl: String? = "",
 
-    // Since liked_song_list is a map, we will use a Map to represent it.
-    // You should define the value type according to what's stored in this map.
-    // Here I'm assuming the values are Strings for simplicity.
-    @get:PropertyName("liked_song_list") @set:PropertyName("liked_song_list") var likedSongList: Map<String, String>? = mapOf(),
+    // The liked_song_list appears to use a map with song IDs as keys and some object as values.
+    // Assuming the values are complex objects, you might have to define a separate data class for them.
+    @get:PropertyName("liked_song_list") @set:PropertyName("liked_song_list") var likedSongList: Map<String, Any>? = mapOf(),
 
-    // rated_song_list is also a map.
-    @get:PropertyName("rated_song_list") @set:PropertyName("rated_song_list") var ratedSongList: Map<String, String>? = mapOf(),
+    // Same for rated_song_list, it seems to be a map with song IDs as keys and ratings as values.
+    @get:PropertyName("rated_song_list") @set:PropertyName("rated_song_list") var ratedSongList: Map<String, Any>? = mapOf(),
 
     // Assuming friends_list is an array of Strings (user IDs or usernames).
     @get:PropertyName("friends_list") @set:PropertyName("friends_list") var friendsList: List<String>? = listOf(),
@@ -2423,22 +2493,92 @@ data class User(
     // Assuming comments is an array. You might have to create a separate data class for Comment if it's a complex type.
     @get:PropertyName("comments") @set:PropertyName("comments") var comments: List<String>? = listOf(),
 
+    // Assuming created_songs is an array of song IDs.
+    @get:PropertyName("created_songs") @set:PropertyName("created_songs") var createdSongs: List<String>? = listOf(),
+
+    // This field looks like a boolean flag indicating the privacy of the user's profile.
+    @get:PropertyName("isprivate") @set:PropertyName("isprivate") var isPrivate: Int? = 0
+
     // Add other fields as necessary
 )
 class UsersViewModel : ViewModel() {
     private val _users = MutableLiveData<List<User>>()
     val users: LiveData<List<User>> = _users
 
-    private val _isLoadingUsers = MutableLiveData<Boolean>()
-    val isLoadingUsers: LiveData<Boolean> = _isLoadingUsers
+    private val _addUserStatus = MutableLiveData<String>()
+    val addUserStatus: LiveData<String> = _addUserStatus
 
-    // Function to load users, similar to loadSongs()
-    fun loadUsers() {
-        // Implement Firebase Firestore logic to fetch users
+    init {
+        loadUsers()
     }
 
-    // Function to search users by a substring
+    private fun loadUsers() {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("Users")
+            .get()
+            .addOnSuccessListener { documents ->
+                val usersList = documents.mapNotNull { documentSnapshot ->
+                    try {
+                        documentSnapshot.toObject(User::class.java)?.apply {
+                            uid = documentSnapshot.id
+                        }
+                    } catch (e: Exception) {
+                        Log.e("UsersViewModel", "Error deserializing user", e)
+                        null
+                    }
+                }
+                _users.value = usersList
+            }
+            .addOnFailureListener { exception ->
+                Log.e("UsersViewModel", "Error loading users", exception)
+            }
+    }
+
+    fun updateUsers(updatedUsers: List<User>) {
+        _users.value = updatedUsers
+    }
+
+    fun addUser(user: User) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("Users")
+            .add(user)
+            .addOnSuccessListener { documentReference ->
+                _addUserStatus.value = "User added successfully with ID: ${documentReference.id}"
+            }
+            .addOnFailureListener { e ->
+                _addUserStatus.value = "Error adding user: ${e.message}"
+            }
+    }
+
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
     fun loadUsersWithSubstring(substring: String) {
-        // Implement logic to fetch and filter users by the given substring
+        val db = FirebaseFirestore.getInstance()
+        _isLoading.value = true
+
+        db.collection("Users")
+            .get()
+            .addOnSuccessListener { documents ->
+                val filteredUsers = documents.mapNotNull { documentSnapshot ->
+                    try {
+                        documentSnapshot.toObject(User::class.java)?.apply {
+                            uid = documentSnapshot.id
+                        }
+                    } catch (e: Exception) {
+                        Log.e("UsersViewModel", "Error parsing user data", e)
+                        null
+                    }
+                }.filter { user ->
+                    user.username?.lowercase(Locale.getDefault())
+                        ?.contains(substring.lowercase(Locale.getDefault())) == true
+                }
+                _users.value = filteredUsers
+                _isLoading.value = false
+            }
+            .addOnFailureListener { exception ->
+                Log.e("UsersViewModel", "Error loading users", exception)
+            }
+
     }
 }
