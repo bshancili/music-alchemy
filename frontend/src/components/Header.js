@@ -146,6 +146,7 @@ const Header = () => {
     console.log("Clicked on result:", result);
     if (type === "user") {
       navigate(`/profile/${result.id}`);
+      window.location.reload();
     }
 
     setIsSearchActive(false);

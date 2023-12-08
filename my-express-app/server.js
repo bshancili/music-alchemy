@@ -107,13 +107,69 @@ app.post("/signin", async (req, res) => {
     }
   }
 });
-
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+app.post("/search_songs", async (req, res) => {
+  const data = req.body;
+  const tracks = data.tracks;
 
+  if (!tracks) {
+    return res.status(400).json({ error: "No tracks provided" });
+  }
+
+  const allResults = [];
+
+  for (const track of tracks) {
+    const trackName = track.track_name;
+    const artistName = track.artist_name;
+
+    if (trackName && artistName) {
+      const results = await searchInFirestore(trackName, artistName);
+      allResults.push(...results);
+    } else {
+      allResults.push({
+        error: `Missing track_name or artist_name for track ${JSON.stringify(
+          track
+        )}`,
+      });
+    }
+  }
+
+  // If recommended songs are not included in Tracks
+  const message = "Not a lucky time! Please try again!!";
+  if (allResults.length === 0) {
+    return res.json({ results: message });
+  }
+
+  return res.json({ results: allResults });
+});
+
+async function searchInFirestore(trackName, artistName) {
+  // Perform a case-insensitive search in the 'Tracks' collection
+  const trackNameLowerCase = trackName.toLowerCase();
+  const artistNameLowerCase = artistName.toLowerCase();
+  const results = [];
+
+  const tracksRef = db.collection("Tracks");
+  const querySnapshot = await tracksRef
+    .where("lowercased_track_name", "==", trackNameLowerCase)
+    .where("lowercased_artists", "array-contains", artistNameLowerCase)
+    .limit(10)
+    .get();
+
+  querySnapshot.forEach((doc) => {
+    results.push({
+      track_id: doc.id,
+    });
+  });
+
+  return results;
+}
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
     const uid = req.body["uid"];
@@ -132,6 +188,49 @@ app.post("/retrieve_user_tracks", async (req, res) => {
   } catch (error) {
     console.error("Error retrieving songs: ", error);
     res.status(500).send(error);
+  }
+});
+
+app.post("/recent_liked_songs", async (req, res) => {
+  try {
+    const uid = req.body["uid"];
+    const querySnapshot = await db.collection("Users").get();
+    const songs = [];
+
+    querySnapshot.forEach((doc) => {
+      if (doc.data()["uid"] == uid) {
+        const likedSongs = doc.data()["liked_song_list"];
+        for (const songId in likedSongs) {
+          const timestamp = likedSongs[songId].timestamp;
+          const date = new Date(
+            timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000
+          );
+          date.setHours(date.getHours() + 3);
+
+          songs.push({
+            songid: songId,
+            timestamp: date,
+          });
+        }
+      }
+    });
+
+    //console.log("Before sorting:", songs);
+
+    // Sort the songs by timestamp
+    songs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    //console.log("After sorting:", songs);
+
+    // Get the most recent 5 songs
+    const recentSongs = songs.slice(0, 5);
+
+    //console.log("Recent 5 songs:", recentSongs);
+
+    res.status(200).send(recentSongs);
+  } catch (error) {
+    console.error("Error fetching recent songs: ", error);
+    res.status(500).send("Error fetching recent songs");
   }
 });
 
@@ -176,11 +275,14 @@ app.post("/find_song_name", async (req, res) => {
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
     let parts = line.split(" - ");
-    return { track_name: parts[0].trim(), artist_name: parts[1].trim() };
+    return {
+      track_name: parts[0] ? parts[0].trim() : "",
+      artist_name: parts[1] ? parts[1].trim() : "",
+    };
   });
 
   try {
-    let response = await axios.post("http://127.0.0.1:8080/search_songs", {
+    let response = await axios.post("http://localhost:3000/search_songs", {
       tracks,
     });
     if (response.data && response.data.results) {
@@ -195,7 +297,7 @@ async function find_recommended_track(prompt_chatgpt) {
 }
 
 app.post("/find_recommended_tracks", async (req, res) => {
-  const userUid = req.body["uid"]; // Extract the user's UID from the URL parameter
+  const userUid = req.body["uid"];
 
   try {
     // Replace with the actual URL of the 'retrieve_user_tracks' endpoint
@@ -264,3 +366,66 @@ app.post("/find_recommended_tracks", async (req, res) => {
       .json({ message: "Error retrieving user tracks" });
   }
 });
+
+function removeEmptyLines(text) {
+  const lines = text.split("\n");
+  const filteredLines = lines.filter((line) => line.trim() !== "");
+  return filteredLines.join("\n");
+}
+
+app.post("/temporal_recommendation", async (req, res) => {
+  const userUid = req.body["uid"];
+  try {
+    const userData = { uid: userUid };
+    const response = await axios.post(
+      "http://localhost:3000/recent_liked_songs",
+      userData
+    );
+
+    console.log(response.data);
+    // Extract song IDs from the response
+    const songIds = response.data.map((item) => item.songid);
+    console.log(songIds);
+
+    let songDetailsList = await Promise.all(
+      songIds.map(async (songId) => {
+        const songData = { docId: songId };
+        const songNameResponse = await axios.post(
+          "http://localhost:3000/find_song_name",
+          songData
+        );
+        const artistNameResponse = await axios.post(
+          "http://localhost:3000/get_track_artist",
+          songData
+        );
+
+        return `${songNameResponse.data["name"]} - sang by ${artistNameResponse.data["artist"]}`;
+      })
+    );
+
+    let myList = songDetailsList.join("\n");
+    //console.log(myList);
+    const prompt =
+      "I will provide list of songs find the albums which these songs belong then recommend all of the songs from these albums for each five song in my list.If there are songs sang by same artist in my list do not duplicate yourself, then recommend another 5 songs of artist from another albums different then you recommended" +
+      "Also do not put anything unrelated numbers or explanations or space between sections just prompt list of formatted songs as I indicated." +
+      'Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like "sang by" or the name of the album here is teh example of the format, name of the song - name of the artist: \n' +
+      myList;
+    const openai_response = await openai.chat.completions.create({
+      model: "gpt-4", // or another model
+      messages: [{ role: "user", content: prompt }],
+    });
+    result = removeEmptyLines(
+      openai_response["choices"][0]["message"]["content"]
+    );
+    console.log(result);
+    const recommendations = await find_recommended_track(result);
+    res.status(200).send(recommendations);
+  } catch (error) {
+    console.error("Error when trying to retrieve user tracks:", error);
+    res
+      .status(error.response?.status || 500)
+      .json({ message: "Error retrieving user tracks" });
+  }
+});
+
+app.post("/friends_recommendation", async (req, res) => {});

@@ -1,7 +1,6 @@
 import { Box, Text, Button, Spacer, useToast } from "@chakra-ui/react";
 import React from "react";
-import pyhtonApi from "../api/axios";
-import pythonApi from "../api/axios";
+import { pythonApi } from "../api/axios";
 
 const CreateSongResult = ({ track }) => {
   const toast = useToast();

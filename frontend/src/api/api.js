@@ -1,5 +1,6 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { api } from "./axios";
 
 const fetchTrackDetails = async (id) => {
   const trackRef = doc(db, "Tracks", id);
@@ -172,9 +173,36 @@ const fetchAverageRatingByTime = async (userId, setRatedSongs) => {
   }
 };
 
+const fetchTemporalRecommendation = async (userID, setTempRecSongs) => {
+  console.log("clicked");
+  try {
+    const response = await api.post("/temporal_recommendation", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        uid: userID,
+      }),
+    });
+    console.log(response.data);
+    if (false) {
+      const recommendations = response.data;
+      const trackIds = recommendations.map(
+        (recommendation) => recommendation.track_id
+      );
+      const tracks = await Promise.all(
+        trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
+      );
+      console.log(tracks);
+      setTempRecSongs(tracks);
+    }
+  } catch (error) {}
+};
+
 export {
   fetchAllLikedSongs,
   fetchTrackDetails,
   fetchLikedSongTimestamps,
   fetchAverageRatingByTime,
+  fetchTemporalRecommendation,
 };
