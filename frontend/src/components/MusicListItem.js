@@ -8,6 +8,7 @@ const MusicListItem = ({ track }) => {
     navigate(`/music/${track.id}`, {
       state: { trackData: track },
     });
+    window.location.reload();
   };
   return (
     <Box

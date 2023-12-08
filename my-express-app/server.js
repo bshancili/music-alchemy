@@ -114,7 +114,62 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+app.post("/search_songs", async (req, res) => {
+  const data = req.body;
+  const tracks = data.tracks;
 
+  if (!tracks) {
+    return res.status(400).json({ error: "No tracks provided" });
+  }
+
+  const allResults = [];
+
+  for (const track of tracks) {
+    const trackName = track.track_name;
+    const artistName = track.artist_name;
+
+    if (trackName && artistName) {
+      const results = await searchInFirestore(trackName, artistName);
+      allResults.push(...results);
+    } else {
+      allResults.push({
+        error: `Missing track_name or artist_name for track ${JSON.stringify(
+          track
+        )}`,
+      });
+    }
+  }
+
+  // If recommended songs are not included in Tracks
+  const message = "Not a lucky time! Please try again!!";
+  if (allResults.length === 0) {
+    return res.json({ results: message });
+  }
+
+  return res.json({ results: allResults });
+});
+
+async function searchInFirestore(trackName, artistName) {
+  // Perform a case-insensitive search in the 'Tracks' collection
+  const trackNameLowerCase = trackName.toLowerCase();
+  const artistNameLowerCase = artistName.toLowerCase();
+  const results = [];
+
+  const tracksRef = db.collection("Tracks");
+  const querySnapshot = await tracksRef
+    .where("lowercased_track_name", "==", trackNameLowerCase)
+    .where("lowercased_artists", "array-contains", artistNameLowerCase)
+    .limit(10)
+    .get();
+
+  querySnapshot.forEach((doc) => {
+    results.push({
+      track_id: doc.id,
+    });
+  });
+
+  return results;
+}
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
     const uid = req.body["uid"];
@@ -220,11 +275,14 @@ app.post("/find_song_name", async (req, res) => {
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
     let parts = line.split(" - ");
-    return { track_name: parts[0].trim(), artist_name: parts[1].trim() };
+    return {
+      track_name: parts[0] ? parts[0].trim() : "",
+      artist_name: parts[1] ? parts[1].trim() : "",
+    };
   });
 
   try {
-    let response = await axios.post("http://127.0.0.1:8080/search_songs", {
+    let response = await axios.post("http://localhost:3000/search_songs", {
       tracks,
     });
     if (response.data && response.data.results) {
@@ -238,8 +296,8 @@ async function find_recommended_track(prompt_chatgpt) {
   return [];
 }
 
-app.get("/find_recommended_tracks", async (req, res) => {
-  const userUid = req.body["uid"]; // Extract the user's UID from the URL parameter
+app.post("/find_recommended_tracks", async (req, res) => {
+  const userUid = req.body["uid"];
 
   try {
     // Replace with the actual URL of the 'retrieve_user_tracks' endpoint
@@ -360,7 +418,6 @@ app.post("/temporal_recommendation", async (req, res) => {
       openai_response["choices"][0]["message"]["content"]
     );
     console.log(result);
-    //res.status(200).send(openai_response['choices'][0]['message']['content']);
     const recommendations = await find_recommended_track(result);
     res.status(200).send(recommendations);
   } catch (error) {
@@ -370,3 +427,5 @@ app.post("/temporal_recommendation", async (req, res) => {
       .json({ message: "Error retrieving user tracks" });
   }
 });
+
+app.post("/friends_recommendation", async (req, res) => {});

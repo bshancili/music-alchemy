@@ -173,9 +173,10 @@ const fetchAverageRatingByTime = async (userId, setRatedSongs) => {
   }
 };
 
-const fetchTemporalRecommendation = (userID) => {
+const fetchTemporalRecommendation = async (userID, setTempRecSongs) => {
+  console.log("clicked");
   try {
-    const response = api.post("/temporal_recommendation", {
+    const response = await api.post("/temporal_recommendation", {
       headers: {
         "Content-Type": "application/json",
       },
@@ -183,7 +184,17 @@ const fetchTemporalRecommendation = (userID) => {
         uid: userID,
       }),
     });
-    if (response) {
+    console.log(response.data);
+    if (false) {
+      const recommendations = response.data;
+      const trackIds = recommendations.map(
+        (recommendation) => recommendation.track_id
+      );
+      const tracks = await Promise.all(
+        trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
+      );
+      console.log(tracks);
+      setTempRecSongs(tracks);
     }
   } catch (error) {}
 };
@@ -193,4 +204,5 @@ export {
   fetchTrackDetails,
   fetchLikedSongTimestamps,
   fetchAverageRatingByTime,
+  fetchTemporalRecommendation,
 };

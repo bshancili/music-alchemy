@@ -53,7 +53,7 @@ function ProfilePage() {
         const nonRated = likedSongs.filter(
           (likedSong) => !ratedSongs.includes(likedSong)
         );
-        console.log(nonRated);
+
         const tracksDetails = await Promise.all(
           nonRated.map((trackId) => fetchTrackDetails(trackId))
         );
