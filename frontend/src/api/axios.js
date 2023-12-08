@@ -14,4 +14,4 @@ const pythonApi = axios.create({
   },
 });
 
-export default pythonApi;
+export { api, pythonApi };
