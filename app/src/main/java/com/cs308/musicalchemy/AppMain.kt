@@ -1076,7 +1076,16 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Button can be omitted if not navigating to a separate user search screen
+            Button(
+                onClick = { navController.navigate("search") },
+                modifier = Modifier
+                    .width(90.dp) // Set the width to your desired value
+                    .height(56.dp), // Match the height of the TextField
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
+                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
+            ) {
+                Text("Search Songs")
+            }
         }
 
         if (displayUsers && !isLoading) {
