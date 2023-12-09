@@ -1,10 +1,10 @@
-#Fri Nov 24 22:51:20 TRT 2023
-base.0=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
-base.1=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
-base.2=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
-base.3=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\4\\classes.dex
-base.4=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
-base.5=C\:\\Users\\ASUS\\Desktop\\SCHOOL\\cs308\\Android_App\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
+#Sat Dec 09 08:14:54 TRT 2023
+base.0=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.2=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
+base.3=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\4\\classes.dex
+base.4=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
+base.5=C\:\\Users\\onura\\AndroidStudioProjects\\music-alchemy\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
 path.0=classes.dex
 path.1=0/classes.dex
 path.2=1/classes.dex

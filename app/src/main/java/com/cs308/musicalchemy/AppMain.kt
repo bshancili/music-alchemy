@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -36,10 +35,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -91,6 +90,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
+import androidx.compose.runtime.Composable as Composable
 
 
 //~~~~~~~~~~
@@ -179,9 +179,11 @@ private fun initializeUserFields() {
                     val friendsList = document.get("friends_list") as? List<String> ?: emptyList()
                     val likedSongList = document.get("liked_song_list") as? Map<String, Any> ?: emptyMap()
                     val ratedSongList = document.get("rated_song_list") as? Map<String, Any> ?: emptyMap()
+                    val createdSongList = document.get("created_song") as? Map<String, Any> ?: emptyMap()
                     val profilePictureUrl = document.getString("profile_picture_url")
                     val uid = document.getString("uid")
                     val username = document.getString("username")
+                    val Isprivate = document.getLong("Isprivate") ?: 0 // Initialize to 0 if not present
 
                     // Check and complete unavailable fields
                     if (comments.isEmpty()) {
@@ -196,6 +198,9 @@ private fun initializeUserFields() {
                     if (ratedSongList.isEmpty()) {
                         userRef.update("rated_song_list", hashMapOf<String, Any>())
                     }
+                    if (createdSongList.isEmpty()) {
+                        userRef.update("created_songs", hashMapOf<String, Any>())
+                    }
                     if (uid == null) {
                         userRef.update("uid", userId)
                     }
@@ -205,6 +210,9 @@ private fun initializeUserFields() {
                     if (profilePictureUrl == null) {
                         userRef.update("profile_picture_url", "http://res.cloudinary.com/ddjyxzbjg/image/upload/v1699788333/pgreicq1gxpo5pbpgnib.png")
                     }
+                    if (Isprivate == null) {
+                        userRef.update("Isprivate", 0)
+                    }
                 } else {
                     // User document does not exist, initialize fields
                     Log.d("MainApp", "Initializing user document for UID: $userId")
@@ -213,8 +221,10 @@ private fun initializeUserFields() {
                         "friends_list" to arrayListOf<String>(),
                         "liked_song_list" to hashMapOf<String, Any>(),
                         "rated_song_list" to hashMapOf<String, Any>(),
+                        "created_songs" to hashMapOf<String, Any>(),
                         "uid" to userId,
                         "username" to "default_username",
+                        "Isprivate" to 0,
                         "profile_picture_url" to "http://res.cloudinary.com/ddjyxzbjg/image/upload/v1699788333/pgreicq1gxpo5pbpgnib.png"
                     )
 
@@ -235,8 +245,6 @@ private fun initializeUserFields() {
         Log.w("MainApp", "User ID is null. Unable to initialize user fields.")
     }
 }
-
-
 
 
 object AuthStateManager {
@@ -323,11 +331,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-
-
-
-
 @Composable
 fun App(startGoogleSignIn: () -> Unit) {
     val navController = rememberNavController()
@@ -359,20 +362,22 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("searchUser") { SearchUser(navController)}
         composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
-        composable("profile") { ProfileScreen(navController) }
-        composable("settings") { SettingsScreen(navController) }
-        composable(
-            "profile/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
-            FriendProfileScreen(userId, navController)
+        composable("profile/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+            Log.d("ProfileScreen", "Navigated to ProfileScreen with userId: $userId")
+            ProfileScreen(navController, userId)
         }
+        composable("friendslist") {
+            val viewModel = viewModel<ProfileViewModel>()
+            FriendsList(navController, viewModel)
+        }
+        composable("settings") { SettingsScreen(navController) }
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
     }
 }
+
 
 //~~~~~~~~~~
 //~~~~~AUTHENTICATION~~~~~
@@ -522,6 +527,9 @@ fun LoginScreen(navController: NavController) {
 
 @Composable
 fun TopNav(navController: NavController) {
+
+    val user = Firebase.auth.currentUser
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -566,11 +574,17 @@ fun TopNav(navController: NavController) {
         Image(
             painter = painterResource(id = R.drawable.group10),
             contentDescription = "image description",
-            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight() // Make the image fill the height of the row
-                .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { navController.navigate("profile") }
+                .fillMaxHeight()
+                .aspectRatio(1f)
+                .clickable {
+                    // Navigate to the profile screen with the current user's ID
+                    user?.uid?.let { userId ->
+                        navController.navigate("profile/$userId")
+                        println(userId)
+                    }
+                }
         )
     }
 }
@@ -623,7 +637,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { navController.navigate("settings") }
+                .clickable { navController.navigate("friendslist") }
         )
     }
 }
@@ -951,7 +965,7 @@ fun DisplayUser(user: User, navController: NavController) {
         Column(
             modifier = Modifier
                 .width(185.dp)
-                .clickable { navController.navigate("userDetail/${user.uid}") }
+                .clickable { navController.navigate("profile/${user.uid}") }
                 .padding(bottom = 24.dp)
         ) {
             // Image
@@ -985,6 +999,7 @@ fun DisplayUser(user: User, navController: NavController) {
 fun UserItem(user: User) {
     Card(
         modifier = Modifier
+            .width(380.dp)
             .width(380.dp)
             .height(128.dp),
         shape = RoundedCornerShape(20.dp),
@@ -1255,10 +1270,6 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
     }
 }
 
-
-
-
-
 @Composable
 fun SettingsScreen(navController: NavController) {
     Column(
@@ -1301,22 +1312,48 @@ data class FriendData(
     val profilePictureUrl: String
 )
 
-
+enum class Tab {
+    Collections,
+    Lists,
+    Rated,
+    Created
+}
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(navController: NavController, userId:String) {
     val viewModel: ProfileViewModel = viewModel()
-    //val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
+    val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
+    var isFriend by remember { mutableStateOf(false) }
+    var isPrivate by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableStateOf(Tab.Collections)}
     //var newUsername by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
+    val currentUserId = user?.uid.orEmpty()
     val currentUsername by viewModel.username.observeAsState("Unknown")
     val profilePictureUrl by viewModel.profilePictureURL.observeAsState("Unknown")
     val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
+    val ratedSongs by viewModel.ratedSongs.observeAsState(initial = emptyList())
+    val createdSongs by viewModel.createdSongs.observeAsState(initial = emptyList())
 
-    LaunchedEffect(user?.uid) {
-        viewModel.fetchUsername(user?.uid ?: "")
-        viewModel.fetchProfilePictureURL(user?.uid ?: "")
-        viewModel.fetchLikedSongs(user?.uid ?: "")
+    LaunchedEffect(userId) {
+        Log.d("ProfileScreen", "Fetching data for userId: $userId")
+        viewModel.fetchUsername(userId)
+        viewModel.fetchProfilePictureURL(userId)
+        viewModel.fetchLikedSongs(userId)
+        viewModel.fetchRatedSongs(userId)
+        viewModel.fetchCreatedSongs(userId)
+        viewModel.fetchFriendsList(currentUserId)
+        viewModel.fetchIsPrivate(userId)
+    }
+
+    LaunchedEffect(friendsList) {
+        isFriend = friendsList.any { it.id == userId }
+    }
+
+    LaunchedEffect(isPrivate) {
+        // Update the isPrivate state when it changes
+        isPrivate = viewModel.isPrivate.value ?: 0
+        Log.d("ProfileScreen", "isPrivate value changed to: $isPrivate")
     }
 
     Column(
@@ -1390,85 +1427,364 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Row{
+            if (userId != currentUserId) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier= Modifier
-                        .width(90.dp)
-                        .height(37.dp)
-                        .background(
-                            color = Color(0xFFFACD66),
-                            shape = RoundedCornerShape(size = 27.dp)
-                        )
-                        .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
-                        .clickable { },
-                ){
-                    Text(
-                        text = "Collection",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            lineHeight = 16.8.sp,
-                            fontWeight = FontWeight(400),
-                            color = Color(0xFF1D2123),
-                            textAlign = TextAlign.Center
-                        ),
-                    )
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .background(
+                                color = Color(0x5E33373B),
+                                shape = RoundedCornerShape(size = 15.dp)
+                            )
+                            .clickable {
+                                if (!isFriend) {viewModel.addFriend(currentUserId, userId)
+                                }else{viewModel.removeFriend(currentUserId, userId)
+                                }
+                            }
+                    ) {
+                        // Content for the first box
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Center)
+                        ) {
+
+
+
+                            if (isFriend) {
+                                // Display a different image for existing friends
+                                Image(
+                                    painter = painterResource(id = R.drawable.removefriend),
+                                    contentDescription = "icon",
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.size(24.dp).padding(2.dp)
+                                )
+                            } else {
+                                // Display the default "Add Friend" image
+                                Image(
+                                    painter = painterResource(id = R.drawable.addfriend),
+                                    contentDescription = "icon",
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier.size(24.dp).padding(2.dp)
+                                )
+                            }
+
+                            Text(
+                                text = if (isFriend) "Remove Friend" else "Add Friend",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 20.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFFFFFFFF),
+                                    textAlign = TextAlign.Center
+                                ),
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .background(
+                                color = Color(0x5E33373B),
+                                shape = RoundedCornerShape(size = 15.dp)
+                            )
+                    ) {
+                        // Content for the second box
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Center)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.chat),
+                                contentDescription = "icon",
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(2.dp)
+                            )
+
+                            Text(
+                                text = "Chat",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 20.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFFFFFFFF),
+                                    textAlign = TextAlign.Center,
+                                )
+                            )
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier= Modifier
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFFEFEEE0),
-                            shape = RoundedCornerShape(size = 27.dp)
-                        )
-                        .width(90.dp)
-                        .height(37.dp)
-                        .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
-                        .clickable { },
-                ){
-                    Text(
-                        text = "Lists",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            lineHeight = 16.8.sp,
-                            fontWeight = FontWeight(400),
-                            color = Color(0xFFEFEEE0),
-                            textAlign = TextAlign.Center
-                        ),
-                    )
-                }
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
 
-            for (i in likedSongs.indices step 2) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (i < likedSongs.size) {
-                        DisplaySong(song = likedSongs[i], navController = navController)
+            if(isPrivate == 0) {
+
+                Row {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(37.dp)
+                            .background(
+                                color = Color(0xFFFACD66),
+                                shape = RoundedCornerShape(size = 27.dp)
+                            )
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                            .clickable { selectedTab = Tab.Collections },
+                    ) {
+                        Text(
+                            text = "Liked <3",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF1D2123),
+                                textAlign = TextAlign.Center
+                            ),
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (i + 1 < likedSongs.size) {
-                        DisplaySong(song = likedSongs[i + 1], navController = navController)
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFFEFEEE0),
+                                shape = RoundedCornerShape(size = 27.dp)
+                            )
+                            .width(110.dp)
+                            .height(37.dp)
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                            .clickable { selectedTab = Tab.Lists },
+                    ) {
+                        Text(
+                            text = "Care to Rate?",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFEFEEE0),
+                                textAlign = TextAlign.Center
+                            ),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(37.dp)
+                            .background(
+                                color = Color(0xFFFACD66),
+                                shape = RoundedCornerShape(size = 27.dp)
+                            )
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                            .clickable { selectedTab = Tab.Rated },
+                    ) {
+                        Text(
+                            text = "Rated",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF1D2123),
+                                textAlign = TextAlign.Center
+                            ),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(37.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFFEFEEE0),
+                                shape = RoundedCornerShape(size = 27.dp)
+                            )
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                            .clickable { selectedTab = Tab.Created },
+                    ) {
+                        Text(
+                            text = "Added",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFEFEEE0),
+                                textAlign = TextAlign.Center
+                            ),
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+
+                Spacer(modifier = Modifier.height(24.dp))
+                Log.d("ProfileScreen", "Liked Songs Size: ${likedSongs.size}")
+                Log.d("ProfileScreen", "Rated Songs Size: ${ratedSongs.size}")
+
+                when (selectedTab) {
+                    Tab.Collections -> {
+                        for (i in likedSongs.indices step 2) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (i < likedSongs.size) {
+                                    DisplaySong(song = likedSongs[i], navController = navController)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                if (i + 1 < likedSongs.size) {
+                                    DisplaySong(
+                                        song = likedSongs[i + 1],
+                                        navController = navController
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Tab.Rated -> {
+                        for (i in ratedSongs.indices step 2) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (i < ratedSongs.size) {
+                                    DisplaySong(song = ratedSongs[i], navController = navController)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                if (i + 1 < ratedSongs.size) {
+                                    DisplaySong(
+                                        song = ratedSongs[i + 1],
+                                        navController = navController
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Tab.Created -> {
+                        for (i in createdSongs.indices step 2) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (i < createdSongs.size) {
+                                    DisplaySong(
+                                        song = createdSongs[i],
+                                        navController = navController
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                if (i + 1 < createdSongs.size) {
+                                    DisplaySong(
+                                        song = createdSongs[i + 1],
+                                        navController = navController
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Tab.Lists -> {
+                        // Display Liked Songs that are not Rated
+                        val likedSongsNotRated = likedSongs.filter { likedSong ->
+                            !ratedSongs.any { ratedSong -> ratedSong.id == likedSong.id }
+                        }
+                        for (i in likedSongsNotRated.indices step 2) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                if (i < likedSongsNotRated.size) {
+                                    DisplaySong(
+                                        song = likedSongsNotRated[i],
+                                        navController = navController
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                if (i + 1 < likedSongsNotRated.size) {
+                                    DisplaySong(
+                                        song = likedSongsNotRated[i + 1],
+                                        navController = navController
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            } else{
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                ){
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Center)
+                    ) {  Image(
+                        painter = painterResource(id = R.drawable.lock),
+                        contentDescription = "icon",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.width(50.dp).padding(2.dp).height(67.dp)
+                    )
+                        Text(
+                            text = "This Account is Private",
+                            style = TextStyle(
+                                fontSize = 24.sp,
+                                lineHeight = 28.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                                textAlign = TextAlign.Center,
+                            )
+                        )
+                    }
+                }
             }
         }
 
         CommonBottomBar(navController = navController)
     }
 }
-
-
 
 
 //~~~~~~~~~~
@@ -1482,15 +1798,24 @@ class ProfileViewModel : ViewModel() {
     val username: LiveData<String> = _username
     private val _likedSongs = MutableLiveData<List<Song>>()
     val likedSongs: LiveData<List<Song>> = _likedSongs
+    private val _createdSongs = MutableLiveData<List<Song>>()
+    val createdSongs: LiveData<List<Song>> = _createdSongs
+    private val _ratedSongs = MutableLiveData<List<Song>>()
+    val ratedSongs: LiveData<List<Song>> = _ratedSongs
     private val _profilePictureURL = MutableLiveData<String>()
     val profilePictureURL: LiveData<String> = _profilePictureURL
+    private val _isPrivate = MutableLiveData<Int>()
+    val isPrivate: LiveData<Int> get() = _isPrivate
 
-    init {
-        val currentUser = Firebase.auth.currentUser
-        currentUser?.uid?.let {
-            fetchUsername(it)
-            fetchLikedSongs(it)
-            fetchFriendsList(it)
+    fun fetchIsPrivate(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            val isPrivateValue = documentSnapshot["Isprivate"] as? Int ?: 0
+            Log.d("ProfileViewModel", "Fetched Isprivate value: $isPrivateValue")
+            _isPrivate.value = isPrivateValue
+        }.addOnFailureListener { exception ->
+            Log.e("ProfileViewModel", "Failed to fetch Isprivate for UID: $userId", exception)
         }
     }
 
@@ -1509,33 +1834,41 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun addFriend(userId: String, friendUsername: String) {
+    fun addFriend(currentUserId: String, friendUserId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
 
-        // Fetch the friend's information
-        usersCollection.whereEqualTo("username", friendUsername).get()
-            .addOnSuccessListener { documents ->
-                if (!documents.isEmpty) {
-                    val friendDocument = documents.documents.first()
-                    val friendId = friendDocument.id
-
-                    // Update your friends_list
-                    usersCollection.document(userId)
-                        .update("friends_list", FieldValue.arrayUnion(friendId))
-                        .addOnSuccessListener {
-                            // Update your friend's friends_list
-                            usersCollection.document(friendId)
-                                .update("friends_list", FieldValue.arrayUnion(userId))
-                                .addOnSuccessListener {
-                                    fetchFriendsList(userId) // Refresh your friends list
-                                }
-                        }
-                }
+        // Update your friends_list
+        usersCollection.document(currentUserId)
+            .update("friends_list", FieldValue.arrayUnion(friendUserId))
+            .addOnSuccessListener {
+                // Optional: You can fetch the updated friends list or perform any other actions
+                fetchFriendsList(currentUserId)
+            }
+            .addOnFailureListener { exception ->
+                // Handle failure
+                Log.e("Error", "Failed to add friend $friendUserId to the friends list", exception)
             }
     }
 
 
-    private fun fetchFriendsList(userId: String) {
+    fun removeFriend(userId: String, friendId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+
+        // Update your friends_list
+        usersCollection.document(userId)
+            .update("friends_list", FieldValue.arrayRemove(friendId))
+            .addOnSuccessListener {
+                // Update your friend's friends_list
+                usersCollection.document(friendId)
+                    .update("friends_list", FieldValue.arrayRemove(userId))
+                    .addOnSuccessListener {
+                        fetchFriendsList(userId) // Refresh your friends list
+                    }
+            }
+    }
+
+
+    fun fetchFriendsList(userId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         usersCollection.document(userId).get().addOnSuccessListener { document ->
             val friendIds = document["friends_list"] as? List<*> ?: return@addOnSuccessListener
@@ -1547,11 +1880,14 @@ class ProfileViewModel : ViewModel() {
             for (id in friendIds) {
                 usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
                     val name = friendDoc["username"] as? String ?: "Unknown"
-                    val profilePicUrl =
-                        friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
+                    val profilePicUrl = friendDoc["profile_picture_url"] as? String
 
                     // Add the friend data to the list
-                    friends.add(FriendData(id, name, profilePicUrl))
+                    if (profilePicUrl != null) {
+                        friends.add(FriendData(id, name, profilePicUrl))
+                    } else {
+                        Log.e("fetchFriendsList", "Profile picture URL is null for friend: $id")
+                    }
 
                     // Update the LiveData once all friends are fetched
                     if (friends.size == friendIds.size) {
@@ -1561,6 +1897,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
 
     fun updateUsername(userId: String, newUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
@@ -1609,7 +1946,7 @@ class ProfileViewModel : ViewModel() {
                 val songIds = likedSongsMap?.keys?.map { it.toString() } ?: emptyList()
 
                 // Fetch song details based on the retrieved song IDs
-                fetchSongsDetails(songIds)
+                fetchSongsDetails(songIds, _likedSongs)
             } else {
                 // Document doesn't exist
                 Log.d("Debug", "User document does not exist for userID: $userId")
@@ -1620,9 +1957,62 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    private fun fetchSongsDetails(songIds: List<String>) {
+    fun fetchCreatedSongs(userId: String) {
+        val createdSongsCollection = Firebase.firestore
+            .collection("Users")
+            .document(userId)
+
+        createdSongsCollection.get().addOnSuccessListener { documentSnapshot ->
+            // Check if the document exists
+            if (documentSnapshot.exists()) {
+                // Access the created_song_list field directly from the DocumentSnapshot
+                val createdSongsMap = documentSnapshot["created_songs"] as? Map<*, *>
+
+                // Extract song IDs from the created_song_list field
+                val songIds = createdSongsMap?.keys?.map { it.toString() } ?: emptyList()
+
+                // Fetch song details based on the retrieved song IDs
+                fetchSongsDetails(songIds, _createdSongs)
+            } else {
+                // Document doesn't exist
+                Log.d("Debug", "User document does not exist for userID: $userId")
+            }
+        }.addOnFailureListener { exception ->
+            // Handle failure
+            Log.e("Error", "Failed to fetch user document for userID: $userId", exception)
+        }
+    }
+
+
+    fun fetchRatedSongs(userId: String) {
+        val ratedSongsCollection = Firebase.firestore
+            .collection("Users")
+            .document(userId)
+
+        ratedSongsCollection.get().addOnSuccessListener { documentSnapshot ->
+            // Check if the document exists
+            if (documentSnapshot.exists()) {
+                // Access the rated_song_list field directly from the DocumentSnapshot
+                val ratedSongsMap = documentSnapshot["rated_song_list"] as? Map<*, *>?
+
+                // Extract song IDs and convert them to a list
+                val songIds = ratedSongsMap?.keys?.map { it.toString() } ?: emptyList()
+
+                // Fetch song details based on the retrieved song IDs
+                fetchSongsDetails(songIds, _ratedSongs)
+            } else {
+                // Document doesn't exist
+                Log.d("Debug", "User document does not exist for userID: $userId")
+            }
+        }.addOnFailureListener { exception ->
+            // Handle failure
+            Log.e("Error", "Failed to fetch user document for userID: $userId", exception)
+        }
+    }
+
+    private fun fetchSongsDetails(songIds: List<String>, targetLiveData: MutableLiveData<List<Song>>) {
         if (songIds.isEmpty()) {
-            _likedSongs.value = emptyList()
+            targetLiveData.value = emptyList()
             return
         }
 
@@ -1635,10 +2025,79 @@ class ProfileViewModel : ViewModel() {
                         id = documentSnapshot.id
                     }
                 }
-                _likedSongs.value = songsList
+                targetLiveData.value = songsList
             }
     }
+
 }
+
+
+@Composable
+fun FriendsList(navController: NavController, viewModel: ProfileViewModel) {
+    val user = Firebase.auth.currentUser
+    val currentUserId = user?.uid.orEmpty()
+    val friendsList by viewModel.friendsList.observeAsState(emptyList())
+
+    LaunchedEffect(currentUserId) {
+        viewModel.fetchFriendsList(currentUserId)
+    }
+
+    Log.d("FriendsList", "FriendsList Size: ${friendsList.size}")
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        TopNav(navController = navController)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(friendsList.chunked(2)) { friendPair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    friendPair.getOrNull(0)?.let { friendData ->
+                        DisplayUser(
+                            user = User(
+                                uid = friendData.id?.toString() ?: "Unknown",
+                                username = friendData.name,
+                                profilePictureUrl = friendData.profilePictureUrl
+                            ),
+                            navController = navController
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    friendPair.getOrNull(1)?.let { friendData ->
+                        DisplayUser(
+                            user = User(
+                                uid = friendData.id?.toString() ?: "Unknown",
+                                username = friendData.name,
+                                profilePictureUrl = friendData.profilePictureUrl
+                            ),
+                            navController = navController
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+
+        CommonBottomBar(navController = navController)
+    }
+}
+
+
+
+
+
+
+
+
 class FriendProfileViewModel : ViewModel() {
     private val _username = MutableLiveData<String>()
     val username: LiveData<String> = _username
@@ -1716,15 +2175,6 @@ class FriendProfileViewModel : ViewModel() {
             }
     }
 
-}
-
-@Composable
-fun FriendsList(friends: List<FriendData>, navController: NavController) {
-    LazyColumn {
-        items(friends) { friend ->
-            FriendItem(friend, navController)
-        }
-    }
 }
 
 @Composable

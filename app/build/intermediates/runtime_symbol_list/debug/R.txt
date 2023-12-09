@@ -100,6 +100,8 @@ int dimen notification_subtext_size 0x7f030015
 int dimen notification_top_pad 0x7f030016
 int dimen notification_top_pad_large_text 0x7f030017
 int drawable abc_vector_test 0x7f040000
+int drawable addfriend 0x7f04003c
+int drawable chat 0x7f04003d
 int drawable comment 0x7f040001
 int drawable common_full_open_on_phone 0x7f040002
 int drawable common_google_signin_btn_icon_dark 0x7f040003
@@ -137,6 +139,7 @@ int drawable ic_call_decline_low 0x7f040022
 int drawable ic_google 0x7f040023
 int drawable likebutton 0x7f040024
 int drawable likedbutton 0x7f040025
+int drawable lock 0x7f04003f
 int drawable not_rated 0x7f040026
 int drawable notification_action_background 0x7f040027
 int drawable notification_bg 0x7f040028
@@ -155,6 +158,7 @@ int drawable plus 0x7f040034
 int drawable profile_placeholder 0x7f040035
 int drawable rated 0x7f040036
 int drawable recommendation 0x7f040037
+int drawable removefriend 0x7f04003e
 int drawable save 0x7f040038
 int drawable search 0x7f040039
 int drawable share 0x7f04003a

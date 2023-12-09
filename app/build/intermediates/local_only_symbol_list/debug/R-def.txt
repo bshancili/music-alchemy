@@ -1,5 +1,7 @@
 R_DEF: Internal format may change without notice
 local
+drawable addfriend
+drawable chat
 drawable comment
 drawable dm
 drawable group10
@@ -10,11 +12,13 @@ drawable ic_apple
 drawable ic_google
 drawable likebutton
 drawable likedbutton
+drawable lock
 drawable not_rated
 drawable plus
 drawable profile_placeholder
 drawable rated
 drawable recommendation
+drawable removefriend
 drawable save
 drawable search
 drawable share
