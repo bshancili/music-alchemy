@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -91,6 +92,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
+
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 //~~~~~~~~~~
@@ -1135,121 +1142,23 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
-    var trackName by remember { mutableStateOf("") }
-    var artists by remember { mutableStateOf("") }
-    var albumName by remember { mutableStateOf("") }
-    var albumReleaseDate by remember { mutableStateOf("") }
-    var albumType by remember { mutableStateOf("") }
-    var danceability by remember { mutableStateOf("") }
-    var energy by remember { mutableStateOf("") }
-    var instrumentalness by remember { mutableStateOf("") }
-    var key by remember { mutableStateOf("") }
-    var lengthInSeconds by remember { mutableStateOf("") }
-    var liveness by remember { mutableStateOf("") }
-    var loudness by remember { mutableStateOf("") }
-    var mode by remember { mutableStateOf("") }
-    var tempo by remember { mutableStateOf("") }
-    var valence by remember { mutableStateOf("") }
-    val addSongStatus by viewModel.addSongStatus.observeAsState("")
+    var searchQuery by remember { mutableStateOf("") }
 
-    val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-        textColor = Color.Black, // Text color inside the text field
-        backgroundColor = Color.White, // Background color of the text field
-        focusedBorderColor = Color.White, // Border color when the text field is focused
-        unfocusedBorderColor = Color.Gray, // Border color when the text field is not focused
-        focusedLabelColor = Color.Black, // Label color when the text field is focused
-        unfocusedLabelColor = Color.Gray // Label color when the text field is not focused
-    )
+    Column {
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Search Songs") }
+        )
+        Button(onClick = { viewModel.searchSongs(searchQuery) }) {
+            Text("Search")
+        }
 
-
-
-    Scaffold(
-        bottomBar = { CommonBottomBar(navController) }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding)
-                .padding(horizontal = 8.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            OutlinedTextField(
-                value = trackName,
-                onValueChange = { trackName = it },
-                label = { Text("Track Name") },
-                colors = textFieldColors
-            )
-            OutlinedTextField(value = artists, onValueChange = { artists = it }, label = { Text("Artist(s)") } ,
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Album Name") } ,
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumReleaseDate, onValueChange = { albumReleaseDate = it }, label = { Text("Album Release Date") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumType, onValueChange = { albumType = it }, label = { Text("Album Type") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = danceability, onValueChange = { danceability = it }, label = { Text("Danceability") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = energy, onValueChange = { energy = it }, label = { Text("Energy") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = instrumentalness, onValueChange = { instrumentalness = it }, label = { Text("Instrumentalness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = lengthInSeconds, onValueChange = { lengthInSeconds = it }, label = { Text("Length in Seconds") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = liveness, onValueChange = { liveness = it }, label = { Text("Liveness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = loudness, onValueChange = { loudness = it }, label = { Text("Loudness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = mode, onValueChange = { mode = it }, label = { Text("Mode") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = tempo, onValueChange = { tempo = it }, label = { Text("Tempo") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = valence, onValueChange = { valence = it }, label = { Text("Valence") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Button(onClick = {
-                val newSong = Song(
-                    trackName = trackName,
-                    artists = artists.split(",").map { it.trim() },
-                    albumName = albumName,
-                    albumReleaseDate = albumReleaseDate,
-                    albumType = albumType,
-                    danceability = danceability.toDoubleOrNull(),
-                    energy = energy.toDoubleOrNull(),
-                    instrumentalness = instrumentalness.toDoubleOrNull(),
-                    key = key.toIntOrNull(),
-                    lengthInSeconds = lengthInSeconds.toDoubleOrNull(),
-                    liveness = liveness.toDoubleOrNull(),
-                    loudness = loudness.toDoubleOrNull(),
-                    mode = mode.toIntOrNull(),
-                    tempo = tempo.toDoubleOrNull(),
-                    valence = valence.toDoubleOrNull()
-                )
-                viewModel.addSong(newSong)
-            },colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black)
-            ) {
-                Text("Add Song")
-            }
-            if (addSongStatus.isNotEmpty()) {
-                Text(addSongStatus)
+        // Observe and display songs
+        val songs = viewModel.songs.observeAsState(listOf())
+        LazyColumn {
+            items(songs.value) { song ->
+                Text("Hey") // Replace with your actual song data display
             }
         }
     }
@@ -1869,6 +1778,24 @@ class SongsViewModel : ViewModel() {
             }
     }
 
+    fun searchSongs(query: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val response = RetrofitInstance.api.searchSongs(query)
+                if (response.isSuccessful && response.body() != null) {
+                    _songs.value = response.body()!!
+                } else {
+                    // Handle the error case
+                }
+            } catch (e: Exception) {
+                // Handle exceptions
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun updateSongs(updatedSongs: List<Song>) {
         _songs.value = updatedSongs
     }
@@ -1926,6 +1853,25 @@ class SongsViewModel : ViewModel() {
     }
 }
 
+interface SongsApiService {
+    @GET("/search")
+    suspend fun searchSongs(@Query("songName") songName: String): Response<List<Song>>
+}
+
+object RetrofitInstance {
+    private const val BASE_URL = "http://your-backend-url.com" // Replace with your backend URL
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val api: SongsApiService by lazy {
+        retrofit.create(SongsApiService::class.java)
+    }
+}
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
     val userDocument = Firebase.firestore
