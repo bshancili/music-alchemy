@@ -151,6 +151,7 @@ const SignUp = () => {
         friends_list: [],
         comments: [],
         uid: userID,
+        Isprivate: 0,
       };
       const userDocRef = doc(db, "Users", response.user.uid);
       await setDoc(userDocRef, userDocData);

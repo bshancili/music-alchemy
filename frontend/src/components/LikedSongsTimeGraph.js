@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { fetchAverageRatingByTime, fetchLikedSongTimestamps } from "../api/api";
+import {
+  fetchAverageRatingByTime,
+  fetchLikedSongTimestamps,
+  fetchCreatedSongData,
+} from "../api/api";
 import {
   Box,
   Text,
@@ -15,6 +19,8 @@ import html2canvas from "html2canvas";
 const LikedSongsTimeGraph = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [ratedSongs, setRatedSongs] = useState([]);
+  const [createdSongs, setCreatedSongs] = useState([]);
+
   const [pic, setPic] = useState();
   const tweetText = "Check out my awesome chart!";
   const tweetUrl =
@@ -82,8 +88,10 @@ const LikedSongsTimeGraph = () => {
     const fetchData = async () => {
       await fetchLikedSongTimestamps(userID, setLikedSongs);
       await fetchAverageRatingByTime(userID, setRatedSongs);
+      await fetchCreatedSongData(userID, setCreatedSongs);
       console.log(ratedSongs);
       console.log(likedSongs);
+      console.log(createdSongs);
     };
 
     fetchData();
@@ -153,6 +161,37 @@ const LikedSongsTimeGraph = () => {
           <Button
             onClick={() => {
               handleShareOnTwitter("averageRate");
+            }}
+          >
+            Share on Twitter
+          </Button>
+        </VStack>
+      </HStack>
+      <HStack>
+        <div id="createdSongChart">
+          <Chart
+            chartId="createdSongsChart"
+            chartTitle="Created Songs Over Time"
+            chartData={createdSongs}
+            lineProps={{
+              type: "monotone",
+              stroke: "rgba(145, 29, 29, 1)",
+              fill: "#fff",
+              dataKey: "count",
+            }}
+          />
+        </div>
+        <VStack>
+          <Button
+            onClick={() => {
+              handleDownloadImage("createdSongChart", "created_songs_data.jpg");
+            }}
+          >
+            Download
+          </Button>
+          <Button
+            onClick={() => {
+              handleShareOnTwitter("createdSongChart");
             }}
           >
             Share on Twitter

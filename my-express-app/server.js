@@ -139,14 +139,18 @@ app.post("/search_songs", async (req, res) => {
       });
     }
   }
-
-  // If recommended songs are not included in Tracks
-  const message = "Not a lucky time! Please try again!!";
+  // If the allResults array is empty, return a 204 No Content status
   if (allResults.length === 0) {
-    return res.json({ results: message });
+    return res
+      .status(204)
+      .json({
+        message:
+          "Not a lucky time! Please try again!!Recommended songs are not matched in Tracks. The list is empty!",
+      });
   }
 
-  return res.json({ results: allResults });
+  // If there are results, return them with a 200 OK status
+  return res.status(200).json({ results: allResults });
 });
 
 async function searchInFirestore(trackName, artistName) {
@@ -170,6 +174,7 @@ async function searchInFirestore(trackName, artistName) {
 
   return results;
 }
+
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
     const uid = req.body["uid"];
@@ -214,19 +219,11 @@ app.post("/recent_liked_songs", async (req, res) => {
         }
       }
     });
-
     //console.log("Before sorting:", songs);
-
-    // Sort the songs by timestamp
-    songs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
+    songs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // sort by timestamp
     //console.log("After sorting:", songs);
-
-    // Get the most recent 5 songs
-    const recentSongs = songs.slice(0, 5);
-
+    const recentSongs = songs.slice(0, 5); // most recent 5 songs
     //console.log("Recent 5 songs:", recentSongs);
-
     res.status(200).send(recentSongs);
   } catch (error) {
     console.error("Error fetching recent songs: ", error);
@@ -235,14 +232,14 @@ app.post("/recent_liked_songs", async (req, res) => {
 });
 
 app.post("/get_track_artist", async (req, res) => {
-  const docId = req.body["docId"]; // Get the document ID from the URL parameter
+  const docId = req.body["docId"];
   try {
-    const docRef = db.collection("Tracks").doc(docId); // Replace 'songs' with your collection name
+    const docRef = db.collection("Tracks").doc(docId);
     const docSnapshot = await docRef.get();
 
     if (docSnapshot.exists) {
       const data = docSnapshot.data();
-      const artists = data["artists"]; // Assuming the field you want is named 'name'
+      const artists = data["artists"];
       res.status(200).send({ artist: artists[0] });
     } else {
       res.status(404).send({ message: "Document not found" });
@@ -254,15 +251,14 @@ app.post("/get_track_artist", async (req, res) => {
 });
 
 app.post("/find_song_name", async (req, res) => {
-  const docId = req.body["docId"]; // Get the document ID from the URL parameter
-
+  const docId = req.body["docId"];
   try {
-    const docRef = db.collection("Tracks").doc(docId); // Replace 'songs' with your collection name
+    const docRef = db.collection("Tracks").doc(docId);
     const docSnapshot = await docRef.get();
 
     if (docSnapshot.exists) {
       const data = docSnapshot.data();
-      const name = data["track_name"]; // Assuming the field you want is named 'name'
+      const name = data["track_name"];
       res.status(200).send({ name });
     } else {
       res.status(404).send({ message: "Document not found" });
@@ -272,6 +268,26 @@ app.post("/find_song_name", async (req, res) => {
     res.status(500).send({ message: "Error retrieving document", error });
   }
 });
+
+app.post("/retrieve_friend_list", async (req, res) => {
+  try {
+    const uid = req.body["uid"];
+    const querySnapshot = await db.collection("Users").get();
+    const friends = [];
+    querySnapshot.forEach((doc) => {
+      if (doc.data()["uid"] == uid) {
+        friends.push({
+          friends_list: doc.data()["friends_list"],
+        });
+      }
+    });
+    res.status(200).send(friends);
+  } catch (error) {
+    console.error("Error retrieving songs: ", error);
+    res.status(500).send(error);
+  }
+});
+
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
     let parts = line.split(" - ");
@@ -286,7 +302,7 @@ async function find_recommended_track(prompt_chatgpt) {
       tracks,
     });
     if (response.data && response.data.results) {
-      //console.log(response.data.results)
+      console.log(response.data.results);
       return response.data.results;
     }
   } catch (error) {
@@ -300,10 +316,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
   const userUid = req.body["uid"];
 
   try {
-    // Replace with the actual URL of the 'retrieve_user_tracks' endpoint
-    const userData = {
-      uid: userUid,
-    };
+    const userData = { uid: userUid };
     const response = await axios.post(
       "http://localhost:3000/retrieve_user_tracks",
       userData
@@ -427,5 +440,3 @@ app.post("/temporal_recommendation", async (req, res) => {
       .json({ message: "Error retrieving user tracks" });
   }
 });
-
-app.post("/friends_recommendation", async (req, res) => {});

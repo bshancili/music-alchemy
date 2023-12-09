@@ -62,12 +62,9 @@ const RecommendPage = () => {
     console.log(trackIds);
     if (Array.isArray(trackIds) && trackIds.length > 0) {
       // Filter out items without track_id property
-      const validTrackIds = trackIds
-        .filter((item) => item.track_id !== undefined && item.track_id !== null)
-        .map((item) => item.track_id);
 
       const tracks = await Promise.all(
-        validTrackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
+        trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
       );
       setTempRecSongs(tracks);
       console.log(tracks);
@@ -90,10 +87,7 @@ const RecommendPage = () => {
           body: JSON.stringify({ uid: userID }),
         }
       );
-      if (!response.ok) {
-        setLoading(false);
-        throw new Error("500 internal server error");
-      }
+
       const trackIds = await response.json();
       const tracks = await Promise.all(
         trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
