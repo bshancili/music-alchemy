@@ -1141,24 +1141,29 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 
 
 @Composable
-fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
-    var searchQuery by remember { mutableStateOf("") }
+fun AddSongScreen(viewModel: SongsViewModel) {
+    var songQuery by remember { mutableStateOf("") }
 
     Column {
         TextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            label = { Text("Search Songs") }
+            value = songQuery,
+            onValueChange = {
+                songQuery = it
+                viewModel.autocompleteSong(songQuery)
+            },
+            label = { Text("Search Song") }
         )
-        Button(onClick = { viewModel.searchSongs(searchQuery) }) {
-            Text("Search")
-        }
 
-        // Observe and display songs
-        val songs = viewModel.songs.observeAsState(listOf())
-        LazyColumn {
-            items(songs.value) { song ->
-                Text("Hey") // Replace with your actual song data display
+        val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            LazyColumn {
+                items(suggestions) { suggestion ->
+                    Text(text = "${suggestion.track_name} by ${suggestion.artists.joinToString()}")
+                }
             }
         }
     }
@@ -1734,15 +1739,44 @@ data class Song(
 )
 
 class SongsViewModel : ViewModel() {
+
+    private val apiService: AutocompleteApiService by lazy {
+        RetrofitInstance.retrofit.create(AutocompleteApiService::class.java)
+    }
+
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
     private val _addSongStatus = MutableLiveData<String>()
     val addSongStatus: LiveData<String> = _addSongStatus
 
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+    val songSuggestions = MutableLiveData<List<Suggestion>>()
+
     init {
         loadSongs()
     }
+
+
+    fun autocompleteSong(query: String) {
+        viewModelScope.launch {
+            _isLoading.value = true  // Modify _isLoading instead of isLoading
+            try {
+                val response = apiService.autocompleteSong(query)
+                if (response.isSuccessful && response.body() != null) {
+                    songSuggestions.value = response.body()!!.suggestions
+                } else {
+                    // Handle error
+                }
+            } catch (e: Exception) {
+                // Handle exception
+            } finally {
+                _isLoading.value = false  // Modify _isLoading instead of isLoading
+            }
+        }
+    }
+
 
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
@@ -1778,23 +1812,7 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-    fun searchSongs(query: String) {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                val response = RetrofitInstance.api.searchSongs(query)
-                if (response.isSuccessful && response.body() != null) {
-                    _songs.value = response.body()!!
-                } else {
-                    // Handle the error case
-                }
-            } catch (e: Exception) {
-                // Handle exceptions
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
+
 
     fun updateSongs(updatedSongs: List<Song>) {
         _songs.value = updatedSongs
@@ -1812,8 +1830,6 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
     fun loadSongsWithSubstring(substring: String) {
         val db = FirebaseFirestore.getInstance()
         _isLoading.value = true
@@ -1858,19 +1874,28 @@ interface SongsApiService {
     suspend fun searchSongs(@Query("songName") songName: String): Response<List<Song>>
 }
 
-object RetrofitInstance {
-    private const val BASE_URL = "http://your-backend-url.com" // Replace with your backend URL
+interface AutocompleteApiService {
+    @GET("/autocomplete")
+    suspend fun autocompleteSong(@Query("song") songQuery: String): Response<AutocompleteResponse>
+}
 
-    private val retrofit: Retrofit by lazy {
+data class AutocompleteResponse(val suggestions: List<Suggestion>)
+
+data class Suggestion(
+    val track_name: String,
+    val artists: List<String>,
+    val album_name: String
+)
+object RetrofitInstance {
+    private const val BASE_URL = "http://10.0.2.2:8080" // Replace with your backend URL
+
+    val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    val api: SongsApiService by lazy {
-        retrofit.create(SongsApiService::class.java)
-    }
 }
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
