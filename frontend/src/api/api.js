@@ -6,7 +6,7 @@ const fetchTrackDetails = async (id) => {
   const trackRef = doc(db, "Tracks", id);
   try {
     const trackSnap = await getDoc(trackRef);
-
+    console.log(trackSnap.id);
     if (trackSnap.exists()) {
       const trackDetails = {
         id: trackSnap.id,
@@ -14,7 +14,7 @@ const fetchTrackDetails = async (id) => {
       };
       return trackDetails;
     } else {
-      console.error("Track not found");
+      console.error(trackSnap.id, "Track not found");
       return null;
     }
   } catch (error) {
