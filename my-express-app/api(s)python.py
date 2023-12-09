@@ -193,7 +193,7 @@ def create_song():
             'valence':audio_features[0]['valence'] # Tracks with high valence sound more positive , while tracks with low valence sound more negative
             }
         db.collection('Tracks').add(track_data)
-        return jsonify({'success': True, 'message': f'Song "{track['name']}" saved to Firestore'})
+        return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
             
     else:
         return jsonify({'success': False, 'message': 'Track already exist in database'})
