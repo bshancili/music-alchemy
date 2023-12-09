@@ -417,7 +417,7 @@ app.post("/temporal_recommendation", async (req, res) => {
     result = removeEmptyLines(
       openai_response["choices"][0]["message"]["content"]
     );
-    console.log(result);
+    //console.log(result);
     const recommendations = await find_recommended_track(result);
     res.status(200).send(recommendations);
   } catch (error) {
