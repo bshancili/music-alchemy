@@ -77,21 +77,21 @@ const fetchLikedSongTimestamps = async (userId, setLikedSongs) => {
           // Format week start as a string
           const weekStartString = weekStart.toISOString().split("T")[0];
 
-          // Increment the count for the week start date or initialize it to 1
+          // Increment the count for the week start date or initialize it to the rating
           const existingEntry = acc.find(
             (entry) => entry.date === weekStartString
           );
           if (existingEntry) {
+            existingEntry.sum += songData.rating;
             existingEntry.count += 1;
           } else {
-            acc.push({ date: weekStartString, count: 1 });
+            acc.push({ date: weekStartString, sum: songData.rating, count: 1 });
           }
 
           return acc;
         },
         []
       );
-
       // Set likedSongs state with the array of counts
       const sortedSongCountByDate = songCountByDate.sort(
         (a, b) => new Date(a.date) - new Date(b.date)
@@ -102,6 +102,61 @@ const fetchLikedSongTimestamps = async (userId, setLikedSongs) => {
     }
   } catch (error) {
     console.error("Error fetching liked songs:", error);
+  }
+};
+
+const fetchCreatedSongData = async (userId, setCreatedSongs) => {
+  const userDocRef = doc(db, "Users", userId);
+  const userSnap = await getDoc(userDocRef);
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+    const createdSongs = userData.created_songs;
+    const songCountByDate = Object.values(createdSongs).reduce(
+      (acc, songData) => {
+        // Firebase timestamp structure
+        const { seconds, nanoseconds } = songData.timestamp;
+        // Combine seconds and nanoseconds to create a timestamp in milliseconds
+        const timestampInMillis = seconds * 1000 + nanoseconds / 1e6;
+
+        // Create a JavaScript Date object from the timestamp
+        const date = new Date(timestampInMillis);
+
+        // Extract date without time information
+        const dateWithoutTime = new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate()
+        );
+
+        // Get the start of the week for the current date
+        const weekStart = new Date(dateWithoutTime);
+        weekStart.setDate(dateWithoutTime.getDate() - dateWithoutTime.getDay());
+
+        // Format week start as a string
+        const weekStartString = weekStart.toISOString().split("T")[0];
+
+        // Increment the count for the week start date or initialize it to 1
+        const existingEntry = acc.find(
+          (entry) => entry.date === weekStartString
+        );
+        if (existingEntry) {
+          existingEntry.count += 1;
+        } else {
+          acc.push({ date: weekStartString, count: 1 });
+        }
+
+        return acc;
+      },
+      []
+    );
+
+    // Set likedSongs state with the array of counts
+    const sortedSongCountByDate = songCountByDate.sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+    console.log(sortedSongCountByDate);
+
+    setCreatedSongs(sortedSongCountByDate);
   }
 };
 
@@ -205,4 +260,5 @@ export {
   fetchLikedSongTimestamps,
   fetchAverageRatingByTime,
   fetchTemporalRecommendation,
+  fetchCreatedSongData,
 };
