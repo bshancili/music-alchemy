@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Profile from "../components/Profile";
-import { Box, useToast } from "@chakra-ui/react";
+import { Text, Box, useToast } from "@chakra-ui/react"; // Add Text to the import statement
 import Header from "../components/Header";
+import Profile from "../components/Profile";
 import ProfileMusicList from "../components/ProfileMusicList";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
@@ -19,12 +19,18 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const { id } = useParams();
-  //const { userID } = useAuthStore();
   const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
   const toast = useToast();
+
   const fetchUser = async () => {
     try {
+      // Ensure id is validIs
+      if (!id) {
+        console.error("Invalid user ID");
+        return;
+      }
+
       const userDocRef = doc(db, "Users", id);
       const userSnap = await getDoc(userDocRef);
 
@@ -33,11 +39,9 @@ function ProfilePage() {
         setUser(userData);
       } else {
         console.log("User not found");
-        // Handle the case where the user document does not exist
       }
     } catch (error) {
       console.error("Error fetching user:", error);
-      // Handle the error appropriately
     }
   };
 
@@ -66,7 +70,6 @@ function ProfilePage() {
 
   const addFriend = async () => {
     try {
-      // Add friendUid to the current user's friend list
       const userDocRef = doc(db, "Users", userID);
       await updateDoc(userDocRef, {
         friends_list: arrayUnion(id),
@@ -88,9 +91,9 @@ function ProfilePage() {
       throw error;
     }
   };
+
   const unfriend = async () => {
     try {
-      // Remove friendUid from the current user's friend list
       const userDocRef = doc(db, "Users", userID);
       await updateDoc(userDocRef, {
         friends_list: arrayRemove(id),
@@ -111,6 +114,7 @@ function ProfilePage() {
       throw error;
     }
   };
+
   useEffect(() => {
     fetchUser();
     fetchNonRatedSongs();
@@ -120,14 +124,19 @@ function ProfilePage() {
   return (
     <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">
       <Header />
-      <Profile
-        user={user}
-        onaddFriend={addFriend}
-        onunfriend={unfriend}
-        isUserProfile={isUserProfile}
-      />
-
-      <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
+      {user && (
+        <Profile
+          user={user}
+          onaddFriend={addFriend}
+          onunfriend={unfriend}
+          isUserProfile={isUserProfile}
+          id={id}
+        />
+      )}
+      {user?.Isprivate === true ||
+        (user?.friends_list?.includes(userID) && user && (
+          <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
+        ))}
     </Box>
   );
 }

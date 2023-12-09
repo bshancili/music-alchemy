@@ -9,6 +9,7 @@ import {
   IconButton,
   Button,
   HStack,
+  useToast, // Add this import for 'toast'
 } from "@chakra-ui/react";
 import useAuthStore from "../stores/authStore";
 import settings from "../utils/settings.svg";
@@ -16,23 +17,69 @@ import friend from "../utils/addFriend.png";
 import cross from "../utils/cross.png";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+
+function Profile({ user, onaddFriend, onunfriend, isUserProfile, id }) {
   const { userID } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
+  const [Isprivate, setIsPublic] = useState(user?.Isprivate);
+  const toast = useToast();
 
   const handleSettingsClick = () => {
     setShowLogoutButton(!showLogoutButton);
   };
+
   const handleAddFriend = () => {
     onaddFriend();
   };
+
   const handleUnfriend = () => {
     onunfriend();
   };
+
   const handleLogout = () => {
     navigate("/login");
     localStorage.clear();
+  };
+
+  const handleTogglePrivacy = async () => {
+    // Ensure userID and id are valid
+
+    // Toggle the state immediately
+    const newIsPublic = !Isprivate;
+    setIsPublic(newIsPublic);
+
+    // Update the database with the new privacy setting
+    try {
+      const userDocRef = doc(db, "Users", id);
+      await updateDoc(userDocRef, {
+        Isprivate: newIsPublic,
+      });
+
+      console.log(newIsPublic);
+
+      toast({
+        title: `Profile is now ${newIsPublic ? "public" : "private"}`,
+
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } catch (error) {
+      toast({
+        title: `Profile is now ${newIsPublic ? "public" : "private"}`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      // Revert the state if the update fails
+      setIsPublic(!newIsPublic);
+      throw error;
+    }
   };
 
   if (!user) {
@@ -60,7 +107,7 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
       color="#FFF"
       gap={4}
       padding="10px 100px"
-      width="100%" // Set width to 100%
+      width="100%"
     >
       <Image
         src={user.profile_picture_url}
@@ -103,6 +150,18 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
             />
           </Box>
         )}
+        <Box>
+          <Box>
+            <Button
+              bg={Isprivate ? "#4CAF50" : "#F44336"}
+              _hover={{ bg: Isprivate ? "#45a049" : "#e57373" }}
+              color="#FFFFFF"
+              onClick={handleTogglePrivacy}
+            >
+              {Isprivate ? "Public" : "Private"}
+            </Button>
+          </Box>
+        </Box>
       </Box>
 
       <Spacer />
