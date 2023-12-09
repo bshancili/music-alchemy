@@ -275,10 +275,7 @@ app.post("/find_song_name", async (req, res) => {
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
     let parts = line.split(" - ");
-    return {
-      track_name: parts[0] ? parts[0].trim() : "",
-      artist_name: parts[1] ? parts[1].trim() : "",
-    };
+    return { track_name: parts[0].trim(), artist_name: parts[1].trim() };
   });
 
   try {
