@@ -35,7 +35,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -82,6 +81,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 
 
 import com.google.firebase.firestore.firestore
@@ -1324,16 +1324,18 @@ fun ProfileScreen(navController: NavController, userId:String) {
     val viewModel: ProfileViewModel = viewModel()
     val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
     var isFriend by remember { mutableStateOf(false) }
-    var isPrivate by remember { mutableStateOf(0) }
+    var isPrivateToggleText by remember { mutableStateOf("Set Profile Private") }
     var selectedTab by remember { mutableStateOf(Tab.Collections)}
     //var newUsername by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     val currentUserId = user?.uid.orEmpty()
+    val isPrivateValue by viewModel.isPrivate.observeAsState()
     val currentUsername by viewModel.username.observeAsState("Unknown")
     val profilePictureUrl by viewModel.profilePictureURL.observeAsState("Unknown")
     val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
     val ratedSongs by viewModel.ratedSongs.observeAsState(initial = emptyList())
     val createdSongs by viewModel.createdSongs.observeAsState(initial = emptyList())
+    val topRatedSongs by viewModel.topRatedSongs.observeAsState(initial = emptyList())
 
     LaunchedEffect(userId) {
         Log.d("ProfileScreen", "Fetching data for userId: $userId")
@@ -1344,16 +1346,19 @@ fun ProfileScreen(navController: NavController, userId:String) {
         viewModel.fetchCreatedSongs(userId)
         viewModel.fetchFriendsList(currentUserId)
         viewModel.fetchIsPrivate(userId)
+        viewModel.fetchTopRatedSongs(currentUserId)
     }
 
     LaunchedEffect(friendsList) {
         isFriend = friendsList.any { it.id == userId }
     }
 
-    LaunchedEffect(isPrivate) {
-        // Update the isPrivate state when it changes
-        isPrivate = viewModel.isPrivate.value ?: 0
-        Log.d("ProfileScreen", "isPrivate value changed to: $isPrivate")
+    LaunchedEffect(isPrivateValue) {
+        isPrivateToggleText = if (isPrivateValue == 0) "Set Profile Private" else "Set Profile Public"
+    }
+
+    LaunchedEffect(topRatedSongs) {
+        Log.d("ProfileScreen", "Top Rated Song IDs: ${topRatedSongs.map { it.id }}")
     }
 
     Column(
@@ -1443,8 +1448,10 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                 shape = RoundedCornerShape(size = 15.dp)
                             )
                             .clickable {
-                                if (!isFriend) {viewModel.addFriend(currentUserId, userId)
-                                }else{viewModel.removeFriend(currentUserId, userId)
+                                if (!isFriend) {
+                                    viewModel.addFriend(currentUserId, userId)
+                                } else {
+                                    viewModel.removeFriend(currentUserId, userId)
                                 }
                             }
                     ) {
@@ -1465,7 +1472,9 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                     painter = painterResource(id = R.drawable.removefriend),
                                     contentDescription = "icon",
                                     contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.size(24.dp).padding(2.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .padding(2.dp)
                                 )
                             } else {
                                 // Display the default "Add Friend" image
@@ -1473,7 +1482,9 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                     painter = painterResource(id = R.drawable.addfriend),
                                     contentDescription = "icon",
                                     contentScale = ContentScale.FillBounds,
-                                    modifier = Modifier.size(24.dp).padding(2.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .padding(2.dp)
                                 )
                             }
 
@@ -1535,8 +1546,60 @@ fun ProfileScreen(navController: NavController, userId:String) {
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+            else{
 
-            if(isPrivate == 0) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .background(
+                                color = Color(0x5E33373B),
+                                shape = RoundedCornerShape(size = 15.dp)
+                            )
+                            .clickable {
+
+                                viewModel.setPrivate(currentUserId)
+                            }
+                    ) {
+                        // Content for the first box
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(
+                                4.dp,
+                                Alignment.CenterHorizontally
+                            ),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Center)
+                        ) {
+
+                            Text(
+                                text = isPrivateToggleText,
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 20.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFFFFFFFF),
+                                    textAlign = TextAlign.Center
+                                ),
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+
+
+
+            if(isPrivateValue == 0 || currentUserId == userId) {
 
                 Row {
                     Row(
@@ -1753,7 +1816,10 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight()
-                        .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
+                        .background(
+                            color = Color(0x5E33373B),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
                 ){
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
@@ -1765,7 +1831,10 @@ fun ProfileScreen(navController: NavController, userId:String) {
                         painter = painterResource(id = R.drawable.lock),
                         contentDescription = "icon",
                         contentScale = ContentScale.FillBounds,
-                        modifier = Modifier.width(50.dp).padding(2.dp).height(67.dp)
+                        modifier = Modifier
+                            .width(50.dp)
+                            .padding(2.dp)
+                            .height(67.dp)
                     )
                         Text(
                             text = "This Account is Private",
@@ -1806,12 +1875,19 @@ class ProfileViewModel : ViewModel() {
     val profilePictureURL: LiveData<String> = _profilePictureURL
     private val _isPrivate = MutableLiveData<Int>()
     val isPrivate: LiveData<Int> get() = _isPrivate
+    private val _topRatedSongs = MutableLiveData<List<Song>>()
+    val topRatedSongs: LiveData<List<Song>> = _topRatedSongs
+    private val currentTopRatedSongIds = mutableListOf<String>()
 
     fun fetchIsPrivate(userId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
 
-        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
-            val isPrivateValue = documentSnapshot["Isprivate"] as? Int ?: 0
+        usersCollection.document(userId).get(Source.SERVER).addOnSuccessListener { documentSnapshot ->
+            Log.d("ProfileViewModel", "Document Snapshot: $documentSnapshot")
+
+            // Retrieve Isprivate as Double
+            val isPrivateValue = (documentSnapshot["Isprivate"] as? Long)?.toInt() ?: 0
+
             Log.d("ProfileViewModel", "Fetched Isprivate value: $isPrivateValue")
             _isPrivate.value = isPrivateValue
         }.addOnFailureListener { exception ->
@@ -1819,6 +1895,26 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    fun setPrivate(currentUserId: String) {
+        // Assuming you have a reference to your Firestore collection
+        val usersCollection = Firebase.firestore.collection("Users").document(currentUserId)
+
+        Firebase.firestore.runTransaction { transaction ->
+            val documentSnapshot = transaction.get(usersCollection)
+
+            val isPrivateValue = (documentSnapshot["Isprivate"] as? Long)?.toInt() ?: 0
+            val updatedIsPrivateValue = if (isPrivateValue == 0) 1 else 0
+
+            transaction.update(usersCollection, "Isprivate", updatedIsPrivateValue)
+
+            updatedIsPrivateValue // Return the updated value
+        }.addOnSuccessListener { updatedIsPrivateValue ->
+            _isPrivate.value = updatedIsPrivateValue
+            Log.d("ProfileViewModel", "Isprivate field updated successfully.")
+        }.addOnFailureListener { exception ->
+            Log.e("ProfileViewModel", "Failed to update Isprivate field.", exception)
+        }
+    }
     fun fetchUsername(userId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
@@ -2010,6 +2106,74 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+
+    fun fetchTopRatedSongs(userId: String) {
+        Log.d("ProfileViewModel", "Fetching top-rated songs details for userID: $userId")
+
+        // Assuming you have initialized _topRatedSongs as MutableLiveData<List<Song>> in your ViewModel
+        val targetList = _topRatedSongs
+        val allTopRatedSongIds = mutableListOf<String>()
+
+        // Fetch the user's friend list
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { document ->
+            val friendIds = document["friends_list"] as? List<String>
+
+            // Initialize an empty list to hold the top-rated song IDs
+
+            // Fetch each friend's top-rated song IDs
+            friendIds?.forEachIndexed { index, friendId ->
+                Log.d("ProfileViewModel", "Inside forEach loop for friend ID: $friendId")
+
+                val friendDocument = Firebase.firestore.collection("Users").document(friendId)
+
+                Log.d("ProfileViewModel", "Fetching top-rated songs for friend ID: $friendId")
+
+                val topRatedSongIds = mutableListOf<String>()
+
+                friendDocument.get().addOnSuccessListener { documentSnapshot ->
+                    val ratedSongsMap = documentSnapshot["rated_song_list"] as? Map<String, Map<String, Any>>?
+
+                    // Check if the rated_songs field exists and is a map
+                    if (ratedSongsMap != null) {
+                        Log.d("ProfileViewModel", "Found rated_songs field for friend ID: $friendId")
+
+                        // Extract the song IDs from the rated_songs map
+                        val songIds = ratedSongsMap.keys.toList()
+
+                        topRatedSongIds.addAll(songIds.take(3))
+                    } else {
+                        Log.d("ProfileViewModel", "No rated_songs field found for friend ID: $friendId")
+                    }
+
+                    // Log the top-rated song IDs after adding
+                    Log.d("ProfileViewModel", "Added Top Rated Song IDs for friend ID $friendId: $topRatedSongIds")
+
+                    // Add the top-rated song IDs to the list
+                    allTopRatedSongIds.addAll(topRatedSongIds)
+
+                    // Fetch details when all friends are processed
+                    if (index == friendIds.size - 1) {
+                        val uniqueTopRatedSongIds = allTopRatedSongIds.distinct()
+                        println(uniqueTopRatedSongIds)
+                        Log.d("ProfileViewModel", "Collected Top Rated Song IDs: $uniqueTopRatedSongIds")
+
+                        fetchSongsDetails(uniqueTopRatedSongIds, targetList)
+                    }
+                }.addOnFailureListener { exception ->
+                    // Handle failure
+                    Log.e("ProfileViewModel", "Failed to fetch rated_songs for friend ID: $friendId", exception)
+                }
+
+                Log.d("ProfileViewModel", "Top Rated Song IDs for friend ID $friendId: $topRatedSongIds")
+            }
+
+        }.addOnFailureListener { exception ->
+            Log.e("ProfileViewModel", "Failed to fetch friend IDs for userID: $userId", exception)
+        }
+    }
+
+
     private fun fetchSongsDetails(songIds: List<String>, targetLiveData: MutableLiveData<List<Song>>) {
         if (songIds.isEmpty()) {
             targetLiveData.value = emptyList()
@@ -2017,16 +2181,29 @@ class ProfileViewModel : ViewModel() {
         }
 
         val songsCollection = Firebase.firestore.collection("Tracks")
-        songsCollection.whereIn(FieldPath.documentId(), songIds).get()
-            .addOnSuccessListener { documents ->
-                val songsList = documents.map { documentSnapshot ->
-                    documentSnapshot.toObject(Song::class.java).apply {
-                        // Set the id field to the document ID
-                        id = documentSnapshot.id
-                    }
+        val fetchedSongs = mutableListOf<Song>()
+        var songsFetchedCount = 0
+
+        for (songId in songIds) {
+            songsCollection.document(songId).get().addOnSuccessListener { documentSnapshot ->
+                val song = documentSnapshot.toObject(Song::class.java)?.apply {
+                    // Set the id field to the document ID
+                    id = documentSnapshot.id
                 }
-                targetLiveData.value = songsList
+                if (song != null) {
+                    fetchedSongs.add(song)
+                }
+
+                songsFetchedCount++
+                if (songsFetchedCount == songIds.size) {
+                    // All songs have been fetched, update the target list
+                    targetLiveData.value = fetchedSongs
+                }
+            }.addOnFailureListener { exception ->
+                // Handle failure
+                Log.e("ProfileViewModel", "Failed to fetch song details for ID: $songId", exception)
             }
+        }
     }
 
 }
