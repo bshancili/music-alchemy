@@ -1,118 +1,118 @@
 [
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_removefriend.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\removefriend.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_spotify_logo.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/spotify_logo.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\font_my_custom_font.xml.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\font\\my_custom_font.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_comment.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/comment.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\font_quantico.xml.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\font\\quantico.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/font_my_custom_font.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/font/my_custom_font.xml"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_ic_apple.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\ic_apple.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_removefriend.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/removefriend.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_comment.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\comment.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_group11.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/group11.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_group10.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\group10.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_profile_placeholder.jpg.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/profile_placeholder.jpg"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_save.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\save.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_likedbutton.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/likedbutton.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_profile_placeholder.jpg.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\profile_placeholder.jpg"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/xml_data_extraction_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_addfriend.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/addfriend.png"
     },
     {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_lock.png.flat",
         "source": "com.cs308.musicalchemy.app-main-66:/drawable/lock.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_search.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\search.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_plus.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/plus.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_ic_google.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\ic_google.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_chat.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/chat.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_likedbutton.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\likedbutton.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/font_quantico_regular.ttf.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/font/quantico_regular.ttf"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_recommendation.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\recommendation.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_likebutton.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/likebutton.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_spotify_logo.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\spotify_logo.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_ic_google.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/ic_google.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_plus.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\plus.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_not_rated.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/not_rated.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_chat.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\chat.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/xml_backup_rules.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/xml/backup_rules.xml"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\xml_data_extraction_rules.xml.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\xml\\data_extraction_rules.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_save.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/save.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_not_rated.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\not_rated.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/font_moon_font.ttf.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/font/moon_font.ttf"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_dm.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\dm.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/font_quantico.xml.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/font/quantico.xml"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_share.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\share.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_dm.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/dm.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_rated.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\rated.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_search.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/search.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_heart.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\heart.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_share.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/share.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\xml_backup_rules.xml.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\xml\\backup_rules.xml"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_home.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/home.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_home.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\home.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_group10.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/group10.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_likebutton.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\likebutton.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_recommendation.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/recommendation.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_group11.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\group11.png"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_rated.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/rated.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\font_moon_font.ttf.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\font\\moon_font.ttf"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_heart.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/heart.png"
     },
     {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\drawable_addfriend.png.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\drawable\\addfriend.png"
-    },
-    {
-        "merged": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-merged_res-64:\\font_quantico_regular.ttf.flat",
-        "source": "C:\\Users\\onura\\.gradle\\daemon\\8.0\\com.cs308.musicalchemy.app-main-66:\\font\\quantico_regular.ttf"
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_ic_apple.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/ic_apple.png"
     }
 ]
