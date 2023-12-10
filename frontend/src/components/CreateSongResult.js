@@ -1,4 +1,4 @@
-import { Box, Text, Button, useToast } from "@chakra-ui/react";
+import { Box, Text, Button, useToast, Image } from "@chakra-ui/react";
 import React from "react";
 import { pythonApi } from "../api/axios";
 
@@ -25,7 +25,6 @@ const CreateSongResult = ({ track }) => {
       const response = await pythonApi.post("/create_song", {
         track_name: track.track_name,
       });
-
       const tracksCollection = collection(db, "Tracks");
       const q = query(
         tracksCollection,
@@ -69,19 +68,53 @@ const CreateSongResult = ({ track }) => {
     }
   };
   return (
-    <Box>
-      <Button
-        display="flex"
-        flexDirection="row"
-        colorScheme="yellow"
-        padding={6}
-        gap={3}
-        onClick={addSongToDB}
+    <Box
+      borderWidth="1px"
+      borderRadius="20px"
+      overflow="hidden"
+      position="relative"
+      transition="transform 0.2s ease-in-out"
+      _hover={{
+        transform: "scale(1.08)",
+      }}
+      onClick={addSongToDB}
+      cursor="pointer"
+    >
+      <Image
+        // God know why we need that question mark
+        src={track.album_images[1]?.url}
+        alt="Album Cover"
+        w="183px"
+        h="183px"
+        objectFit="cover"
+        transition="transform 0.2s ease-in-out"
+        _hover={{
+          transform: "scale(1.4)",
+        }}
+      />
+      <Text
+        position="absolute"
+        bottom="6"
+        left="2"
+        fontSize="md"
+        color="white"
+        fontWeight="bold"
+        lineHeight={1.3}
+        mb={1.5}
+        transition="bottom 0.2s ease-in-out"
       >
-        <Text>Album: {track.album_name}</Text>
-        <Text>Song Name: {track.track_name}</Text>
-        <Text>Artist: {track["artist(s)"][0]}</Text>
-      </Button>
+        {track.track_name}
+      </Text>
+      <Text
+        position="absolute"
+        bottom="2"
+        left="3"
+        fontSize="sm"
+        fontWeight="w.300"
+        color="white"
+      >
+        {track["artist(s)"][0]}
+      </Text>
     </Box>
   );
 };
