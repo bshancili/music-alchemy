@@ -286,6 +286,30 @@ app.post("/retrieve_friend_list", async (req, res) => {
   }
 });
 
+app.post("/get_privacy_value", async (req, res) => {
+  try {
+    const uid = req.body["uid"];
+    if (!uid) {
+      return res.status(400).json({ error: "No UID provided" });
+    }
+    const userRef = db.collection("Users").doc(uid);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const userData = doc.data();
+    const isPrivate = userData.Isprivate === 1;
+
+    return res.status(200).json({ isPrivate });
+  } catch (error) {
+    console.error("Error retrieving privacy value: ", error);
+    res
+      .status(500)
+      .json({ error: "Error retrieving privacy value", details: error });
+  }
+});
+
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
     let parts = line.split(" - ");
@@ -358,7 +382,9 @@ app.post("/find_recommended_tracks", async (req, res) => {
     let myList = combinedList.join("\n");
 
     const prompt =
-      'I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me. Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like "sang by" or anyting else here is the example format: All I want - Adele:\n' +
+      "I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me." +
+      'Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like' +
+      '"sang by" or anyting else here is the example format: All I want - Adele:\n' +
       myList;
     const openai_response = await openai.chat.completions.create({
       model: "gpt-4", // or another model
@@ -438,5 +464,102 @@ app.post("/temporal_recommendation", async (req, res) => {
     res
       .status(error.response?.status || 500)
       .json({ message: "Error retrieving user tracks" });
+  }
+});
+
+app.post("/friends_recommendation", async (req, res) => {
+  const userUid = req.body["uid"];
+  try {
+    const userData = { uid: userUid };
+    const friendsResponse = await axios.post(
+      "http://localhost:3000/retrieve_friend_list",
+      userData
+    );
+    const friendsList = friendsResponse.data[0]["friends_list"];
+
+    let allSongsFriends = [];
+    let userLikedSongs = [];
+    const response = await axios.post(
+      "http://localhost:3000/retrieve_user_tracks",
+      userData
+    );
+    const liked_songs = response.data[0]["liked_songs"];
+    let lsongIdlist = await Promise.all(
+      Object.keys(liked_songs).map(async (songId) => {
+        const songData = { docId: songId };
+        const songName = await axios.post(
+          "http://localhost:3000/find_song_name",
+          songData
+        );
+        const artistName = await axios.post(
+          "http://localhost:3000/get_track_artist",
+          songData
+        );
+        //console.log(songName.data);
+        userLikedSongs.push(
+          `${songName.data["name"]} - ${artistName.data["artist"]}`
+        );
+      })
+    );
+
+    for (const friendUid of friendsList) {
+      const friendData = { uid: friendUid };
+      const friendprivacyResponse = await axios.post(
+        "http://localhost:3000/get_privacy_value",
+        { uid: friendUid }
+      );
+
+      if (friendprivacyResponse.data["isPrivate"] === false) {
+        console.log(friendUid);
+        const friendTracksResponse = await axios.post(
+          "http://localhost:3000/retrieve_user_tracks",
+          friendData
+        );
+        const likedSongs = friendTracksResponse.data[0]["liked_songs"];
+        console.log(likedSongs);
+
+        for (const songId in likedSongs) {
+          const songNameResponse = await axios.post(
+            "http://localhost:3000/find_song_name",
+            { docId: songId }
+          );
+          const artistNameResponse = await axios.post(
+            "http://localhost:3000/get_track_artist",
+            { docId: songId }
+          );
+          allSongsFriends.push(
+            `${songNameResponse.data["name"]} - ${artistNameResponse.data["artist"]}`
+          );
+        }
+      }
+    }
+
+    // Remove duplicates and prepare prompt for recommendation
+    allSongsFriends = [...new Set(allSongsFriends)].join("\n");
+    //console.log(allSongsFriends);
+    const prompt =
+      "Here is my list of the songs I liked: " +
+      userLikedSongs +
+      "Also here is list of songs that my friends like: " +
+      allSongsFriends +
+      "Please compare the list of songs my friends liked with my list if there are at least 5 different songs print those songs otherwise recommend songs with similar genres." +
+      'Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like' +
+      '"sang by" or anyting else here is the example format: All I want - Adele. The output should be list of songs with provided format.\n';
+    const openai_response = await openai.chat.completions.create({
+      model: "gpt-4", // or another model
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    console.log(openai_response["choices"][0]["message"]["content"]);
+    //res.status(200).send(openai_response['choices'][0]['message']['content']);
+    const recommendations = await find_recommended_track(
+      openai_response["choices"][0]["message"]["content"]
+    );
+    res.status(200).send(recommendations);
+  } catch (error) {
+    console.error("Error in /friends_recommendation:", error);
+    res
+      .status(error.response?.status || 500)
+      .json({ message: "Error retrieving friends' recommendations" });
   }
 });
