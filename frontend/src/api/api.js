@@ -22,6 +22,80 @@ const fetchTrackDetails = async (id) => {
   }
 };
 
+const fetchFriendRecommendations = async (
+  userID,
+  setFriendRecSongs,
+  loading,
+  setLoading
+) => {
+  setLoading(true);
+  try {
+    const response = await fetch(
+      "http://localhost:3000/friends_recommendation",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Add any additional headers if needed
+        },
+        body: JSON.stringify({ uid: userID }),
+      }
+    );
+    const trackIds = await response.json();
+    if (Array.isArray(trackIds) && trackIds.length > 0) {
+      // Filter out items without track_id property
+
+      const tracks = await Promise.all(
+        trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
+      );
+      setFriendRecSongs(tracks);
+      setLoading(false);
+    }
+  } catch (error) {
+    console.log("zortladik");
+    setLoading(false);
+  }
+};
+
+const fetchTemp = async (userID, setTempRecSongs, loading, setLoading) => {
+  console.log("clicked");
+
+  setLoading(true);
+  try {
+    const response = await fetch(
+      "http://localhost:3000/temporal_recommendation",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Add any additional headers if needed
+        },
+        body: JSON.stringify({ uid: userID }),
+      }
+    );
+    const trackIds = await response.json();
+    console.log(trackIds);
+    if (Array.isArray(trackIds) && trackIds.length > 0) {
+      // Filter out items without track_id property
+      const validTrackIds = trackIds.filter(
+        (trackId) => trackId && trackId.track_id
+      );
+
+      const tracks = await Promise.all(
+        validTrackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
+      );
+      setTempRecSongs(tracks);
+      console.log(tracks);
+      setLoading(false);
+    } else if (Array.isArray(trackIds) === 0) {
+      fetchTemp(userID, setTempRecSongs, loading, setLoading);
+    }
+  } catch (error) {
+    console.log("bir daha dene");
+    setLoading(false);
+  }
+};
+
 const fetchAllLikedSongs = async (userId, setLikedSongs) => {
   try {
     const userDocRef = doc(db, "Users", userId);
@@ -260,4 +334,6 @@ export {
   fetchAverageRatingByTime,
   fetchTemporalRecommendation,
   fetchCreatedSongData,
+  fetchTemp,
+  fetchFriendRecommendations,
 };

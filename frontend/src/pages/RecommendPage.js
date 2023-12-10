@@ -12,18 +12,20 @@ import {
   TabPanels,
   TabPanel,
 } from "@chakra-ui/react";
-
+import { fetchTemp, fetchFriendRecommendations } from "../api/api";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import MusicListItem from "../components/MusicListItem";
 import Header from "../components/Header";
-import { fetchTemporalRecommendation } from "../api/api";
 const RecommendPage = () => {
   const userID = localStorage.getItem("userID");
   const [recommendedTracks, setRecommendedTracks] = useState([]);
   const [tempRecSongs, setTempRecSongs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingF, setLoadingF] = useState(false);
+  const [loadingT, setLoadingT] = useState(false);
+  const [loadingA, setLoadingA] = useState(false);
 
+  const [friendRecTracks, setFriendRecSongs] = useState([]);
   const fetchTrackDetails = async (id) => {
     const trackRef = doc(db, "Tracks", id);
     try {
@@ -43,39 +45,9 @@ const RecommendPage = () => {
       return null;
     }
   };
-  const fetchTemp = async () => {
-    console.log("clicked");
-    if (loading) return;
-    setLoading(true);
-    const response = await fetch(
-      "http://localhost:3000/temporal_recommendation",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Add any additional headers if needed
-        },
-        body: JSON.stringify({ uid: userID }),
-      }
-    );
-    const trackIds = await response.json();
-    console.log(trackIds);
-    if (Array.isArray(trackIds) && trackIds.length > 0) {
-      // Filter out items without track_id property
-
-      const tracks = await Promise.all(
-        trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
-      );
-      setTempRecSongs(tracks);
-      console.log(tracks);
-      setLoading(false);
-    } else if (Array.isArray(trackIds) === 0) {
-      fetchTemp();
-    }
-  };
-  const getRecommendedSongs = async () => {
+  const fetchRecommendedSongs = async () => {
     try {
-      setLoading(true);
+      setLoadingA(true);
       const response = await fetch(
         "http://localhost:3000/find_recommended_tracks",
         {
@@ -89,26 +61,32 @@ const RecommendPage = () => {
       );
 
       const trackIds = await response.json();
+
       const tracks = await Promise.all(
         trackIds.map((trackId) => fetchTrackDetails(trackId.track_id))
       );
-      //console.log(tracks);
+      console.log(tracks);
       setRecommendedTracks(tracks);
-      setLoading(false);
+      setLoadingA(false);
     } catch (error) {
       console.error("zortladik");
     }
   };
   useEffect(() => {
-    getRecommendedSongs();
-    fetchTemp();
-    //fetchTemporalRecommendation(userID, setTempRecSongs);
-  }, []);
+    fetchRecommendedSongs();
+    fetchTemp(userID, setTempRecSongs, loadingT, setLoadingT);
+    fetchFriendRecommendations(
+      userID,
+      setFriendRecSongs,
+      loadingF,
+      setLoadingF
+    );
+  }, [fetchTemp]);
 
   return (
     <Box bg="#1D2123" h="100vh">
       <Header />
-      <Box p="4" color="white" textAlign="center">
+      <Box p="4" color="white" textAlign="center" bg="#1D2123">
         <Tabs colorScheme="yellow" align="center">
           <TabList>
             <Tab>Activity Recommendations</Tab>
@@ -117,7 +95,7 @@ const RecommendPage = () => {
           </TabList>
           <TabPanels>
             <TabPanel>
-              {loading ? (
+              {loadingA ? (
                 <Box>
                   <Spinner size="xl" />
                   <Text>Recommending for your music taste...</Text>
@@ -136,16 +114,51 @@ const RecommendPage = () => {
                       </GridItem>
                     ))}
                   </Grid>
-                  <Button mt="30px" onClick={getRecommendedSongs}>
+                  <Button mt="30px" onClick={fetchRecommendedSongs}>
                     Get Recommendations
                   </Button>
                 </Box>
               )}
             </TabPanel>
-            <TabPanel>{}</TabPanel>
+            <TabPanel>
+              {loadingF ? (
+                <Box>
+                  <Spinner size="xl" />
+                  <Text>Recommendations from Friends...</Text>
+                </Box>
+              ) : (
+                <Box
+                  textAlign="center"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                >
+                  <Grid templateColumns="repeat(4, 1fr)" gap={3}>
+                    {friendRecTracks.map((track) => (
+                      <GridItem key={track.id}>
+                        <MusicListItem track={track} />
+                      </GridItem>
+                    ))}
+                  </Grid>
+                  <Button
+                    mt="30px"
+                    onClick={() =>
+                      fetchFriendRecommendations(
+                        userID,
+                        setFriendRecSongs,
+                        loadingF,
+                        setLoadingF
+                      )
+                    }
+                  >
+                    Get Friends Recommendations
+                  </Button>
+                </Box>
+              )}
+            </TabPanel>
             <TabPanel>
               {" "}
-              {loading ? (
+              {loadingT ? (
                 <Box>
                   <Spinner size="xl" />
                   <Text>Recommendations from Past...</Text>
@@ -164,7 +177,12 @@ const RecommendPage = () => {
                       </GridItem>
                     ))}
                   </Grid>
-                  <Button mt="30px" onClick={fetchTemp}>
+                  <Button
+                    mt="30px"
+                    onClick={() =>
+                      fetchTemp(userID, setTempRecSongs, loadingT, setLoadingT)
+                    }
+                  >
                     Get Temporal Recommendations
                   </Button>
                 </Box>

@@ -1,4 +1,4 @@
-import { Box, Text, Button, Spacer, useToast } from "@chakra-ui/react";
+import { Text, Button, useToast } from "@chakra-ui/react";
 import React from "react";
 import { pythonApi } from "../api/axios";
 import { db } from "../firebase";

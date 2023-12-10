@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Grid,
   GridItem,
   Tab,
@@ -9,7 +8,7 @@ import {
   TabPanels,
   Tabs,
 } from "@chakra-ui/react";
-import React, { useEffect } from "react";
+import React from "react";
 import MusicListItem from "./MusicListItem";
 
 const ProfileMusicList = ({ tracks, non_rated }) => {

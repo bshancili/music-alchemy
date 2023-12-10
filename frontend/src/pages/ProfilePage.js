@@ -19,7 +19,6 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const [friends, setFriends] = useState([]);
-  const [isF, setIsF] = useState(false);
   const { id } = useParams();
   //const { userID } = useAuthStore();
   const userID = localStorage.getItem("userID");

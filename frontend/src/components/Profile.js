@@ -10,14 +10,12 @@ import {
   Button,
   HStack,
 } from "@chakra-ui/react";
-import useAuthStore from "../stores/authStore";
 import settings from "../utils/settings.svg";
 import friend from "../utils/addFriend.png";
 import cross from "../utils/cross.png";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 function Profile({ user, onaddFriend, onunfriend, isUserProfile, friends }) {
-  const { userID } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
   const [isFriend, setIsFriend] = useState(false);

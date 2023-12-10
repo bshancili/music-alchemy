@@ -17,13 +17,11 @@ import share from "../utils/share.svg";
 import comment from "../utils/comment.svg";
 import bookmark from "../utils/bookmark.svg";
 import spotify_logo from "../utils/spotify_logo.png";
-import useAuthStore from "../stores/authStore";
 import { db } from "../firebase";
 import { getDoc, doc, updateDoc } from "firebase/firestore";
 import RatingStars from "./RatingStars";
 
 const MusicDetail = ({ t }) => {
-  //const { userID } = useAuthStore();
   const [isLiked, setIsLiked] = useState(false);
   const toast = useToast();
   const [rating, setRating] = useState(0);
