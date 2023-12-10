@@ -141,12 +141,10 @@ app.post("/search_songs", async (req, res) => {
   }
   // If the allResults array is empty, return a 204 No Content status
   if (allResults.length === 0) {
-    return res
-      .status(204)
-      .json({
-        message:
-          "Not a lucky time! Please try again!!Recommended songs are not matched in Tracks. The list is empty!",
-      });
+    return res.status(204).json({
+      message:
+        "Not a lucky time! Please try again!!Recommended songs are not matched in Tracks. The list is empty!",
+    });
   }
 
   // If there are results, return them with a 200 OK status
@@ -323,6 +321,8 @@ app.post("/find_recommended_tracks", async (req, res) => {
     );
     const rated_songs = response.data[0]["rated_songs"];
     const liked_songs = response.data[0]["liked_songs"];
+    console.log(rated_songs);
+    console.log(liked_songs);
     let songIdList = await Promise.all(
       Object.keys(rated_songs).map(async (songId) => {
         const songData = { docId: songId };

@@ -18,9 +18,12 @@ function ProfilePage() {
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [isF, setIsF] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
+
   const toast = useToast();
 
   const fetchUser = async () => {
@@ -44,7 +47,18 @@ function ProfilePage() {
       console.error("Error fetching user:", error);
     }
   };
-
+  const fetchFriends = async () => {
+    try {
+      const userDocRef = doc(db, "Users", userID);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap) {
+        const userData = userSnap.data();
+        console.log(userData);
+        const friends = userData.friends_list;
+        setFriends(friends);
+      }
+    } catch (error) {}
+  };
   const fetchNonRatedSongs = async () => {
     try {
       const userDocRef = doc(db, "Users", id);
@@ -120,6 +134,7 @@ function ProfilePage() {
     fetchNonRatedSongs();
     fetchAllLikedSongs(userID, setLikedSongs);
     console.log(user?.Isprivate);
+    fetchFriends();
   }, [id]);
 
   return (
@@ -133,6 +148,7 @@ function ProfilePage() {
           isUserProfile={isUserProfile}
           id={id}
           isPrivate={user?.Isprivate}
+          friends={friends}
         />
       )}
       {(user?.Isprivate === 0 ||
