@@ -87,6 +87,7 @@ import com.google.firebase.firestore.SetOptions
 
 
 import com.google.firebase.firestore.firestore
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -1163,7 +1164,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             LazyColumn {
                 items(suggestions ?: emptyList()) { suggestion ->
                     val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
-                    Text(text = "${suggestion.track_name} by $artistNames")
+                    Text(text = "${suggestion.trackName} by $artistNames")
                 }
             }
 
@@ -1790,7 +1791,13 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song.let {
+                        song.let {data class Suggestion(
+                            @SerializedName("track_name") val trackName: String,
+                            @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
+                            @SerializedName("album_name") val albumName: String,
+                            @SerializedName("spotify_track_id") val spotifyTrackId: String
+                        )
+
                             // Ensure "rating" is an integer
                             it.rating = try {
                                 it.rating?.toString()?.toDoubleOrNull() ?: 0.0
@@ -1885,10 +1892,12 @@ interface AutocompleteApiService {
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
 
 data class Suggestion(
-    val track_name: String,
-    val artists: List<String>,
-    val album_name: String
+    @SerializedName("track_name") val trackName: String,
+    @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
+    @SerializedName("album_name") val albumName: String,
+    @SerializedName("spotify_track_id") val spotifyTrackId: String
 )
+
 object RetrofitInstance {
     private const val BASE_URL = "http://10.0.2.2:8080" // Replace with your backend URL
 
