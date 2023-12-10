@@ -16,7 +16,7 @@ def client():
         yield client
 
 def test_search_and_match():
-    with patch('your_app_module.sp') as mock_sp:
+    with patch('my_express_app.sp') as mock_sp:
         # Mock the response from Spotify API
         mock_sp.search.return_value = {'tracks': {'items': [{'id': '123', 'name': 'Test Song'}]}}
 

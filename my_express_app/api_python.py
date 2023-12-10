@@ -101,6 +101,7 @@ def autocomplete():
             'track_name': track['name'],
             'artist(s)': artist_names,
             'album_name': track['album']['name'],
+            'album_images':track['album']['images'],
             'spotify_track_id':track['id']
         }
         suggestions.append(track_info)
@@ -235,6 +236,7 @@ def process_file():
                 'suggested_track_name': suggested_track_name,
                 'suggested_artist(s)':artist_names,
                 'suggested_album_name':track['album']['name'],
+                'album_images':track['album']['images'],
                 'create_song_response': create_song_response
             }
 
