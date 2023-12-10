@@ -1159,6 +1159,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         Spacer(modifier = Modifier.height(16.dp))
 
         var songQuery by remember { mutableStateOf("") }
+        var isSearchPerformed by remember { mutableStateOf(false) }
         val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
 
@@ -1166,6 +1167,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             value = songQuery,
             onValueChange = {
                 songQuery = it
+                isSearchPerformed = it.isNotBlank()
                 viewModel.autocompleteSong(songQuery)
             },
             modifier = Modifier
@@ -1212,7 +1214,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                     }
                 }
             }
-        } else {
+        } else if (isSearchPerformed) {
             Text(
                 "No results",
                 color = Color.White,
