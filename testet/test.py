@@ -6,24 +6,25 @@ import requests
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
+from flask import Flask
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
-
+from my_express_app.api_python import test_client
 from my_express_app.api_python import search_and_match, process_file, search, autocomplete, create_song
 
+@pytest.fixture
 def client():
     with my_express_app.api_python.test_client() as client:
         yield client
+@patch('my_express_app.api_python.Spotify')
+def test_search_and_match(mock_spotify):
+    # Mock the response from Spotify API
+    mock_sp = mock_spotify.return_value
+    mock_sp.search.return_value = {'tracks': {'items': [{'id': '123', 'name': 'Test Song'}]}}
 
-def test_search_and_match():
-    with patch('my_express_app.sp') as mock_sp:
-        # Mock the response from Spotify API
-        mock_sp.search.return_value = {'tracks': {'items': [{'id': '123', 'name': 'Test Song'}]}}
+    result = search_and_match('Test Song')
 
-        result = search_and_match('Test Song')
-
-        assert result == ['123']
-
+    assert result == ['123']
 def test_search(client):
     response = client.get('/search?songName=Test Song')
 
@@ -96,9 +97,16 @@ class TestProcessFile(unittest.TestCase):
         assert suggestion1['create_song_response'] == {'success': True, 'message': 'Song created successfully'}
 
         # Check the second suggestion similarly
+        suggestion2 = results[1]
+        assert suggestion2['song_entered'] == 'Song2'
+        assert suggestion2['suggested_track_name'] == 'SuggestedSong2'  # Replace with the expected track name for Song2
+        assert suggestion2['suggested_artist(s)'] == ['Artist2']  # Replace with the expected artist(s) for Song2
+        assert suggestion2['suggested_album_name'] == 'Album2'  # Replace with the expected album name for Song2
+        assert suggestion2['create_song_response'] == {'success': True, 'message': 'Song created successfully for Song2'}  # Adjust for Song2
 
     @patch('my_express_app.api_python.request')
-    def test_process_file_without_file(self, mock_request):
+    def test_process_file_without_file(mock_request):
+        app = my_express_app.api_python
         # Mock the absence of file
         mock_request.files.get.return_value = None
 
@@ -106,5 +114,5 @@ class TestProcessFile(unittest.TestCase):
         response = process_file()
 
         # Assertions
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'error': 'No file provided'})
+        assert response.status_code == 400
+        assert response.json == {'error': 'No file provided'}
