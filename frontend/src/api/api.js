@@ -6,7 +6,6 @@ const fetchTrackDetails = async (id) => {
   const trackRef = doc(db, "Tracks", id);
   try {
     const trackSnap = await getDoc(trackRef);
-    console.log(trackSnap.id);
     if (trackSnap.exists()) {
       const trackDetails = {
         id: trackSnap.id,

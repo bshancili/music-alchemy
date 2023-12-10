@@ -18,10 +18,13 @@ function ProfilePage() {
   const [user, setUser] = useState();
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [isF, setIsF] = useState(false);
   const { id } = useParams();
   //const { userID } = useAuthStore();
   const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
+
   const toast = useToast();
   const fetchUser = async () => {
     try {
@@ -40,7 +43,18 @@ function ProfilePage() {
       // Handle the error appropriately
     }
   };
-
+  const fetchFriends = async () => {
+    try {
+      const userDocRef = doc(db, "Users", userID);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap) {
+        const userData = userSnap.data();
+        console.log(userData);
+        const friends = userData.friends_list;
+        setFriends(friends);
+      }
+    } catch (error) {}
+  };
   const fetchNonRatedSongs = async () => {
     try {
       const userDocRef = doc(db, "Users", id);
@@ -111,10 +125,12 @@ function ProfilePage() {
       throw error;
     }
   };
+
   useEffect(() => {
     fetchUser();
     fetchNonRatedSongs();
     fetchAllLikedSongs(userID, setLikedSongs);
+    fetchFriends();
   }, [id]);
 
   return (
@@ -125,6 +141,7 @@ function ProfilePage() {
         onaddFriend={addFriend}
         onunfriend={unfriend}
         isUserProfile={isUserProfile}
+        friends={friends}
       />
 
       <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />

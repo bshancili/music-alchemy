@@ -15,21 +15,30 @@ import settings from "../utils/settings.svg";
 import friend from "../utils/addFriend.png";
 import cross from "../utils/cross.png";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
+import { useEffect, useState } from "react";
+function Profile({ user, onaddFriend, onunfriend, isUserProfile, friends }) {
   const { userID } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
+  const isFriendCheck = () => {
+    return setIsFriend(friends.some((friend) => user.id === friend));
+  };
 
   const handleSettingsClick = () => {
     setShowLogoutButton(!showLogoutButton);
   };
   const handleAddFriend = () => {
     onaddFriend();
+    setIsFriend(!isFriend);
   };
   const handleUnfriend = () => {
     onunfriend();
+    setIsFriend(!isFriend);
   };
+  useEffect(() => {
+    isFriendCheck();
+  }, []);
   const handleLogout = () => {
     navigate("/login");
     localStorage.clear();
@@ -80,28 +89,26 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile }) {
           </Text>
           <Text>@{user?.username}</Text>
         </Box>
-        {isUserProfile ? null : (
-          <Box>
-            <IconButton
-              bg="#33373B5E"
-              _hover={{ bg: "#000" }}
-              color="#FFFFFF"
-              w="64px"
-              h="64px"
-              icon={<Image src={friend} />}
-              onClick={handleAddFriend}
-            />
-            <IconButton
-              ml={6}
-              bg="#33373B5E"
-              _hover={{ bg: "#000" }}
-              color="#FFFFFF"
-              w="64px"
-              h="64px"
-              icon={<Image src={cross} />}
-              onClick={handleUnfriend}
-            />
-          </Box>
+        {isUserProfile ? null : isFriend ? (
+          <IconButton
+            bg="#33373B5E"
+            _hover={{ bg: "#000" }}
+            color="#FFFFFF"
+            w="64px"
+            h="64px"
+            icon={<Image src={cross} />}
+            onClick={handleUnfriend}
+          />
+        ) : (
+          <IconButton
+            bg="#33373B5E"
+            _hover={{ bg: "#000" }}
+            color="#FFFFFF"
+            w="64px"
+            h="64px"
+            icon={<Image src={friend} />}
+            onClick={handleAddFriend}
+          />
         )}
       </Box>
 
