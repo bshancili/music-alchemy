@@ -26,6 +26,7 @@ def test_search(client):
 def test_autocomplete(client):
     response = client.get('/autocomplete?song=Test')
 
+
     assert response.status_code == 200
     assert 'suggestions' in response.json
 
