@@ -20,11 +20,18 @@ import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-function Profile({ user, onaddFriend, onunfriend, isUserProfile, id }) {
+function Profile({
+  user,
+  onaddFriend,
+  onunfriend,
+  isUserProfile,
+  id,
+  isPrivate,
+}) {
   const { userID } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
-  const [Isprivate, setIsPublic] = useState(user?.Isprivate);
+  const [Isprivate, setIsPrivate] = useState(isPrivate);
   const toast = useToast();
 
   const handleSettingsClick = () => {
@@ -47,21 +54,19 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile, id }) {
   const handleTogglePrivacy = async () => {
     // Ensure userID and id are valid
 
-    // Toggle the state immediately
-    const newIsPublic = !Isprivate;
-    setIsPublic(newIsPublic);
+    setIsPrivate(!Isprivate);
 
     // Update the database with the new privacy setting
     try {
       const userDocRef = doc(db, "Users", id);
       await updateDoc(userDocRef, {
-        Isprivate: newIsPublic,
+        Isprivate: Isprivate ? 0 : 1,
       });
 
-      console.log(newIsPublic);
+      console.log(Isprivate);
 
       toast({
-        title: `Profile is now ${newIsPublic ? "public" : "private"}`,
+        title: `Profile is now ${Isprivate ? "private" : "public"}`,
 
         status: "success",
         duration: 5000,
@@ -70,14 +75,14 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile, id }) {
       });
     } catch (error) {
       toast({
-        title: `Profile is now ${newIsPublic ? "public" : "private"}`,
+        title: `Profile is now ${Isprivate ? "public" : "private"}`,
         status: "success",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
       // Revert the state if the update fails
-      setIsPublic(!newIsPublic);
+      setIsPrivate(!Isprivate);
       throw error;
     }
   };
@@ -151,16 +156,16 @@ function Profile({ user, onaddFriend, onunfriend, isUserProfile, id }) {
           </Box>
         )}
         <Box>
-          <Box>
+          {isUserProfile && (
             <Button
-              bg={Isprivate ? "#4CAF50" : "#F44336"}
-              _hover={{ bg: Isprivate ? "#45a049" : "#e57373" }}
+              bg={Isprivate ? "#F44336" : "#4CAF50"}
+              _hover={{ bg: Isprivate ? "#e57373" : "#45a049" }}
               color="#FFFFFF"
               onClick={handleTogglePrivacy}
             >
-              {Isprivate ? "Public" : "Private"}
+              {Isprivate ? "Private" : "Public"}
             </Button>
-          </Box>
+          )}
         </Box>
       </Box>
 

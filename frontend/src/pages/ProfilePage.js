@@ -119,6 +119,7 @@ function ProfilePage() {
     fetchUser();
     fetchNonRatedSongs();
     fetchAllLikedSongs(userID, setLikedSongs);
+    console.log(user?.Isprivate);
   }, [id]);
 
   return (
@@ -131,12 +132,15 @@ function ProfilePage() {
           onunfriend={unfriend}
           isUserProfile={isUserProfile}
           id={id}
+          isPrivate={user?.Isprivate}
         />
       )}
-      {user?.Isprivate === true ||
-        (user?.friends_list?.includes(userID) && user && (
+      {(user?.Isprivate === 0 ||
+        user?.friends_list?.includes(userID) ||
+        isUserProfile) &&
+        user && (
           <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
-        ))}
+        )}
     </Box>
   );
 }
