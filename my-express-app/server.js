@@ -135,13 +135,14 @@ app.post('/search_songs', async (req, res) => {
       allResults.push({ error: `Missing track_name or artist_name for track ${JSON.stringify(track)}` });
     }
   }
-  // If the allResults array is empty, return a 204 No Content status
+
+  // If recommended songs are not included in Tracks
+  const message = "Not a lucky time! Please try again!!";
   if (allResults.length === 0) {
-    return res.status(204).json({ message: "Not a lucky time! Please try again!!Recommended songs are not matched in Tracks. The list is empty!" });
+    return res.json({ results: message });
   }
 
-  // If there are results, return them with a 200 OK status
-    return res.status(200).json({ results: allResults });
+  return res.json({ results: allResults });
 });
 
 async function searchInFirestore(trackName, artistName) {
@@ -165,6 +166,44 @@ async function searchInFirestore(trackName, artistName) {
 
   return results;
 }
+
+app.get('/copy-documents', async (req, res) => {
+  try {
+    const sourceCollectionName = req.query.sourceCollection;
+
+    if (!sourceCollectionName) {
+      return res.status(400).json({ success: false, message: 'Source collection name is required.' });
+    }
+
+    const sourceCollection = db.collection(sourceCollectionName);
+    const destinationCollection = db.collection('Tracks');
+
+    const snapshot = await sourceCollection.get();
+
+    for (const sourceDoc of snapshot.docs) {
+      const sourceData = sourceDoc.data();
+
+      // Check if the document already exists in the destination collection
+      const existingDocQuery = await destinationCollection.where('spotify_track_id', '==', sourceData.spotify_track_id).limit(1).get();
+
+      if (existingDocQuery.docs.length === 0) {
+        // Document doesn't exist in the destination collection, proceed with copying
+        const destinationDocRef = await destinationCollection.add(sourceData);
+        const firebaseId = destinationDocRef.id;
+
+        await destinationCollection.doc(firebaseId).update({ firebase_id: firebaseId });
+      } else {
+        // Document already exists in the destination collection, provide a message
+        console.log(`Document with track_name ${sourceData.track_name} already exists in the destination collection.`);
+      }
+    }
+
+    return res.json({ success: true, message: 'Documents copied successfully!' });
+  } catch (error) {
+    console.error('Error copying documents:', error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
 
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
