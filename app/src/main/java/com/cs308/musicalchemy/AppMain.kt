@@ -1141,7 +1141,7 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 
 
 @Composable
-fun AddSongScreen(viewModel: SongsViewModel) {
+fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     var songQuery by remember { mutableStateOf("") }
 
     Column {
@@ -1161,10 +1161,12 @@ fun AddSongScreen(viewModel: SongsViewModel) {
             CircularProgressIndicator()
         } else {
             LazyColumn {
-                items(suggestions) { suggestion ->
-                    Text(text = "${suggestion.track_name} by ${suggestion.artists.joinToString()}")
+                items(suggestions ?: emptyList()) { suggestion ->
+                    val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
+                    Text(text = "${suggestion.track_name} by $artistNames")
                 }
             }
+
         }
     }
 }
@@ -1765,6 +1767,7 @@ class SongsViewModel : ViewModel() {
             try {
                 val response = apiService.autocompleteSong(query)
                 if (response.isSuccessful && response.body() != null) {
+                    Log.d("API Response", response.body()!!.suggestions.toString())
                     songSuggestions.value = response.body()!!.suggestions
                 } else {
                     // Handle error
