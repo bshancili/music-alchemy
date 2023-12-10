@@ -1148,6 +1148,9 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var songToAdd by remember { mutableStateOf<String?>(null) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1196,7 +1199,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                viewModel.createSong(suggestion.spotifyTrackId)
+                                songToAdd = suggestion.spotifyTrackId
                             }
                             .padding(vertical = 4.dp),
                         shape = RoundedCornerShape(8.dp)
@@ -1223,6 +1226,15 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         }
 
         // CommonBottomBar(navController = navController) // Uncomment if you have a bottom navigation bar
+    }
+    LaunchedEffect(songToAdd) {
+        songToAdd?.let { trackId ->
+            coroutineScope.launch {
+                val resultMessage = viewModel.createSong(trackId)
+                Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
+            }
+            songToAdd = null // Reset after showing the toast
+        }
     }
 }
 
@@ -1835,21 +1847,16 @@ class SongsViewModel : ViewModel() {
         }
     }
 
-    fun createSong(trackSpotifyId: String) {
-        viewModelScope.launch {
-            try {
-                val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
-                if (response.isSuccessful && response.body() != null) {
-                    // Log the response for debugging
-                    Log.d("CreateSongResponse", response.body()!!.message)
-                } else {
-                    // Log error
-                    Log.e("CreateSongError", "Failed to create song")
-                }
-            } catch (e: Exception) {
-                // Log exception
-                Log.e("CreateSongException", e.toString())
+    suspend fun createSong(trackSpotifyId: String): String {
+        return try {
+            val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
+            if (response.isSuccessful && response.body() != null) {
+                response.body()!!.message
+            } else {
+                "Failed to create song"
             }
+        } catch (e: Exception) {
+            "Error: ${e.message}"
         }
     }
 
