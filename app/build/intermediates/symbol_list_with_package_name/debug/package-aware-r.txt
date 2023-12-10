@@ -101,6 +101,8 @@ dimen notification_subtext_size
 dimen notification_top_pad
 dimen notification_top_pad_large_text
 drawable abc_vector_test
+drawable addfriend
+drawable chat
 drawable comment
 drawable common_full_open_on_phone
 drawable common_google_signin_btn_icon_dark
@@ -138,6 +140,7 @@ drawable ic_call_decline_low
 drawable ic_google
 drawable likebutton
 drawable likedbutton
+drawable lock
 drawable not_rated
 drawable notification_action_background
 drawable notification_bg
@@ -156,6 +159,7 @@ drawable plus
 drawable profile_placeholder
 drawable rated
 drawable recommendation
+drawable removefriend
 drawable save
 drawable search
 drawable share

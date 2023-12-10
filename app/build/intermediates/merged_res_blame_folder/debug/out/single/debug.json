@@ -12,6 +12,10 @@
         "source": "com.cs308.musicalchemy.app-main-66:/font/my_custom_font.xml"
     },
     {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_removefriend.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/removefriend.png"
+    },
+    {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_group11.png.flat",
         "source": "com.cs308.musicalchemy.app-main-66:/drawable/group11.png"
     },
@@ -28,8 +32,20 @@
         "source": "com.cs308.musicalchemy.app-main-66:/xml/data_extraction_rules.xml"
     },
     {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_addfriend.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/addfriend.png"
+    },
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_lock.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/lock.png"
+    },
+    {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_plus.png.flat",
         "source": "com.cs308.musicalchemy.app-main-66:/drawable/plus.png"
+    },
+    {
+        "merged": "com.cs308.musicalchemy.app-merged_res-64:/drawable_chat.png.flat",
+        "source": "com.cs308.musicalchemy.app-main-66:/drawable/chat.png"
     },
     {
         "merged": "com.cs308.musicalchemy.app-merged_res-64:/font_quantico_regular.ttf.flat",

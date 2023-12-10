@@ -9,13 +9,18 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a46ab04c-5c52-4632-b8e4-b2b9eaff1387" name="Changes" comment="ADDED RATING FUNCTIONALITY">
+    <list default="true" id="a46ab04c-5c52-4632-b8e4-b2b9eaff1387" name="Changes" comment="Phase 11.5: Merge for profile screen">
+      <change beforePath="$PROJECT_DIR$/.gradle/8.0/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/8.0/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/cs308/musicalchemy/AppMain.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/cs308/musicalchemy/AppMain.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[C:\Users\ASUS\.android\avd\New_Device_API_34.avd]" />
   <component name="ExternalProjectsData">
@@ -72,11 +77,10 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="branchboi" />
+        <entry key="$PROJECT_DIR$" value="mobile_bartu" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="RESET_MODE" value="MIXED" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -90,23 +94,23 @@
     <option name="showMembers" value="true" />
     <option name="sortByType" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Git.Branch.Popup.ShowAllRemotes&quot;: &quot;true&quot;,
-    &quot;ResourceManagerPrefKey.ResourceType&quot;: &quot;MIPMAP&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/ASUS/Desktop/SCHOOL/cs308/Android_App&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.17&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.folding&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ResourceManagerPrefKey.ResourceType": "MIPMAP",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "git-widget-placeholder": "mobile__can",
+    "last_opened_file_path": "C:/Users/ASUS/Downloads/music-alchemy-mobile_bartu",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.17",
+    "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "editor.preferences.folding"
   }
-}</component>
+}]]></component>
   <component name="PsdUISettings">
     <option name="MODULE_TAB" value="Signing Configs" />
     <option name="LAST_EDITED_SIGNING_CONFIG" value="debug" />
@@ -134,6 +138,7 @@
       <option name="ALL_USERS" value="false" />
       <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
       <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
       <option name="ACTIVITY_EXTRA_FLAGS" value="" />
       <option name="MODE" value="default_activity" />
       <option name="CLEAR_LOGCAT" value="false" />
@@ -205,13 +210,6 @@
     </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
-  <component name="StandaloneScriptsStorage">
-    <option name="files">
-      <set>
-        <option value="$PROJECT_DIR$/build.gradle.kts" />
-      </set>
-    </option>
-  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="a46ab04c-5c52-4632-b8e4-b2b9eaff1387" name="Changes" comment="" />
@@ -332,21 +330,36 @@
       <option name="project" value="LOCAL" />
       <updated>1700626142456</updated>
     </task>
-    <task id="LOCAL-00017" summary="Phase 10: Merged Search Screen // MERGE">
-      <created>1700806022578</created>
+    <task id="LOCAL-00017" summary="Phase 10.5: Fixed bugs related scrolling.">
+      <created>1700651396658</created>
       <option name="number" value="00017" />
       <option name="presentableId" value="LOCAL-00017" />
       <option name="project" value="LOCAL" />
-      <updated>1700806022578</updated>
+      <updated>1700651396658</updated>
     </task>
-    <task id="LOCAL-00018" summary="ADDED RATING FUNCTIONALITY">
-      <created>1700855700000</created>
+    <task id="LOCAL-00018" summary="Phase 11: Add/remove friends, user search navigation, see liked songs, see rated songs, see liked but not rated songs, see created songs, bottom right button friend list">
+      <created>1702099228314</created>
       <option name="number" value="00018" />
       <option name="presentableId" value="LOCAL-00018" />
       <option name="project" value="LOCAL" />
-      <updated>1700855700000</updated>
+      <updated>1702099228314</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Phase 11: Add/remove friends, user search navigation, see liked songs, see rated songs, see liked but not rated songs, see created songs, bottom right button friend list">
+      <created>1702099518499</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1702099518499</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Phase 11.5: Merge for profile screen">
+      <option name="closed" value="true" />
+      <created>1702218894421</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1702218894421</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -365,7 +378,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="MAIN_DONT_PUSH!!!!/mobile_can" />
+                        <option value="mobile_onuralp" />
                       </list>
                     </value>
                   </entry>
@@ -390,8 +403,10 @@
     <MESSAGE value="Phase 9.5: Forgot the pngs." />
     <MESSAGE value="Phase 9.6: Converting the type of rating from int to double." />
     <MESSAGE value="Phase 10: Added Profile Page" />
-    <MESSAGE value="Phase 10: Merged Search Screen // MERGE" />
-    <MESSAGE value="ADDED RATING FUNCTIONALITY" />
-    <option name="LAST_COMMIT_MESSAGE" value="ADDED RATING FUNCTIONALITY" />
+    <MESSAGE value="Phase 10.5: Fixed bugs related scrolling." />
+    <MESSAGE value="Phase 11: Add/remove friends, user search navigation, see liked songs, see rated songs, see liked but not rated songs, see created songs, bottom right button friend list" />
+    <MESSAGE value="Phase 11.5: Added privacy logic to the ProfileScreen. Moreover, ın the ProfileViewModel fetchTopRatedSongs is implemented. With given userid returns the top rated songs of the friends of the user." />
+    <MESSAGE value="Phase 11.5: Merge for profile screen" />
+    <option name="LAST_COMMIT_MESSAGE" value="Phase 11.5: Merge for profile screen" />
   </component>
 </project>
