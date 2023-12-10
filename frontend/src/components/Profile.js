@@ -23,16 +23,15 @@ function Profile({
   user,
   onaddFriend,
   onunfriend,
-  isUserProfile, friends,
+  isUserProfile,
+  isF,
   id,
   isPrivate,
 }) {
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
-  const [isFriend, setIsFriend] = useState(false);
-  const isFriendCheck = () => {
-    return setIsFriend(friends.some((friend) => user.id === friend));
-  };
+  const [isFriend, setIsFriend] = useState(isF);
+
   const [Isprivate, setIsPrivate] = useState(isPrivate);
   const toast = useToast();
 
@@ -49,9 +48,6 @@ function Profile({
     onunfriend();
     setIsFriend(!isFriend);
   };
-  useEffect(() => {
-    isFriendCheck();
-  }, []);
 
   const handleLogout = () => {
     navigate("/login");
@@ -131,7 +127,7 @@ function Profile({
         pt={5}
         display="flex"
         flexDirection="column"
-        justifyContent={"space-between"}
+        justifyContent="space-between"
       >
         <Box>
           <Text fontSize="lg" fontWeight="bold">
@@ -160,19 +156,7 @@ function Profile({
             onClick={handleAddFriend}
           />
         )}
-        <Box>
-          {isUserProfile && (
-            <Button
-              bg={Isprivate ? "#F44336" : "#4CAF50"}
-              _hover={{ bg: Isprivate ? "#e57373" : "#45a049" }}
-              color="#FFFFFF"
-              w="64px"
-              h="64px"
-              icon={<Image src={cross} />}
-              onClick={handleUnfriend}
-            />
-          </Box>
-        )}
+
         <Box>
           {isUserProfile && (
             <Button
