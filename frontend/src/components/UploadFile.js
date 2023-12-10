@@ -1,8 +1,9 @@
-import { Box, Button, Input } from "@chakra-ui/react";
+import { Box, Button, Input, useToast } from "@chakra-ui/react";
 import React, { useState } from "react";
 import axios from "axios";
 
 const UploadFile = () => {
+  const toast = useToast();
   const [file, setFile] = useState(null);
 
   const handleFileChange = (event) => {
@@ -12,7 +13,13 @@ const UploadFile = () => {
   const handleUpload = async () => {
     try {
       if (!file) {
-        console.error("No file selected.");
+        toast({
+          title: "No file selected",
+          description: "Please choose a file before uploading.",
+          status: "warning",
+          duration: 5000, // Duration in milliseconds
+          isClosable: true,
+        });
         return;
       }
 
@@ -28,6 +35,7 @@ const UploadFile = () => {
 
       // Process the response from the server
       console.log(response.data);
+      setFile(null);
     } catch (error) {
       console.error("Error uploading file:", error.message);
     }
