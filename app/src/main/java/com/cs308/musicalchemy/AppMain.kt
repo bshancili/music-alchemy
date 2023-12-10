@@ -89,6 +89,7 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.delay
+
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -99,6 +100,9 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.POST
+
 
 
 //~~~~~~~~~~
@@ -1141,6 +1145,7 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     var songQuery by remember { mutableStateOf("") }
@@ -1164,7 +1169,12 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
             LazyColumn {
                 items(suggestions ?: emptyList()) { suggestion ->
                     val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
-                    Text(text = "${suggestion.trackName} by $artistNames")
+                    ListItem(
+                        text = { Text(text = "${suggestion.trackName} by $artistNames") },
+                        modifier = Modifier.clickable {
+                            viewModel.createSong(suggestion.spotifyTrackId)
+                        }
+                    )
                 }
             }
 
@@ -1781,6 +1791,25 @@ class SongsViewModel : ViewModel() {
         }
     }
 
+    fun createSong(trackSpotifyId: String) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
+                if (response.isSuccessful && response.body() != null) {
+                    // Log the response for debugging
+                    Log.d("CreateSongResponse", response.body()!!.message)
+                } else {
+                    // Log error
+                    Log.e("CreateSongError", "Failed to create song")
+                }
+            } catch (e: Exception) {
+                // Log exception
+                Log.e("CreateSongException", e.toString())
+            }
+        }
+    }
+
+
 
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
@@ -1887,9 +1916,14 @@ interface SongsApiService {
 interface AutocompleteApiService {
     @GET("/autocomplete")
     suspend fun autocompleteSong(@Query("song") songQuery: String): Response<AutocompleteResponse>
+
+    @POST("/create_song")
+    suspend fun createSong(@Body requestData: CreateSongRequest): Response<CreateSongResponse>
 }
 
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
+data class CreateSongRequest(val track_spotify_id: String)
+data class CreateSongResponse(val success: Boolean, val message: String)
 
 data class Suggestion(
     @SerializedName("track_name") val trackName: String,
