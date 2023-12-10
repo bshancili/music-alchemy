@@ -1172,7 +1172,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                 .fillMaxWidth()
                 .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
             textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
-            placeholder = { Text("Search Songs...", color = Color.Gray) },
+            placeholder = { Text("Search Songs To Add...", color = Color.Gray) },
             singleLine = true,
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = Color.Transparent,
