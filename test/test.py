@@ -1,9 +1,12 @@
 import pytest
+import sys
+import os
 import requests
 from unittest.mock import MagicMock
 from unittest.mock import patch
-from my_express_app.api_python import search_and_match, process_file, search, autocomplete, create_song
-
+from ..my_express_app.api_pyhton import search_and_match, process_file, search, autocomplete, create_song
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
 def client():
     with api_pyhton.test_client() as client:
         yield client
