@@ -21,7 +21,6 @@ const fetchTrackDetails = async (id) => {
     return null;
   }
 };
-
 const fetchFriendRecommendations = async (
   userID,
   setFriendRecSongs,
@@ -140,7 +139,6 @@ const fetchLikedSongTimestamps = async (userId, setLikedSongs) => {
             date.getMonth(),
             date.getDate()
           );
-
           // Get the start of the week for the current date
           const weekStart = new Date(dateWithoutTime);
           weekStart.setDate(

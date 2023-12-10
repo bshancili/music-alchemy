@@ -1,4 +1,12 @@
-import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
+import {
+  Box,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Text,
+} from "@chakra-ui/react";
 import React from "react";
 import Header from "../components/Header";
 import AddSong from "../components/AddSong";
@@ -19,7 +27,7 @@ const AddSongPage = () => {
           <Tab>Upload File</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel>
+          <TabPanel w="800px">
             <AddSong />
           </TabPanel>
           <TabPanel>

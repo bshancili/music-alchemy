@@ -80,10 +80,8 @@ def autocomplete():
 
     # Search for tracks similar to the user's input
     suggestions = []
-    tracks = []
-    track_results = sp.search(q=query, type='track', limit=5)
-    for track in track_results['tracks']['items']:
-        tracks.append(track)
+    track_results = sp.search(q=query, type='track', limit=10)
+    tracks = track_results['tracks']['items']
 
     # Extract relevant information about the tracks
     
@@ -97,6 +95,8 @@ def autocomplete():
             'track_name': track['name'],
             'artist(s)': artist_names,
             'album_name': track['album']['name'],
+            'album_images':track['album']['images'],
+            'spotify_track_id':track['id']
         }
         suggestions.append(track_info)
 
@@ -188,7 +188,8 @@ def create_song():
             
         else:
             return jsonify({'fail': False, 'message': 'Track already exist in database'})
-        
+
+
 @app.route('/process_file', methods=['POST'])
 def process_file():
     file = request.files.get('file')
@@ -222,6 +223,7 @@ def process_file():
                 'suggested_track_name': suggested_track_name,
                 'suggested_artist(s)':artist_names,
                 'suggested_album_name':track['album']['name'],
+                'album_images':track['album']['images'],
                 'create_song_response': create_song_response
             }
 
