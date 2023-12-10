@@ -113,7 +113,7 @@ const TopChartItem = ({ track }) => {
   useEffect(() => {
     fetchIsLiked();
     console.log(isLiked);
-  }, [likeSong]);
+  }, [isLiked]);
 
   return (
     <Box

@@ -6,7 +6,6 @@ import {
   Tab,
   Box,
   TabList,
-  Flex,
   Text,
 } from "@chakra-ui/react";
 import Login from "../components/Login";

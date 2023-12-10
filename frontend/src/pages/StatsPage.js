@@ -1,10 +1,10 @@
 import { Box } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Header from "../components/Header";
 import LikedSongsTimeGraph from "../components/LikedSongsTimeGraph";
 const StatsPage = () => {
-  const [likedSongs, setLikedSongs] = useState([]);
-  const userID = localStorage.getItem("userID");
+  //const [likedSongs, setLikedSongs] = useState([]);
+  //const userID = localStorage.getItem("userID");
 
   return (
     <Box

@@ -19,6 +19,7 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [isFriend, setIsFriend] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
@@ -38,7 +39,11 @@ function ProfilePage() {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
+        console.log(userData.friends_list);
+        const friends = userData.friends_list;
         setUser(userData);
+        setFriends(friends);
+        setIsFriend(userData.friends_list.includes(userID));
       } else {
         console.log("User not found");
       }
@@ -52,7 +57,7 @@ function ProfilePage() {
       const userSnap = await getDoc(userDocRef);
       if (userSnap) {
         const userData = userSnap.data();
-        console.log(userData);
+        //console.log(userData);
         const friends = userData.friends_list;
         setFriends(friends);
       }
@@ -129,12 +134,15 @@ function ProfilePage() {
   };
 
   useEffect(() => {
-    fetchUser();
-    fetchNonRatedSongs();
-    fetchAllLikedSongs(userID, setLikedSongs);
-    console.log(user?.Isprivate);
-    fetchFriends();
-  }, []);
+    const fetchData = async () => {
+      await fetchUser();
+      await fetchNonRatedSongs();
+      await fetchAllLikedSongs(userID, setLikedSongs);
+      //await fetchFriends();
+    };
+
+    fetchData();
+  }, [id]);
 
   return (
     <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">
@@ -145,15 +153,14 @@ function ProfilePage() {
           onaddFriend={addFriend}
           onunfriend={unfriend}
           isUserProfile={isUserProfile}
+          isF={isFriend}
           id={id}
           isPrivate={user?.Isprivate}
           friends={friends}
         />
       )}
-      {(user?.Isprivate === 0 ||
-        user?.friends_list?.includes(userID) ||
-        isUserProfile) &&
-        user && (
+      {user && // Check if user is available before checking conditions
+        (isFriend || isUserProfile || user?.Isprivate === 0) && (
           <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
         )}
     </Box>

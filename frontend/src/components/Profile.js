@@ -11,7 +11,6 @@ import {
   HStack,
   useToast, // Add this import for 'toast'
 } from "@chakra-ui/react";
-import useAuthStore from "../stores/authStore";
 import settings from "../utils/settings.svg";
 import friend from "../utils/addFriend.png";
 import cross from "../utils/cross.png";
@@ -25,19 +24,16 @@ function Profile({
   onaddFriend,
   onunfriend,
   isUserProfile,
-  friends,
+  isF,
   id,
   isPrivate,
 }) {
-  const { userID } = useAuthStore();
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
+  const [isFriend, setIsFriend] = useState(isF);
+
   const [Isprivate, setIsPrivate] = useState(isPrivate);
   const toast = useToast();
-  const [isFriend, setIsFriend] = useState(false);
-  const isFriendCheck = () => {
-    setIsFriend(friends.some((friend) => user?.id === friend));
-  };
 
   const handleSettingsClick = () => {
     setShowLogoutButton(!showLogoutButton);
@@ -52,9 +48,7 @@ function Profile({
     onunfriend();
     setIsFriend(!isFriend);
   };
-  useEffect(() => {
-    isFriendCheck();
-  }, [friends, user.id]);
+
   const handleLogout = () => {
     navigate("/login");
     localStorage.clear();
@@ -133,7 +127,7 @@ function Profile({
         pt={5}
         display="flex"
         flexDirection="column"
-        justifyContent={"space-between"}
+        justifyContent="space-between"
       >
         <Box>
           <Text fontSize="lg" fontWeight="bold">

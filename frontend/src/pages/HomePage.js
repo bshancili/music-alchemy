@@ -1,22 +1,20 @@
 // Import necessary Chakra UI components
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { Box } from '@chakra-ui/react';
+import { Box } from "@chakra-ui/react";
 // Import your image files
-import Header from '../components/Header';
-import MainSection from '../components/MainSection';
-import HomePageMusicList from '../components/HomePageMusicList';
-import { db } from '../firebase';
-import { collection, getDocs, limit, query } from 'firebase/firestore';
+import Header from "../components/Header";
+import MainSection from "../components/MainSection";
+import HomePageMusicList from "../components/HomePageMusicList";
+import { db } from "../firebase";
+import { collection, getDocs, limit, query } from "firebase/firestore";
 
 const Homepage = () => {
   const [allTracks, setAllTracks] = useState([]);
-  const [visibleTracks, setVisibleTracks] = useState(50);
-  const observer = useRef();
 
   const fetchAllTracks = async () => {
     //const tracksCollection = collection(db, "Tracks");
-    const first = query(collection(db, 'Tracks'), limit(12));
+    const first = query(collection(db, "Tracks"), limit(12));
 
     try {
       const snap = await getDocs(first);
@@ -26,12 +24,10 @@ const Homepage = () => {
       }));
       setAllTracks(trackData);
     } catch (error) {
-      console.error('Error fetching tracks:', error);
+      console.error("Error fetching tracks:", error);
     }
   };
-  const loadMoreTracks = async () => {
-    setVisibleTracks((prevVisibleTracks) => prevVisibleTracks + 50);
-  };
+
   useEffect(() => {
     fetchAllTracks();
   }, []);
