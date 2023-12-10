@@ -107,7 +107,6 @@ class TestProcessFile(unittest.TestCase):
     @patch('my_express_app.api_python.request')
     def test_process_file_without_file(mock_request):
         app = my_express_app.api_python
-        # Mock the absence of file
         mock_request.files.get.return_value = None
 
         # Call the function
