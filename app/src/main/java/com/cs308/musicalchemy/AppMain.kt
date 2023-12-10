@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -179,7 +180,7 @@ private fun initializeUserFields() {
                     val friendsList = document.get("friends_list") as? List<String> ?: emptyList()
                     val likedSongList = document.get("liked_song_list") as? Map<String, Any> ?: emptyMap()
                     val ratedSongList = document.get("rated_song_list") as? Map<String, Any> ?: emptyMap()
-                    val createdSongList = document.get("created_song") as? Map<String, Any> ?: emptyMap()
+                    val createdSongList = document.get("created_songs") as? Map<String, Any> ?: emptyMap()
                     val profilePictureUrl = document.getString("profile_picture_url")
                     val uid = document.getString("uid")
                     val username = document.getString("username")
@@ -374,6 +375,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("settings") { SettingsScreen(navController) }
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
+        }
+        composable("recommendations") {
+            RecommendationScreen(navController)
         }
     }
 }
@@ -627,7 +631,7 @@ fun CommonBottomBar(navController: NavController) {
             modifier = Modifier
                 .fillMaxHeight() // Make the image fill the height of the row
                 .aspectRatio(1f) // Maintain aspect ratio
-                .clickable { /* Handle click if needed */ }
+                .clickable { navController.navigate("recommendations") }
         )
 
         Image(
@@ -846,6 +850,88 @@ fun SongItem(song: Song) {
         }
     }
 }
+
+
+@Composable
+fun RecommendationScreen(navController: NavController) {
+    val tabIndex = remember { mutableStateOf(0) }
+    val isLoading = remember { mutableStateOf(false) } // Update this as per your logic
+    val recommendedTracks = remember { mutableStateOf(emptyList<Song>()) } // Replace Song with your actual data model
+    val tempRecSongs = remember { mutableStateOf(emptyList<Song>()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1D2123))
+    ) {
+        TabRow(
+            selectedTabIndex = tabIndex.value,
+            backgroundColor = Color(0xFF1D2123),
+            contentColor = Color.Yellow
+        ) {
+            Tab(
+                text = { Text("Activity Recommendations") },
+                selected = tabIndex.value == 0,
+                onClick = { tabIndex.value = 0 }
+            )
+            Tab(
+                text = { Text("Friend Recommendations") },
+                selected = tabIndex.value == 1,
+                onClick = { tabIndex.value = 1 }
+            )
+            Tab(
+                text = { Text("Temporal Recommendations") },
+                selected = tabIndex.value == 2,
+                onClick = { tabIndex.value = 2 }
+            )
+        }
+
+        when (tabIndex.value) {
+            0 -> RecommendationTabContent(navController, recommendedTracks.value, isLoading.value)
+            1 -> {} // Placeholder for Friend Recommendations
+            2 -> RecommendationTabContent(navController, tempRecSongs.value, isLoading.value)
+        }
+    }
+}
+
+@Composable
+fun RecommendationTabContent(navController: NavController, tracks: List<Song>, isLoading: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 20.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Assuming you want to display the tracks in a similar grid pattern as in MainMenu
+            for (i in tracks.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (i < tracks.size) {
+                        DisplaySong(song = tracks[i], navController = navController)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (i + 1 < tracks.size) {
+                        DisplaySong(song = tracks[i + 1], navController = navController)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
 
 
 @Composable
