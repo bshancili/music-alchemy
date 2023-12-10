@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "bshancili/music-alchemy/my-express-app/test"
+    "test": "python deneme/test.py"
   },
   "keywords": [],
   "author": "",
