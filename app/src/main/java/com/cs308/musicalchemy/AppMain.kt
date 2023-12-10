@@ -1148,37 +1148,79 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
-    var songQuery by remember { mutableStateOf("") }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        // TopNav(navController = navController) // Uncomment if you have a top navigation bar
 
-    Column {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        var songQuery by remember { mutableStateOf("") }
+        val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
         TextField(
             value = songQuery,
             onValueChange = {
                 songQuery = it
                 viewModel.autocompleteSong(songQuery)
             },
-            label = { Text("Search Song") }
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+            textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+            placeholder = { Text("Search Songs...", color = Color.Gray) },
+            singleLine = true,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
 
-        val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
-        val isLoading by viewModel.isLoading.observeAsState(initial = false)
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            LazyColumn {
-                items(suggestions ?: emptyList()) { suggestion ->
+            CircularProgressIndicator(modifier = Modifier.align(CenterHorizontally))
+        } else if (suggestions.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(suggestions) { suggestion ->
                     val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
-                    ListItem(
-                        text = { Text(text = "${suggestion.trackName} by $artistNames") },
-                        modifier = Modifier.clickable {
-                            viewModel.createSong(suggestion.spotifyTrackId)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.createSong(suggestion.spotifyTrackId)
+                            }
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = suggestion.trackName,
+                                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            )
+                            Text(
+                                text = "by $artistNames",
+                                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                            )
                         }
-                    )
+                    }
                 }
             }
-
+        } else {
+            Text(
+                "No results",
+                color = Color.White,
+                modifier = Modifier.align(CenterHorizontally)
+            )
         }
+
+        // CommonBottomBar(navController = navController) // Uncomment if you have a bottom navigation bar
     }
 }
 
