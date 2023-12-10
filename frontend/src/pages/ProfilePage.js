@@ -19,7 +19,6 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const [friends, setFriends] = useState([]);
-  const [isF, setIsF] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("userID");
   const isUserProfile = id === userID;
@@ -135,7 +134,7 @@ function ProfilePage() {
     fetchAllLikedSongs(userID, setLikedSongs);
     console.log(user?.Isprivate);
     fetchFriends();
-  }, [id]);
+  }, []);
 
   return (
     <Box display="flex" flexDirection="column" h="100vh" bg="#1D2123">

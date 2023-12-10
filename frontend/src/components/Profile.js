@@ -24,7 +24,8 @@ function Profile({
   user,
   onaddFriend,
   onunfriend,
-  isUserProfile, friends,
+  isUserProfile,
+  friends,
   id,
   isPrivate,
 }) {
@@ -35,7 +36,7 @@ function Profile({
   const toast = useToast();
   const [isFriend, setIsFriend] = useState(false);
   const isFriendCheck = () => {
-    return setIsFriend(friends.some((friend) => user.id === friend));
+    setIsFriend(friends.some((friend) => user?.id === friend));
   };
 
   const handleSettingsClick = () => {
@@ -53,7 +54,7 @@ function Profile({
   };
   useEffect(() => {
     isFriendCheck();
-  }, []);
+  }, [friends, user.id]);
   const handleLogout = () => {
     navigate("/login");
     localStorage.clear();
@@ -74,7 +75,7 @@ function Profile({
       console.log(Isprivate);
 
       toast({
-        title: `Profile is now ${Isprivate ? "private" : "public"}`,
+        title: `Profile is now ${Isprivate ? "public" : "private"}`,
 
         status: "success",
         duration: 5000,
@@ -161,19 +162,7 @@ function Profile({
             onClick={handleAddFriend}
           />
         )}
-        <Box>
-          {isUserProfile && (
-            <Button
-              bg={Isprivate ? "#F44336" : "#4CAF50"}
-              _hover={{ bg: Isprivate ? "#e57373" : "#45a049" }}
-              color="#FFFFFF"
-              w="64px"
-              h="64px"
-              icon={<Image src={cross} />}
-              onClick={handleUnfriend}
-            />
-          </Box>
-        )}
+
         <Box>
           {isUserProfile && (
             <Button

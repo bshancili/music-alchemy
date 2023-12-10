@@ -24,7 +24,7 @@ const AddSong = () => {
   };
   return (
     <div>
-      <Flex direction="row" gap={10} margin="0 auto" width="40%">
+      <Flex direction="row" gap={10} margin="0 auto" width="100%">
         <Input
           colorScheme="white"
           textColor="white"

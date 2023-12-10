@@ -1,6 +1,7 @@
-import { Box, Text, Button, Spacer, useToast } from "@chakra-ui/react";
+import { Box, Text, Button, useToast } from "@chakra-ui/react";
 import React from "react";
 import { pythonApi } from "../api/axios";
+
 import { db } from "../firebase";
 import {
   collection,
@@ -14,9 +15,7 @@ import {
 
 const CreateSongResult = ({ track }) => {
   const userID = localStorage.getItem("userID");
-
   const toast = useToast();
-
   const addSongToDB = async () => {
     const userRef = doc(db, "Users", userID);
     const userDoc = await getDoc(userRef);
@@ -70,18 +69,20 @@ const CreateSongResult = ({ track }) => {
     }
   };
   return (
-    <Button
-      display="flex"
-      flexDirection="row"
-      colorScheme="yellow"
-      padding={6}
-      gap={3}
-      onClick={addSongToDB}
-    >
-      <Text>Album: {track.album_name}</Text>
-      <Text>Song Name: {track.track_name} </Text>
-      <Text>Artist: {track["artist(s)"][0]}</Text>
-    </Button>
+    <Box>
+      <Button
+        display="flex"
+        flexDirection="row"
+        colorScheme="yellow"
+        padding={6}
+        gap={3}
+        onClick={addSongToDB}
+      >
+        <Text>Album: {track.album_name}</Text>
+        <Text>Song Name: {track.track_name}</Text>
+        <Text>Artist: {track["artist(s)"][0]}</Text>
+      </Button>
+    </Box>
   );
 };
 

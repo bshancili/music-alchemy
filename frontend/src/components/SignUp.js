@@ -152,6 +152,7 @@ const SignUp = () => {
         comments: [],
         uid: userID,
         Isprivate: 0,
+        created_songs: [],
       };
       const userDocRef = doc(db, "Users", response.user.uid);
       await setDoc(userDocRef, userDocData);
