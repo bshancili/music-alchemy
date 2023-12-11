@@ -28,24 +28,17 @@ Brief project description and purpose.
 - [Overview](#overview)
 - [Features](#features)
 - [Mobile App](#mobile-app)
+  - [Introduction](#introductio1)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-  - [Configuration](#configuration)
-  - [Running the App](#running-the-app)
 - [Backend](#backend)
+  - [Introduction](#introductio2)
   - [Prerequisites](#prerequisites-1)
   - [Installation](#installation-1)
-  - [Configuration](#configuration-1)
-  - [Running the App](#running-the-app-1)
 - [Web App](#web-app)
   - [Prerequisites](#prerequisites-2)
+  - [Introduction](#introductio-3)
   - [Installation](#installation-2)
-  - [Configuration](#configuration-2)
-  - [Running the App](#running-the-app-2)
-- [Deployment](#deployment)
-  - [Mobile App](#deployment-for-mobile-app)
-  - [Backend](#deployment-for-backend)
-  - [Web App](#deployment-for-web-app)
 
 ---
 
@@ -59,17 +52,12 @@ List the key features of the project.
 
 ---
 
-## Mobile App
+## Backend
 
-### Prerequisites
+### Introduction
 
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Node.js](https://nodejs.org/)
 - [Firebase CLI](https://firebase.google.com/docs/cli)
 
-### Installation
+### Prerequisites
 
-1. Clone the mobile app repository:
-
-   ```bash
-   git clone https://github.com/your-username/mobile-app.git
