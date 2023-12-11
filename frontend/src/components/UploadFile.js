@@ -6,7 +6,7 @@ const UploadFile = () => {
   const toast = useToast();
   const [file, setFile] = useState(null);
   const [responseArray, setResponseArray] = useState([]);
-  const toast = useToast();
+
   const [isUploaded, setIsUploaded] = useState(false);
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
