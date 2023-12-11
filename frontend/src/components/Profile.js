@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import settings from "../utils/settings.svg";
 import friend from "../utils/addFriend.png";
+import stats from "../utils/stats.png";
 import cross from "../utils/cross.png";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -175,12 +176,12 @@ function Profile({
       <HStack align="start">
         <IconButton
           bg="#33373B5E"
-          _hover={{ bg: "#000" }}
+          _hover={{ bg: "#111" }}
           color="#FFFFFF"
           w="64px"
           h="64px"
-          icon={<Image src={settings} />}
-          onClick={() => navigate("/stats")}
+          icon={<Image color="white" src={stats} />}
+          onClick={() => navigate(`/stats/${id}`)}
         />
         {isUserProfile && (
           <>

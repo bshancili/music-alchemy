@@ -26,7 +26,7 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
-
+import { useParams } from "react-router-dom";
 const LikedSongsTimeGraph = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [ratedSongs, setRatedSongs] = useState([]);
@@ -34,7 +34,7 @@ const LikedSongsTimeGraph = () => {
   const [averageRate, setAverageRate] = useState([]);
   const [filterOption, setFilterOption] = useState("all");
   const [filterOptionLikes, setFilterOptionLikes] = useState("all");
-
+  const { id } = useParams();
   const handleFilter = (option) => {
     setFilterOption(option);
   };
@@ -133,10 +133,10 @@ const LikedSongsTimeGraph = () => {
   };
   useEffect(() => {
     const fetchData = async () => {
-      await fetchLikedSongTimestamps(userID, setLikedSongs);
-      await fetchAverageRatingByTime(userID, setRatedSongs);
-      await fetchCreatedSongData(userID, setCreatedSongs);
-      await fetchRatingCounts(userID, setAverageRate);
+      await fetchLikedSongTimestamps(id, setLikedSongs);
+      await fetchAverageRatingByTime(id, setRatedSongs);
+      await fetchCreatedSongData(id, setCreatedSongs);
+      await fetchRatingCounts(id, setAverageRate);
     };
     console.log(ratedSongs);
     console.log(averageRate);
@@ -155,7 +155,7 @@ const LikedSongsTimeGraph = () => {
       <HStack>
         <div id="averageRateCount">
           <Text ml={5} fontSize="2xl" fontWeight="bold" color="white">
-            Average Rate Count All Time{" "}
+            Rate Count All Time{" "}
           </Text>
           <BarChart
             width={700}

@@ -137,7 +137,7 @@ function ProfilePage() {
     const fetchData = async () => {
       await fetchUser();
       await fetchNonRatedSongs();
-      await fetchAllLikedSongs(userID, setLikedSongs);
+      await fetchAllLikedSongs(id, setLikedSongs);
       //await fetchFriends();
     };
 
