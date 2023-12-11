@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "python deneme/test.py"
+    "test": "pytest test_rename.py"
   },
   "keywords": [],
   "author": "",
