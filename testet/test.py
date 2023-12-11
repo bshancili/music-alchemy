@@ -3,19 +3,25 @@ import pytest
 import sys
 import os
 import requests
+from flask import Flask
 import unittest
 from unittest.mock import MagicMock
 from unittest.mock import patch
-from flask import Flask
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
-from my_express_app.api_python import test_client
+
 from my_express_app.api_python import search_and_match, process_file, search, autocomplete, create_song
+@pytest.fixture
+def app():
+    # Your app creation logic here
+    app = Flask(__name__)
+    return app
 
 @pytest.fixture
-def client():
-    with my_express_app.api_python.test_client() as client:
-        yield client
+def client(app):
+    return app.test_client()
+
+
 @patch('my_express_app.api_python.Spotify')
 def test_search_and_match(mock_spotify):
     # Mock the response from Spotify API
