@@ -7,8 +7,13 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from datetime import datetime
+import os
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
+
 
 # Replace these values with your Spotify API credentials
 SPOTIPY_CLIENT_ID = '57e35b7900e2473eb2c8a3dc6b3e68ce'
@@ -17,7 +22,10 @@ client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_I
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 # Firebase credentials and initialization
-cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuniv.edu\\Desktop\\CS308\\code\\ayca_backend\\music-alchemy\\my-express-app\\music-alchemy-firebase-adminsdk.json')
+base_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(base_dir, 'music-alchemy-firebase-adminsdk.json')
+cred = credentials.Certificate(json_path)
+
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
