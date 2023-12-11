@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import os
 
 app = Flask(__name__)
 
