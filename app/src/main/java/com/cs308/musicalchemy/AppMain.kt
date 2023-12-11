@@ -1247,12 +1247,17 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
+
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var songToAdd by remember { mutableStateOf<String?>(null) }
+    var songToAdd by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    val currentUser = Firebase.auth.currentUser
+    val currentUserId = currentUser?.uid.orEmpty()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1267,6 +1272,8 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         var isSearchPerformed by remember { mutableStateOf(false) }
         val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
+
 
         TextField(
             value = songQuery,
@@ -1301,24 +1308,38 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                songToAdd = suggestion.spotifyTrackId
-                            }
-                            .padding(vertical = 4.dp),
+                                songToAdd = Pair(suggestion.spotifyTrackId, suggestion.trackName) // Set both ID and Name
+                            },
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = suggestion.trackName,
-                                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            )
-                            Text(
-                                text = "by $artistNames",
-                                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
-                            )
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            if (suggestion.albumImages.isNotEmpty()) {
+                                val imageUrl = suggestion.albumImages.first().url // Example: using the first image
+                                Image(
+                                    painter = rememberImagePainter(imageUrl),
+                                    contentDescription = "Album Cover",
+                                    modifier = Modifier
+                                        .size(72.dp) // Or any other size
+                                        .align(Alignment.CenterVertically) // Align the image vertically with the text
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp)) // Add space between image and text
+                            }
+                            Column {
+                                Text(
+                                    text = suggestion.trackName,
+                                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                )
+                                Text(
+                                    text = "by $artistNames",
+                                    style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                                )
+                            }
                         }
                     }
                 }
             }
+
         } else if (isSearchPerformed) {
             Text(
                 "No results",
@@ -1330,10 +1351,15 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         // CommonBottomBar(navController = navController) // Uncomment if you have a bottom navigation bar
     }
     LaunchedEffect(songToAdd) {
-        songToAdd?.let { trackId ->
+        songToAdd?.let { (trackId, trackName) ->
             coroutineScope.launch {
-                val resultMessage = viewModel.createSong(trackId)
-                Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
+                // Check if the user is logged in
+                if (currentUserId.isNotEmpty()) {
+                    val resultMessage = viewModel.createSong(trackId, trackName, currentUserId)
+                    Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "User not logged in", Toast.LENGTH_LONG).show()
+                }
             }
             songToAdd = null // Reset after showing the toast
         }
@@ -2561,16 +2587,46 @@ class SongsViewModel : ViewModel() {
         }
     }
 
-    suspend fun createSong(trackSpotifyId: String): String {
+    fun addCreatedSongToUser(userId: String, songId: String) {
+        val db = FirebaseFirestore.getInstance()
+        val userRef = db.collection("Users").document(userId)
+
+        // Create a map for the song with a timestamp
+        val songWithTimestamp = mapOf(
+            "timestamp" to FieldValue.serverTimestamp() // Uses the server's timestamp
+        )
+
+        // Prepare the update for the created_songs map
+        val update = mapOf(
+            "created_songs.$songId" to songWithTimestamp
+        )
+
+        // Update the user's created_songs map
+        userRef.update(update)
+            .addOnSuccessListener {
+                Log.d("UsersViewModel", "Song added to user's created songs with timestamp")
+            }
+            .addOnFailureListener { e ->
+                Log.e("UsersViewModel", "Error adding song to user's created songs", e)
+            }
+    }
+
+    suspend fun createSong(trackSpotifyId: String, trackName: String, userId: String): String {
         return try {
             val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
             if (response.isSuccessful && response.body() != null) {
-                response.body()!!.message
+                val responseBody = response.body()!!
+                if (responseBody.success) {
+                    addCreatedSongToUser(userId, trackSpotifyId)
+                    "The song '$trackName' has been added"  // Custom success message
+                } else {
+                    "Song already exists"  // Server's response message (e.g., "Track already exist in database")
+                }
             } else {
-                "Failed to create song"
+                "Failed to add $trackName"
             }
         } catch (e: Exception) {
-            "Error: ${e.message}"
+            "Error adding $trackName: ${e.message}"
         }
     }
 
@@ -2730,7 +2786,12 @@ data class Suggestion(
     @SerializedName("track_name") val trackName: String,
     @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
     @SerializedName("album_name") val albumName: String,
-    @SerializedName("spotify_track_id") val spotifyTrackId: String
+    @SerializedName("spotify_track_id") val spotifyTrackId: String,
+    @SerializedName("album_images") val albumImages: List<AlbumImage>
+)
+data class AlbumImage(
+    @SerializedName("url") val url: String,
+    // Include other fields if needed, like height and width
 )
 
 object RetrofitInstance {
@@ -3367,7 +3428,8 @@ data class User(
     @get:PropertyName("comments") @set:PropertyName("comments") var comments: List<String>? = listOf(),
 
     // Assuming created_songs is an array of song IDs.
-    @get:PropertyName("created_songs") @set:PropertyName("created_songs") var createdSongs: List<String>? = listOf(),
+    @get:PropertyName("created_songs") @set:PropertyName("created_songs")
+    var createdSongs: Map<String, Map<String, Timestamp>>? = mapOf(),
 
     // This field looks like a boolean flag indicating the privacy of the user's profile.
     @get:PropertyName("isprivate") @set:PropertyName("isprivate") var isPrivate: Int? = 0
