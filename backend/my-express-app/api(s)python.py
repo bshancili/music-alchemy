@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import os
 
 app = Flask(__name__)
 
@@ -15,11 +16,10 @@ SPOTIPY_CLIENT_SECRET = 'ee8e317543da4aa59bb351217a476e14'
 client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
-# Firebase credentials and initialization
-cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuniv.edu\\Desktop\\CS308\\code\\ayca_backend\\music-alchemy\\my-express-app\\music-alchemy-firebase-adminsdk.json')
-firebase_admin.initialize_app(cred)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(base_dir, 'music-alchemy-firebase-adminsdk.json')
+cred = credentials.Certificate(json_path)
 db = firestore.client()
-
 
 def search_and_match(song_name):
     try:
