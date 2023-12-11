@@ -1,9 +1,13 @@
 com.cs308.musicalchemy
 attr action
+attr activityAction
+attr activityName
 attr alpha
+attr alwaysExpand
 attr argType
 attr buttonSize
 attr circleCrop
+attr clearTop
 attr colorScheme
 attr coordinatorLayoutStyle
 attr data
@@ -11,6 +15,8 @@ attr dataPattern
 attr destination
 attr enterAnim
 attr exitAnim
+attr finishPrimaryWithSecondary
+attr finishSecondaryWithPrimary
 attr font
 attr fontProviderAuthority
 attr fontProviderCerts
@@ -38,16 +44,24 @@ attr mimeType
 attr navGraph
 attr nestedScrollViewStyle
 attr nullable
+attr placeholderActivityName
 attr popEnterAnim
 attr popExitAnim
 attr popUpTo
 attr popUpToInclusive
 attr popUpToSaveState
+attr primaryActivityName
 attr queryPatterns
 attr restoreState
 attr route
 attr scopeUris
+attr secondaryActivityAction
+attr secondaryActivityName
 attr shortcutMatchRequired
+attr splitLayoutDirection
+attr splitMinSmallestWidth
+attr splitMinWidth
+attr splitRatio
 attr startDestination
 attr statusBarBackground
 attr targetPackage
@@ -210,6 +224,7 @@ id adjust_height
 id adjust_width
 id all
 id androidx_compose_ui_view_composition_context
+id androidx_window_activity_scope
 id async
 id auto
 id blocking
@@ -249,6 +264,8 @@ id left
 id light
 id line1
 id line3
+id locale
+id ltr
 id nav_controller_view_tag
 id none
 id normal
@@ -260,6 +277,7 @@ id report_drawn
 id right
 id right_icon
 id right_side
+id rtl
 id standard
 id start
 id tag_accessibility_actions
@@ -302,6 +320,10 @@ layout notification_template_part_time
 raw firebase_common_keep
 string androidx_startup
 string app_name
+string bottom_sheet_collapse_description
+string bottom_sheet_dismiss_description
+string bottom_sheet_drag_handle_description
+string bottom_sheet_expand_description
 string call_notification_answer_action
 string call_notification_answer_video_action
 string call_notification_decline_action
@@ -331,6 +353,37 @@ string common_open_on_phone
 string common_signin_button_text
 string common_signin_button_text_long
 string copy_toast_msg
+string date_input_headline
+string date_input_headline_description
+string date_input_invalid_for_pattern
+string date_input_invalid_not_allowed
+string date_input_invalid_year_range
+string date_input_label
+string date_input_no_input_description
+string date_input_title
+string date_picker_headline
+string date_picker_headline_description
+string date_picker_navigate_to_year_description
+string date_picker_no_selection_description
+string date_picker_scroll_to_earlier_years
+string date_picker_scroll_to_later_years
+string date_picker_switch_to_calendar_mode
+string date_picker_switch_to_day_selection
+string date_picker_switch_to_input_mode
+string date_picker_switch_to_next_month
+string date_picker_switch_to_previous_month
+string date_picker_switch_to_year_selection
+string date_picker_title
+string date_picker_today_description
+string date_picker_year_picker_pane_title
+string date_range_input_invalid_range_input
+string date_range_input_title
+string date_range_picker_day_in_range
+string date_range_picker_end_headline
+string date_range_picker_scroll_to_next_month
+string date_range_picker_scroll_to_previous_month
+string date_range_picker_start_headline
+string date_range_picker_title
 string default_error_message
 string default_popup_window_title
 string default_web_client_id
@@ -356,12 +409,29 @@ string profile
 string project_id
 string range_end
 string range_start
+string search_bar_search
 string selected
 string settings
+string snackbar_dismiss
 string status_bar_notification_info_overflow
+string suggestions_available
 string switch_role
 string tab
 string template_percent
+string time_picker_am
+string time_picker_hour
+string time_picker_hour_24h_suffix
+string time_picker_hour_selection
+string time_picker_hour_suffix
+string time_picker_hour_text_field
+string time_picker_minute
+string time_picker_minute_selection
+string time_picker_minute_suffix
+string time_picker_minute_text_field
+string time_picker_period_toggle_description
+string time_picker_pm
+string tooltip_long_press_label
+string tooltip_pane_description
 style DialogWindowTheme
 style FloatingDialogTheme
 style FloatingDialogWindowTheme
@@ -374,7 +444,9 @@ style Theme_App_template
 style Widget_Compat_NotificationActionContainer
 style Widget_Compat_NotificationActionText
 style Widget_Support_CoordinatorLayout
+styleable ActivityFilter activityAction activityName
 styleable ActivityNavigator android_name action data dataPattern targetPackage
+styleable ActivityRule alwaysExpand
 styleable AnimatedStateListDrawableCompat android_dither android_visible android_variablePadding android_constantSize android_enterFadeDuration android_exitFadeDuration
 styleable AnimatedStateListDrawableItem android_id android_drawable
 styleable AnimatedStateListDrawableTransition android_drawable android_toId android_fromId android_reversible
@@ -395,6 +467,9 @@ styleable NavHost navGraph
 styleable NavInclude graph
 styleable Navigator android_label android_id route
 styleable SignInButton buttonSize colorScheme scopeUris
+styleable SplitPairFilter primaryActivityName secondaryActivityAction secondaryActivityName
+styleable SplitPairRule clearTop finishPrimaryWithSecondary finishSecondaryWithPrimary splitLayoutDirection splitMinSmallestWidth splitMinWidth splitRatio
+styleable SplitPlaceholderRule placeholderActivityName splitLayoutDirection splitMinSmallestWidth splitMinWidth splitRatio
 styleable StateListDrawable android_dither android_visible android_variablePadding android_constantSize android_enterFadeDuration android_exitFadeDuration
 styleable StateListDrawableItem android_drawable
 xml backup_rules

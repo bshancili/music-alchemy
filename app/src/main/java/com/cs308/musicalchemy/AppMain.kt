@@ -2,10 +2,11 @@
 package com.cs308.musicalchemy
 
 
-import android.app.Activity
+
 import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Intent
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -27,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -62,6 +64,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import co.yml.charts.axis.AxisData
+import co.yml.charts.common.model.Point
+import co.yml.charts.ui.linechart.LineChart
+import co.yml.charts.ui.linechart.model.GridLines
+import co.yml.charts.ui.linechart.model.IntersectionPoint
+import co.yml.charts.ui.linechart.model.Line
+import co.yml.charts.ui.linechart.model.LineChartData
+import co.yml.charts.ui.linechart.model.LinePlotData
+import co.yml.charts.ui.linechart.model.LineStyle
+import co.yml.charts.ui.linechart.model.SelectionHighlightPoint
+import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
+import co.yml.charts.ui.linechart.model.ShadowUnderLine
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -82,15 +96,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
-
-
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.Locale
-import androidx.compose.runtime.Composable as Composable
+import java.util.*
 
 
 //~~~~~~~~~~
@@ -179,7 +190,7 @@ private fun initializeUserFields() {
                     val friendsList = document.get("friends_list") as? List<String> ?: emptyList()
                     val likedSongList = document.get("liked_song_list") as? Map<String, Any> ?: emptyMap()
                     val ratedSongList = document.get("rated_song_list") as? Map<String, Any> ?: emptyMap()
-                    val createdSongList = document.get("created_song") as? Map<String, Any> ?: emptyMap()
+                    val createdSongList = document.get("created_songs") as? Map<String, Any> ?: emptyMap()
                     val profilePictureUrl = document.getString("profile_picture_url")
                     val uid = document.getString("uid")
                     val username = document.getString("username")
@@ -275,10 +286,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         auth = FirebaseAuth.getInstance()
         configureGoogleSignIn()
+
         authResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK) {
+            if (result.resultCode == RESULT_OK) {
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 handleSignInResult(task)
             }
@@ -1316,7 +1328,8 @@ enum class Tab {
     Collections,
     Lists,
     Rated,
-    Created
+    Created,
+    Stats
 }
 @OptIn(ExperimentalCoilApi::class)
 @Composable
@@ -1336,6 +1349,10 @@ fun ProfileScreen(navController: NavController, userId:String) {
     val ratedSongs by viewModel.ratedSongs.observeAsState(initial = emptyList())
     val createdSongs by viewModel.createdSongs.observeAsState(initial = emptyList())
     val topRatedSongs by viewModel.topRatedSongs.observeAsState(initial = emptyList())
+    val likedSongTimestamps by viewModel.likedSongTimestamps.observeAsState(initial = emptyList())
+    val lineChartData = remember { mutableStateOf<LineChartData?>(null) }
+    val ratedSongTimestamps by viewModel.ratedSongTimestamps.observeAsState(initial = emptyList())
+    val lineChartDataR = remember { mutableStateOf<LineChartData?>(null) }
 
     LaunchedEffect(userId) {
         Log.d("ProfileScreen", "Fetching data for userId: $userId")
@@ -1347,6 +1364,8 @@ fun ProfileScreen(navController: NavController, userId:String) {
         viewModel.fetchFriendsList(currentUserId)
         viewModel.fetchIsPrivate(userId)
         viewModel.fetchTopRatedSongs(currentUserId)
+        viewModel.fetchLikedSongTimestamps(userId)
+        viewModel.fetchRatedSongTimestamps(userId)
     }
 
     LaunchedEffect(friendsList) {
@@ -1457,7 +1476,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     ) {
                         // Content for the first box
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -1514,7 +1533,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     ) {
                         // Content for the second box
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxSize()
@@ -1571,7 +1590,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(
                                 4.dp,
-                                Alignment.CenterHorizontally
+                                CenterHorizontally
                             ),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -1711,6 +1730,36 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     }
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(37.dp)
+                            .background(
+                                color = Color(0xFFFACD66),
+                                shape = RoundedCornerShape(size = 27.dp)
+                            )
+                            .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp)
+                            .clickable { selectedTab = Tab.Stats },
+                    ) {
+                        Text(
+                            text = "Stats",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.8.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF1D2123),
+                                textAlign = TextAlign.Center
+                            ),
+                        )
+                    }
+                }
+
+
                 Spacer(modifier = Modifier.height(24.dp))
                 Log.d("ProfileScreen", "Liked Songs Size: ${likedSongs.size}")
                 Log.d("ProfileScreen", "Rated Songs Size: ${ratedSongs.size}")
@@ -1809,6 +1858,213 @@ fun ProfileScreen(navController: NavController, userId:String) {
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+
+                    Tab.Stats -> {
+
+                        LaunchedEffect(userId) {
+                            // Check if the LiveData is not empty
+                            if (likedSongTimestamps.isNotEmpty()) {
+                                // Parse and format timestamps
+                                val dateFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US)
+                                val likedSongDates = likedSongTimestamps.map { timestamp ->
+                                    dateFormat.parse(timestamp)?.let {
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it)
+                                    }
+                                }
+
+                                // Filter out null values
+                                val validDates = likedSongDates.filterNotNull()
+
+                                // Count occurrences of each date
+                                val dateCountMap = mutableMapOf<String, Int>()
+                                validDates.forEach { date ->
+                                    dateCountMap[date] = (dateCountMap[date] ?: 0) + 1
+                                }
+
+                                val sortedDateCountMap = dateCountMap.entries.sortedBy { it.key }
+
+
+                        val pointsData: List<Point> = sortedDateCountMap.mapIndexed { index, entry ->
+                            Point(index.toFloat(), entry.value.toFloat())
+                        }
+
+                        Log.d("Profile Screen", "After the date is parsed: $dateCountMap")
+                        Log.d("Profile Screen", "Points Data: $pointsData")
+
+                        if(pointsData.isNotEmpty()){
+
+                            val steps = pointsData.size
+                            // Build the chart using the retrieved data
+                            val xAxisData = AxisData.Builder()
+                                .axisStepSize(100.dp)
+                                .backgroundColor(Color.DarkGray)
+                                .steps(pointsData.size - 1)
+                                .labelData { i ->
+                                    sortedDateCountMap.getOrNull(i)?.key ?: ""
+                                }
+                                .labelAndAxisLinePadding(15.dp)
+                                .axisLineColor(Color.White)
+                                .axisLabelColor(Color.White)
+                                .build()
+
+                            val yAxisData = AxisData.Builder()
+                                .steps(steps)
+                                .backgroundColor(Color.DarkGray)
+                                .labelAndAxisLinePadding(20.dp)
+                                .labelData { i ->
+                                    val yScale = 8f / steps.toFloat()
+                                    (i * yScale).toInt().toString()
+                                }
+                                .axisLineColor(Color.White)
+                                .axisLabelColor(Color.White)
+                                .build()
+
+                            val lineChartDataUpdate = LineChartData(
+                                linePlotData = LinePlotData(
+                                    lines = listOf(
+                                        Line(
+                                            dataPoints = pointsData,
+                                            LineStyle(),
+                                            IntersectionPoint(),
+                                            SelectionHighlightPoint(),
+                                            ShadowUnderLine(),
+                                            SelectionHighlightPopUp()
+                                        )
+                                    ),
+                                ),
+                                xAxisData = xAxisData,
+                                yAxisData = yAxisData,
+                                gridLines = GridLines(),
+                                backgroundColor = Color.DarkGray
+                            )
+
+                            lineChartData.value = lineChartDataUpdate
+
+                        } }
+                            // Check if the LiveData is not empty
+                            if (ratedSongTimestamps.isNotEmpty()) {
+                                // Parse and format timestamps
+                                val dateFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.US)
+                                val ratedSongDates = ratedSongTimestamps.map { timestamp ->
+                                    dateFormat.parse(timestamp)?.let {
+                                        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it)
+                                    }
+                                }
+
+                                // Filter out null values
+                                val validDates = ratedSongDates.filterNotNull()
+
+                                // Count occurrences of each date
+                                val dateCountMapR = mutableMapOf<String, Int>()
+                                validDates.forEach { date ->
+                                    dateCountMapR[date] = (dateCountMapR[date] ?: 0) + 1
+                                }
+
+                                val sortedDateCountMapR = dateCountMapR.entries.sortedBy { it.key }
+
+
+                                val pointsDataR: List<Point> = sortedDateCountMapR.mapIndexed { index, entry ->
+                                    Point(index.toFloat(), entry.value.toFloat())
+                                }
+
+                                Log.d("Profile Screen", "After the date is parsed: $dateCountMapR")
+                                Log.d("Profile Screen", "Points Data: $pointsDataR")
+
+                                if(pointsDataR.isNotEmpty()){
+
+                                    val steps = pointsDataR.size
+                                    // Build the chart using the retrieved data
+                                    val xAxisData = AxisData.Builder()
+                                        .axisStepSize(100.dp)
+                                        .backgroundColor(Color.DarkGray)
+                                        .steps(pointsDataR.size - 1)
+                                        .labelData { i ->
+                                            sortedDateCountMapR.getOrNull(i)?.key ?: ""
+                                        }
+                                        .labelAndAxisLinePadding(15.dp)
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
+
+                                    val yAxisData = AxisData.Builder()
+                                        .steps(steps)
+                                        .backgroundColor(Color.DarkGray)
+                                        .labelAndAxisLinePadding(20.dp)
+                                        .labelData { i ->
+                                            val yScale = 8f / steps.toFloat()
+                                            (i * yScale).toInt().toString()
+                                        }
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
+
+                                    val lineChartDataUpdateR = LineChartData(
+                                        linePlotData = LinePlotData(
+                                            lines = listOf(
+                                                Line(
+                                                    dataPoints = pointsDataR,
+                                                    LineStyle(),
+                                                    IntersectionPoint(),
+                                                    SelectionHighlightPoint(),
+                                                    ShadowUnderLine(),
+                                                    SelectionHighlightPopUp()
+                                                )
+                                            ),
+                                        ),
+                                        xAxisData = xAxisData,
+                                        yAxisData = yAxisData,
+                                        gridLines = GridLines(),
+                                        backgroundColor = Color.DarkGray
+                                    )
+
+                                    lineChartDataR.value = lineChartDataUpdateR
+
+                                } }
+                        }
+
+                        Log.d("Profile Screen", "LineChartData: $lineChartData")
+
+                        Text(
+                            text = "Liked Songs over Time",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEFEEE0)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        
+                        lineChartData.value?.let { lineChartData ->
+                            LineChart(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp),
+                                lineChartData = lineChartData
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Text(
+                            text = "Rated Songs over Time",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEFEEE0)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        lineChartDataR.value?.let { lineChartDataR ->
+                            LineChart(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp),
+                                lineChartData = lineChartDataR
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                    }
                 }
             } else{
 
@@ -1822,7 +2078,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                         )
                 ){
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxSize()
@@ -1855,7 +2111,6 @@ fun ProfileScreen(navController: NavController, userId:String) {
     }
 }
 
-
 //~~~~~~~~~~
 //~~~~~FRIENDS LIST/PROFILE~~~~~
 
@@ -1877,7 +2132,89 @@ class ProfileViewModel : ViewModel() {
     val isPrivate: LiveData<Int> get() = _isPrivate
     private val _topRatedSongs = MutableLiveData<List<Song>>()
     val topRatedSongs: LiveData<List<Song>> = _topRatedSongs
-    private val currentTopRatedSongIds = mutableListOf<String>()
+    private val _likedSongTimestamps = MutableLiveData<List<String>>()
+    val likedSongTimestamps: LiveData<List<String>> = _likedSongTimestamps
+    private val _ratedSongTimestamps = MutableLiveData<List<String>>()
+    val ratedSongTimestamps: LiveData<List<String>> = _ratedSongTimestamps
+
+    fun fetchLikedSongTimestamps(userId: String) {
+        val userDocRef = Firebase.firestore.collection("Users").document(userId)
+        val songTimeStamps: MutableList<String> = mutableListOf()  // Initialize as a mutable list
+
+        userDocRef.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                // Access the liked_song_list field directly from the DocumentSnapshot
+                val likedSongsMap = documentSnapshot["liked_song_list"] as? Map<*, *>
+
+                // Iterate through the liked_song_list entries
+                likedSongsMap?.entries?.forEachIndexed { index, entry ->
+                    val songId = entry.key as? String
+                    val songData = entry.value as? Map<*, *>
+
+                    // Use toString() to ensure we get the correct representation
+                    val timestamp = songData?.get("timestamp") as? Timestamp
+
+                    if (timestamp != null) {
+                        val date = timestamp.toDate()
+                        Log.d("ProfileViewModel", "LikedSongsCollection document $index: songId=$songId, timestamp=${date.toString()}")
+                        songTimeStamps.add(date.toString())
+                    } else {
+                        Log.e("ProfileViewModel", "LikedSongsCollection document $index has null or missing timestamp")
+                    }
+                }
+
+                _likedSongTimestamps.value = songTimeStamps
+            } else {
+                // Document doesn't exist
+                Log.d("ProfileViewModel", "User document does not exist for userID: $userId")
+            }
+        }.addOnFailureListener { exception ->
+            // Handle failure
+            Log.e("ProfileViewModel", "Failed to fetch user document for userID: $userId", exception)
+        }
+    }
+
+    fun fetchRatedSongTimestamps(userId: String) {
+        val userDocRef = Firebase.firestore.collection("Users").document(userId)
+        val songTimeStamps: MutableList<String> = mutableListOf()  // Initialize as a mutable list
+
+        userDocRef.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                // Access the liked_song_list field directly from the DocumentSnapshot
+                val likedSongsMap = documentSnapshot["rated_song_list"] as? Map<*, *>
+
+                // Iterate through the liked_song_list entries
+                likedSongsMap?.entries?.forEachIndexed { index, entry ->
+                    val songId = entry.key as? String
+                    val songData = entry.value as? Map<*, *>
+
+                    // Use toString() to ensure we get the correct representation
+                    val timestamp = songData?.get("timestamp") as? Timestamp
+
+                    if (timestamp != null) {
+                        val date = timestamp.toDate()
+                        Log.d("ProfileViewModel", "RatedSongsCollection document $index: songId=$songId, timestamp=${date.toString()}")
+                        songTimeStamps.add(date.toString())
+                    } else {
+                        Log.e("ProfileViewModel", "RatedSongsCollection document $index has null or missing timestamp")
+                    }
+                }
+
+                _ratedSongTimestamps.value = songTimeStamps
+            } else {
+                // Document doesn't exist
+                Log.d("ProfileViewModel", "User document does not exist for userID: $userId")
+            }
+        }.addOnFailureListener { exception ->
+            // Handle failure
+            Log.e("ProfileViewModel", "Failed to fetch user document for userID: $userId", exception)
+        }
+    }
+
+
+
+
+
 
     fun fetchIsPrivate(userId: String) {
         val usersCollection = Firebase.firestore.collection("Users")
@@ -1962,6 +2299,8 @@ class ProfileViewModel : ViewModel() {
                     }
             }
     }
+
+
 
 
     fun fetchFriendsList(userId: String) {
@@ -2205,9 +2544,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
-
 }
-
 
 @Composable
 fun FriendsList(navController: NavController, viewModel: ProfileViewModel) {
@@ -2267,8 +2604,6 @@ fun FriendsList(navController: NavController, viewModel: ProfileViewModel) {
         CommonBottomBar(navController = navController)
     }
 }
-
-
 
 
 
