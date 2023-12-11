@@ -96,6 +96,7 @@ import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.firestore
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -108,7 +109,9 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -370,7 +373,7 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("search") { Search(navController) }
         composable("searchUser") { SearchUser(navController)}
-        composable("addSong") { AddSongScreen(navController) }
+        composable("addSong") { AddSongScreen() }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
@@ -1355,9 +1358,8 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var songToAdd by remember { mutableStateOf<String?>(null) }
@@ -1404,7 +1406,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         } else if (suggestions.isNotEmpty()) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(suggestions) { suggestion ->
-                    val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
+                    val artistNames = suggestion.artists.joinToString()
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2852,9 +2854,6 @@ class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
-    private val _addSongStatus = MutableLiveData<String>()
-    val addSongStatus: LiveData<String> = _addSongStatus
-
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     val songSuggestions = MutableLiveData<List<Suggestion>>()
@@ -2907,12 +2906,16 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song.let {data class Suggestion(
+
+                        song.let {
+                            /*
+                            data class Suggestion(
                             @SerializedName("track_name") val trackName: String,
                             @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
                             @SerializedName("album_name") val albumName: String,
                             @SerializedName("spotify_track_id") val spotifyTrackId: String
                         )
+                            */
 
                             // Ensure "rating" is an integer
                             it.rating = try {
@@ -2943,7 +2946,7 @@ class SongsViewModel : ViewModel() {
     fun updateSongs(updatedSongs: List<Song>) {
         _songs.value = updatedSongs
     }
-
+/*
     fun addSong(song: Song) {
         val db = FirebaseFirestore.getInstance()
         db.collection("Tracks")
@@ -2955,10 +2958,10 @@ class SongsViewModel : ViewModel() {
                 _addSongStatus.value = "Error adding song: ${e.message}"
             }
     }
+*/
+    private val fuzzyMatchThreshold = 6
 
-    val fuzzyMatchThreshold = 6
-
-    fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
+    private fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
         val lhsLength = lhs.length
         val rhsLength = rhs.length
 
@@ -3021,7 +3024,7 @@ class SongsViewModel : ViewModel() {
                 _songs.value = sortedFilteredSongs
                 _isLoading.value = false
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
                 // Handle failure...
             }
     }
@@ -3030,12 +3033,12 @@ class SongsViewModel : ViewModel() {
 
 
 }
-
+/*
 interface SongsApiService {
     @GET("/search")
     suspend fun searchSongs(@Query("songName") songName: String): Response<List<Song>>
 }
-
+*/
 interface AutocompleteApiService {
     @GET("/autocomplete")
     suspend fun autocompleteSong(@Query("song") songQuery: String): Response<AutocompleteResponse>
@@ -3045,7 +3048,7 @@ interface AutocompleteApiService {
 }
 
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
-data class CreateSongRequest(val track_spotify_id: String)
+data class CreateSongRequest(val trackSpotifyId: String)
 data class CreateSongResponse(val success: Boolean, val message: String)
 
 data class Suggestion(
