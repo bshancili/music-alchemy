@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -117,6 +118,7 @@ def create_song():
     # Get the track name from the request body
     data = request.get_json()
     track_spotify_id = data.get('track_spotify_id')
+    user_id = data.get('userid')
 
     # Search for the track
 
@@ -193,7 +195,35 @@ def create_song():
             'key':audio_features[0]['key'], # The key the track is in
             'valence':audio_features[0]['valence'] # Tracks with high valence sound more positive , while tracks with low valence sound more negative
             }
-        db.collection('Tracks').add(track_data)
+        song_ref = db.collection('Tracks').add(track_data)
+        new_song_id = song_ref[1].id
+
+        user_ref = db.collection('Users').document(user_id)
+        song_ref1 = db.collection('Tracks').document(new_song_id)
+
+        # Retrieve the current arrays
+        liked_songs_list = user_ref.get().to_dict().get('liked_songs_list', [])
+        created_songs = user_ref.get().to_dict().get('created_songs', [])
+        current_time = datetime.utcnow()
+        song_dict = {new_song_id: {'timestamp': current_time}}
+
+        # Check if new_song_id is not already in the arrays
+        if new_song_id not in liked_songs_list:
+            liked_songs_list.append(song_dict)
+
+        if new_song_id not in created_songs:
+            created_songs.append(song_dict)
+
+        # Update the arrays in Firestore
+        user_ref.update({
+        'liked_song_list': liked_songs_list,
+        'created_songs': created_songs,
+        })
+
+        song_ref1.update({
+        'like_count': firestore.Increment(1)  # Increment by one
+        })
+
         return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
             
     else:
@@ -248,6 +278,8 @@ def process_file():
 def create_song_internal(data):
     # Function to handle song creation
     track_spotify_id = data.get('track_spotify_id')
+    user_id = data.get('userid')
+    
     # Search for the track
     track = sp.track(track_spotify_id)
 
@@ -319,8 +351,34 @@ def create_song_internal(data):
             'key':audio_features[0]['key'], # The key the track is in
             'valence':audio_features[0]['valence'] # Tracks with high valence sound more positive , while tracks with low valence sound more negative
             }
-        
-        db.collection('Tracks').add(track_data)
+        song_ref = db.collection('Tracks').add(track_data)
+        new_song_id = song_ref[1].id
+
+        user_ref = db.collection('Users').document(user_id)
+        song_ref1 = db.collection('Tracks').document(new_song_id)
+
+        # Retrieve the current arrays
+        liked_songs_list = user_ref.get().to_dict().get('liked_songs_list', [])
+        created_songs = user_ref.get().to_dict().get('created_songs', [])
+        current_time = datetime.utcnow()
+        song_dict = {new_song_id: {'timestamp': current_time}}
+
+        # Check if new_song_id is not already in the arrays
+        if new_song_id not in liked_songs_list:
+            liked_songs_list.append(song_dict)
+
+        if new_song_id not in created_songs:
+            created_songs.append(song_dict)
+
+        # Update the arrays in Firestore
+        user_ref.update({
+        'liked_song_list': liked_songs_list,
+        'created_songs': created_songs,
+        })
+
+        song_ref1.update({
+        'like_count': firestore.Increment(1)  # Increment by one
+        })
 
         return {'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'}
 
