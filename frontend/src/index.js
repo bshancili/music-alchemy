@@ -26,7 +26,7 @@ root.render(
         <Route path="music/:id" element={<MusicDetailPage />} />
         <Route path="recommend_songs" element={<RecommendPage />} />
         <Route path="add_song" element={<AddSongPage />} />
-        <Route path="stats" element={<StatsPage />} />
+        <Route path="stats/:id" element={<StatsPage />} />
       </Routes>
     </ChakraProvider>
   </BrowserRouter>

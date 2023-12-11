@@ -43,7 +43,7 @@ const AddSong = () => {
     }
   };
   return (
-    <Box display="flex" flexDirection="column">
+    <Box h="100%" display="flex" flexDirection="column" bg="#1D2123">
       <HStack>
         <Input
           width="100%"

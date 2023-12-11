@@ -3,6 +3,7 @@ import {
   fetchAverageRatingByTime,
   fetchLikedSongTimestamps,
   fetchCreatedSongData,
+  fetchRatingCounts,
 } from "../api/api";
 import {
   Box,
@@ -12,15 +13,61 @@ import {
   Button,
   HStack,
   VStack,
+  Spacer,
 } from "@chakra-ui/react";
 import Chart from "./Chart";
 import html2canvas from "html2canvas";
-
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
+import { useParams } from "react-router-dom";
 const LikedSongsTimeGraph = () => {
   const [likedSongs, setLikedSongs] = useState([]);
   const [ratedSongs, setRatedSongs] = useState([]);
   const [createdSongs, setCreatedSongs] = useState([]);
-
+  const [averageRate, setAverageRate] = useState([]);
+  const [filterOption, setFilterOption] = useState("all");
+  const [filterOptionLikes, setFilterOptionLikes] = useState("all");
+  const { id } = useParams();
+  const handleFilter = (option) => {
+    setFilterOption(option);
+  };
+  const handleFilterLikes = (option) => {
+    setFilterOptionLikes(option);
+  };
+  const filteredDataLikes = (() => {
+    switch (filterOptionLikes) {
+      case "last2Weeks":
+        // Filter data for the last 2 weeks
+        return likedSongs.slice(-2);
+      case "last4Weeks":
+        // Filter data for the last 4 weeks
+        return likedSongs.slice(-4);
+      default:
+        // No filtering
+        return likedSongs;
+    }
+  })();
+  // Filter the chart data based on the selected option
+  const filteredData = (() => {
+    switch (filterOption) {
+      case "last2Weeks":
+        // Filter data for the last 2 weeks
+        return ratedSongs.slice(-2);
+      case "last4Weeks":
+        // Filter data for the last 4 weeks
+        return ratedSongs.slice(-4);
+      default:
+        // No filtering
+        return ratedSongs;
+    }
+  })();
   const [pic, setPic] = useState();
   const tweetText = "Check out my awesome chart!";
   const tweetUrl =
@@ -86,13 +133,13 @@ const LikedSongsTimeGraph = () => {
   };
   useEffect(() => {
     const fetchData = async () => {
-      await fetchLikedSongTimestamps(userID, setLikedSongs);
-      await fetchAverageRatingByTime(userID, setRatedSongs);
-      await fetchCreatedSongData(userID, setCreatedSongs);
-      console.log(ratedSongs);
-      console.log(likedSongs);
-      console.log(createdSongs);
+      await fetchLikedSongTimestamps(id, setLikedSongs);
+      await fetchAverageRatingByTime(id, setRatedSongs);
+      await fetchCreatedSongData(id, setCreatedSongs);
+      await fetchRatingCounts(id, setAverageRate);
     };
+    console.log(ratedSongs);
+    console.log(averageRate);
 
     fetchData();
   }, [userID]);
@@ -106,11 +153,51 @@ const LikedSongsTimeGraph = () => {
       overflowY="hidden"
     >
       <HStack>
+        <div id="averageRateCount">
+          <Text ml={5} fontSize="2xl" fontWeight="bold" color="white">
+            Rate Count All Time{" "}
+          </Text>
+          <BarChart
+            width={700}
+            height={300}
+            data={averageRate}
+            title="Average Rate Count All Time"
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="rating" />
+            <YAxis
+              dataKey="count"
+              label={{ value: "Count", angle: -90, position: "insideLeft" }}
+            />
+            <Tooltip />
+            <Legend />
+            <Spacer />
+            <Bar dataKey="count" fill="rgba(255, 235, 59, 1)" />
+          </BarChart>
+        </div>
+        <VStack>
+          <Button
+            onClick={() => {
+              handleDownloadImage("averageRateCount", "rates.jpg");
+            }}
+          >
+            Download
+          </Button>
+          <Button
+            onClick={() => {
+              handleShareOnTwitter("averageRateCount");
+            }}
+          >
+            Share on Twitter
+          </Button>
+        </VStack>
+      </HStack>
+      <HStack>
         <div id="likedSongChart">
           <Chart
             chartId="likedSongsChart"
             chartTitle="Liked Songs Over Time"
-            chartData={likedSongs}
+            chartData={filteredDataLikes}
             lineProps={{
               type: "monotone",
               stroke: "rgba(75, 192, 192, 1)",
@@ -134,6 +221,13 @@ const LikedSongsTimeGraph = () => {
           >
             Share on Twitter
           </Button>
+          <Button onClick={() => handleFilterLikes("all")}>All Time</Button>
+          <Button onClick={() => handleFilterLikes("last2Weeks")}>
+            Last 2 Weeks
+          </Button>
+          <Button onClick={() => handleFilterLikes("last4Weeks")}>
+            Last 4 Weeks
+          </Button>
         </VStack>
       </HStack>
       <HStack>
@@ -141,7 +235,7 @@ const LikedSongsTimeGraph = () => {
           <Chart
             chartId="ratedSongsChart"
             chartTitle="Rated Songs Over Time"
-            chartData={ratedSongs}
+            chartData={filteredData}
             lineProps={{
               type: "monotone",
               stroke: "rgba(255, 235, 59, 1)",
@@ -164,6 +258,13 @@ const LikedSongsTimeGraph = () => {
             }}
           >
             Share on Twitter
+          </Button>
+          <Button onClick={() => handleFilter("all")}>All Time</Button>
+          <Button onClick={() => handleFilter("last2Weeks")}>
+            Last 2 Weeks
+          </Button>
+          <Button onClick={() => handleFilter("last4Weeks")}>
+            Last 4 Weeks
           </Button>
         </VStack>
       </HStack>

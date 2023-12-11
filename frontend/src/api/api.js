@@ -231,6 +231,40 @@ const fetchCreatedSongData = async (userId, setCreatedSongs) => {
   }
 };
 
+const fetchRatingCounts = async (userId, setRatingCounts) => {
+  try {
+    const userDocRef = doc(db, "Users", userId);
+    const userSnap = await getDoc(userDocRef);
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const ratedSongs = userData.rated_song_list;
+
+      const ratingCounts = Array(10).fill(0); // Initialize an array to store counts for each rating (1-10)
+
+      Object.values(ratedSongs).forEach((songData) => {
+        const rating = songData.rating;
+
+        // Increment the count for the corresponding rating
+        if (rating >= 1 && rating <= 10) {
+          ratingCounts[rating - 1] += 1;
+        }
+      });
+
+      // Create an array of objects with rating and count
+      const ratingCountsData = ratingCounts.map((count, index) => ({
+        rating: index + 1,
+        count: count,
+      }));
+
+      console.log(ratingCountsData);
+      setRatingCounts(ratingCountsData);
+    }
+  } catch (error) {
+    console.error("Error fetching rating counts:", error);
+  }
+};
+
 const fetchAverageRatingByTime = async (userId, setRatedSongs) => {
   try {
     const userDocRef = doc(db, "Users", userId);
@@ -334,4 +368,5 @@ export {
   fetchCreatedSongData,
   fetchTemp,
   fetchFriendRecommendations,
+  fetchRatingCounts,
 };

@@ -16,14 +16,16 @@ import {
 const CreateSongResult = ({ track }) => {
   const userID = localStorage.getItem("userID");
   const toast = useToast();
+
   const addSongToDB = async () => {
     const userRef = doc(db, "Users", userID);
     const userDoc = await getDoc(userRef);
     const createdSongsArray = userDoc.data().created_songs || [];
+    console.log(track);
 
     try {
       const response = await pythonApi.post("/create_song", {
-        track_name: track.track_name,
+        track_spotify_id: track.spotify_track_id,
       });
       const tracksCollection = collection(db, "Tracks");
       const q = query(
@@ -37,10 +39,23 @@ const CreateSongResult = ({ track }) => {
         ...createdSongsArray,
         [querySnap.docs[0].id]: { timestamp },
       };
+      const likedSongsArray = userDoc.data().liked_song_list || [];
+      const updatedLikedSongs = {
+        ...likedSongsArray,
+        [querySnap.docs[0].id]: { timestamp },
+      };
       await updateDoc(userRef, {
         created_songs: updatedCreatedSongs,
       });
+
       if (response.data.success) {
+        const songRef = doc(db, "Tracks", querySnap.docs[0].id);
+        await updateDoc(songRef, {
+          like_count: 1,
+        });
+        await updateDoc(userRef, {
+          liked_song_list: updatedLikedSongs,
+        });
         toast({
           title: `${track.track_name} added to database`,
           status: "success",
