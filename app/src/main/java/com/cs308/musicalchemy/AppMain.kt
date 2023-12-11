@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -1133,7 +1134,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     searchText = newText
                     displaySongs = newText.isNotBlank()
                     if (displaySongs) {
-                        viewModel.loadSongsWithSubstring(newText)
+                        viewModel.loadSongsFuzzy(newText)
                     }
                 },
                 modifier = Modifier
@@ -1354,124 +1355,95 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
-    var trackName by remember { mutableStateOf("") }
-    var artists by remember { mutableStateOf("") }
-    var albumName by remember { mutableStateOf("") }
-    var albumReleaseDate by remember { mutableStateOf("") }
-    var albumType by remember { mutableStateOf("") }
-    var danceability by remember { mutableStateOf("") }
-    var energy by remember { mutableStateOf("") }
-    var instrumentalness by remember { mutableStateOf("") }
-    var key by remember { mutableStateOf("") }
-    var lengthInSeconds by remember { mutableStateOf("") }
-    var liveness by remember { mutableStateOf("") }
-    var loudness by remember { mutableStateOf("") }
-    var mode by remember { mutableStateOf("") }
-    var tempo by remember { mutableStateOf("") }
-    var valence by remember { mutableStateOf("") }
-    val addSongStatus by viewModel.addSongStatus.observeAsState("")
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var songToAdd by remember { mutableStateOf<String?>(null) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+        // TopNav(navController = navController) // Uncomment if you have a top navigation bar
 
-    val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-        textColor = Color.Black, // Text color inside the text field
-        backgroundColor = Color.White, // Background color of the text field
-        focusedBorderColor = Color.White, // Border color when the text field is focused
-        unfocusedBorderColor = Color.Gray, // Border color when the text field is not focused
-        focusedLabelColor = Color.Black, // Label color when the text field is focused
-        unfocusedLabelColor = Color.Gray // Label color when the text field is not focused
-    )
+        Spacer(modifier = Modifier.height(16.dp))
 
+        var songQuery by remember { mutableStateOf("") }
+        var isSearchPerformed by remember { mutableStateOf(false) }
+        val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
+        val isLoading by viewModel.isLoading.observeAsState(initial = false)
 
-
-    Scaffold(
-        bottomBar = { CommonBottomBar(navController) }
-    ) { innerPadding ->
-        Column(
+        TextField(
+            value = songQuery,
+            onValueChange = {
+                songQuery = it
+                isSearchPerformed = it.isNotBlank()
+                viewModel.autocompleteSong(songQuery)
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(innerPadding)
-                .padding(horizontal = 8.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            OutlinedTextField(
-                value = trackName,
-                onValueChange = { trackName = it },
-                label = { Text("Track Name") },
-                colors = textFieldColors
+                .background(color = Color(0xFFF5F5F5), shape = RoundedCornerShape(12.dp)),
+            textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+            placeholder = { Text("Search Songs To Add...", color = Color.Gray) },
+            singleLine = true,
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
             )
-            OutlinedTextField(value = artists, onValueChange = { artists = it }, label = { Text("Artist(s)") } ,
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumName, onValueChange = { albumName = it }, label = { Text("Album Name") } ,
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumReleaseDate, onValueChange = { albumReleaseDate = it }, label = { Text("Album Release Date") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = albumType, onValueChange = { albumType = it }, label = { Text("Album Type") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = danceability, onValueChange = { danceability = it }, label = { Text("Danceability") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = energy, onValueChange = { energy = it }, label = { Text("Energy") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = instrumentalness, onValueChange = { instrumentalness = it }, label = { Text("Instrumentalness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = lengthInSeconds, onValueChange = { lengthInSeconds = it }, label = { Text("Length in Seconds") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = liveness, onValueChange = { liveness = it }, label = { Text("Liveness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = loudness, onValueChange = { loudness = it }, label = { Text("Loudness") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = mode, onValueChange = { mode = it }, label = { Text("Mode") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = tempo, onValueChange = { tempo = it }, label = { Text("Tempo") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(value = valence, onValueChange = { valence = it }, label = { Text("Valence") },
-                colors = textFieldColors)
-            Spacer(modifier = Modifier.height(6.dp))
+        )
 
-            Button(onClick = {
-                val newSong = Song(
-                    trackName = trackName,
-                    artists = artists.split(",").map { it.trim() },
-                    albumName = albumName,
-                    albumReleaseDate = albumReleaseDate,
-                    albumType = albumType,
-                    danceability = danceability.toDoubleOrNull(),
-                    energy = energy.toDoubleOrNull(),
-                    instrumentalness = instrumentalness.toDoubleOrNull(),
-                    key = key.toIntOrNull(),
-                    lengthInSeconds = lengthInSeconds.toDoubleOrNull(),
-                    liveness = liveness.toDoubleOrNull(),
-                    loudness = loudness.toDoubleOrNull(),
-                    mode = mode.toIntOrNull(),
-                    tempo = tempo.toDoubleOrNull(),
-                    valence = valence.toDoubleOrNull()
-                )
-                viewModel.addSong(newSong)
-            },colors = ButtonDefaults.buttonColors(backgroundColor = Color.Black)
-            ) {
-                Text("Add Song")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(CenterHorizontally))
+        } else if (suggestions.isNotEmpty()) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(suggestions) { suggestion ->
+                    val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                songToAdd = suggestion.spotifyTrackId
+                            }
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = suggestion.trackName,
+                                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            )
+                            Text(
+                                text = "by $artistNames",
+                                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                            )
+                        }
+                    }
+                }
             }
-            if (addSongStatus.isNotEmpty()) {
-                Text(addSongStatus)
+        } else if (isSearchPerformed) {
+            Text(
+                "No results",
+                color = Color.White,
+                modifier = Modifier.align(CenterHorizontally)
+            )
+        }
+
+        // CommonBottomBar(navController = navController) // Uncomment if you have a bottom navigation bar
+    }
+    LaunchedEffect(songToAdd) {
+        songToAdd?.let { trackId ->
+            coroutineScope.launch {
+                val resultMessage = viewModel.createSong(trackId)
+                Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
             }
+            songToAdd = null // Reset after showing the toast
         }
     }
 }
@@ -2872,15 +2844,59 @@ data class Song(
 )
 
 class SongsViewModel : ViewModel() {
+
+    private val apiService: AutocompleteApiService by lazy {
+        RetrofitInstance.retrofit.create(AutocompleteApiService::class.java)
+    }
+
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
     private val _addSongStatus = MutableLiveData<String>()
     val addSongStatus: LiveData<String> = _addSongStatus
 
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+    val songSuggestions = MutableLiveData<List<Suggestion>>()
+
     init {
         loadSongs()
     }
+
+
+    fun autocompleteSong(query: String) {
+        viewModelScope.launch {
+            _isLoading.value = true  // Modify _isLoading instead of isLoading
+            try {
+                val response = apiService.autocompleteSong(query)
+                if (response.isSuccessful && response.body() != null) {
+                    Log.d("API Response", response.body()!!.suggestions.toString())
+                    songSuggestions.value = response.body()!!.suggestions
+                } else {
+                    // Handle error
+                }
+            } catch (e: Exception) {
+                // Handle exception
+            } finally {
+                _isLoading.value = false  // Modify _isLoading instead of isLoading
+            }
+        }
+    }
+
+    suspend fun createSong(trackSpotifyId: String): String {
+        return try {
+            val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
+            if (response.isSuccessful && response.body() != null) {
+                response.body()!!.message
+            } else {
+                "Failed to create song"
+            }
+        } catch (e: Exception) {
+            "Error: ${e.message}"
+        }
+    }
+
+
 
     private fun loadSongs() {
         val db = FirebaseFirestore.getInstance()
@@ -2891,7 +2907,13 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song.let {
+                        song.let {data class Suggestion(
+                            @SerializedName("track_name") val trackName: String,
+                            @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
+                            @SerializedName("album_name") val albumName: String,
+                            @SerializedName("spotify_track_id") val spotifyTrackId: String
+                        )
+
                             // Ensure "rating" is an integer
                             it.rating = try {
                                 it.rating?.toString()?.toDoubleOrNull() ?: 0.0
@@ -2916,6 +2938,8 @@ class SongsViewModel : ViewModel() {
             }
     }
 
+
+
     fun updateSongs(updatedSongs: List<Song>) {
         _songs.value = updatedSongs
     }
@@ -2932,47 +2956,116 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
-    fun loadSongsWithSubstring(substring: String) {
+    val fuzzyMatchThreshold = 6
+
+    fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
+        val lhsLength = lhs.length
+        val rhsLength = rhs.length
+
+        var cost = IntArray(lhsLength + 1) { it }
+        var newCost = IntArray(lhsLength + 1)
+
+        for (i in 1..rhsLength) {
+            newCost[0] = i
+
+            for (j in 1..lhsLength) {
+                val match = if (lhs[j - 1] == rhs[i - 1]) 0 else 1
+
+                val costReplace = cost[j - 1] + match
+                val costInsert = cost[j] + 1
+                val costDelete = newCost[j - 1] + 1
+
+                newCost[j] = minOf(costInsert, costDelete, costReplace)
+            }
+
+            val swap = cost
+            cost = newCost
+            newCost = swap
+        }
+
+        return cost[lhsLength]
+    }
+
+    fun loadSongsFuzzy(searchText: String) {
         val db = FirebaseFirestore.getInstance()
         _isLoading.value = true
 
         db.collection("Tracks")
             .get()
             .addOnSuccessListener { documents ->
-                val filteredSongs = documents.mapNotNull { documentSnapshot ->
-                    try {
-                        val song = documentSnapshot.toObject(Song::class.java)
-                        song.apply {
-                            // Handle the conversion of rating to Double
-                            rating = try {
-                                rating?.toString()?.toDoubleOrNull() ?: 0.0
-                            } catch (e: NumberFormatException) {
-                                Log.e("SongsViewModel", "Error converting rating to double for song $id", e)
-                                0.0
-                            }
-                            id = documentSnapshot.id
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SongsViewModel", "Error parsing song data", e)
-                        null
-                    }
-                }.filter { song ->
-                    // Perform a case-insensitive check if trackName contains the substring
-                    song.trackName?.lowercase(Locale.getDefault())
-                        ?.contains(substring.lowercase(Locale.getDefault())) == true
+                val allSongs = documents.mapNotNull { documentSnapshot ->
+                    documentSnapshot.toObject(Song::class.java)
                 }
-                _songs.value = filteredSongs
+
+                val searchTextLowercase = searchText.lowercase(Locale.getDefault())
+                val sortedFilteredSongs = allSongs.mapNotNull { song ->
+                    val trackDistance = levenshtein(song.trackName?.lowercase(Locale.getDefault()) ?: "", searchTextLowercase)
+                    val artistDistances = song.artists?.map { artist ->
+                        val artistLowercase = artist.lowercase(Locale.getDefault())
+                        if (artistLowercase.contains(searchTextLowercase)) {
+                            // Lower distance for names that contain the search text as a substring
+                            0
+                        } else {
+                            levenshtein(artistLowercase, searchTextLowercase)
+                        }
+                    }
+
+                    val bestArtistDistance = artistDistances?.minOrNull() ?: Int.MAX_VALUE
+                    val bestDistance = minOf(trackDistance, bestArtistDistance)
+
+                    if (bestDistance > fuzzyMatchThreshold) null else song to bestDistance
+                }
+                    .sortedBy { (_, distance) -> distance }
+                    .map { (song, _) -> song }
+
+                _songs.value = sortedFilteredSongs
                 _isLoading.value = false
             }
             .addOnFailureListener { exception ->
-                Log.e("SongsViewModel", "Error loading songs", exception)
+                // Handle failure...
             }
-
     }
+
+
+
+
 }
 
+interface SongsApiService {
+    @GET("/search")
+    suspend fun searchSongs(@Query("songName") songName: String): Response<List<Song>>
+}
+
+interface AutocompleteApiService {
+    @GET("/autocomplete")
+    suspend fun autocompleteSong(@Query("song") songQuery: String): Response<AutocompleteResponse>
+
+    @POST("/create_song")
+    suspend fun createSong(@Body requestData: CreateSongRequest): Response<CreateSongResponse>
+}
+
+data class AutocompleteResponse(val suggestions: List<Suggestion>)
+data class CreateSongRequest(val track_spotify_id: String)
+data class CreateSongResponse(val success: Boolean, val message: String)
+
+data class Suggestion(
+    @SerializedName("track_name") val trackName: String,
+    @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
+    @SerializedName("album_name") val albumName: String,
+    @SerializedName("spotify_track_id") val spotifyTrackId: String
+)
+
+object RetrofitInstance {
+    private const val BASE_URL = "http://10.0.2.2:8080" // Replace with your backend URL
+
+    val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+}
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
     val userDocument = Firebase.firestore
