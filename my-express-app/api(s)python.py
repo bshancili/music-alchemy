@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from spotipy import Spotify
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -6,75 +7,70 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+from datetime import datetime
+import os
 
 app = Flask(__name__)
-
+CORS(app)
 # Replace these values with your Spotify API credentials
 SPOTIPY_CLIENT_ID = '57e35b7900e2473eb2c8a3dc6b3e68ce'
 SPOTIPY_CLIENT_SECRET = 'ee8e317543da4aa59bb351217a476e14'
 client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_ID, client_secret=SPOTIPY_CLIENT_SECRET)
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(base_dir, 'music-alchemy-firebase-adminsdk.json')
+cred = credentials.Certificate(json_path)
+
 # Firebase credentials and initialization
-cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuniv.edu\\Desktop\\CS308\\code\\ayca_backend\\music-alchemy\\my-express-app\\music-alchemy-firebase-adminsdk.json')
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+@app.route('/search_songs', methods=['POST'])
+def search_songs():
+    data = request.get_json()
+    tracks = data.get('tracks')
 
-def search_and_match(song_name):
-    try:
-       
-        # Search for tracks on Spotify
-        spotify_tracks_results = sp.search(q=song_name, type='track', limit=20)
+    if not tracks:
+        return jsonify({'error': 'No tracks provided'}), 400
 
-        spotify_tracks=spotify_tracks_results['tracks']['items']
+    all_results = []
 
-        # Reference to Firestore database
-        tracks_ref = db.collection('Tracks')
+    for track in tracks:
+        track_name = track.get('track_name')
+        artist_name = track.get('artist_name')
 
-        # Find matching documents in Firestore based on Spotify IDs
-        matching_track_ids = []
-        for spotify_track in spotify_tracks:
-
-            spotify_id = spotify_track['id']
-            field = 'spotify_track_id'
-            op = '=='
-            value = spotify_id
-            query = tracks_ref.where(filter=FieldFilter(field, op, value)).limit(1)
-            existing_tracks = query.stream()
-
-            # Convert the generator to a list and check if it's not empty
-            existing_tracks_list = list(existing_tracks)
-            if existing_tracks_list:
-                 matching_track_ids.append(existing_tracks_list[0].id)
-
-
-        return matching_track_ids
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return []
-
-
-@app.route('/search', methods=['GET'])
-def search():
-    try:
-        song_name = request.args.get('songName')
-
-        if not song_name:
-            return jsonify({'error': 'Song name parameter is required.'}), 400
-
-        matching_ids = search_and_match(song_name)
-
-        if matching_ids:
-            return jsonify({'matchingTrackIds': matching_ids})
+        if track_name and artist_name:
+            results = search_in_firestore(track_name, artist_name)
+            all_results.extend(results)
         else:
-            return jsonify({'error': 'No matching documents found.'}), 404
+            all_results.append({'error': f'Missing track_name or artist_name for track {track}'})
+    
+    # if recommended songs are not included in Tracks
+    message = "Not a lucky time! Please try again!!"
+    if len(all_results) == 0:
+        return jsonify({'results': message})
+    
+    print(all_results)
 
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'error': 'Internal server error.'}), 500
+    return jsonify({'results': all_results})
 
+def search_in_firestore(track_name, artist_name):
+    # Perform a case-insensitive search in the 'Tracks' collection
+    track_name_l = track_name.lower()
+    artist_name_l = artist_name.lower()
+    results = []
+
+    tracks_ref = db.collection('Tracks')
+    query_result = tracks_ref.where(field_path='lowercased_track_name', op_string='==', value=track_name_l).where(field_path='lowercased_artists', op_string='array_contains', value=artist_name_l).limit(10).stream()
+
+    for doc in query_result:
+        track_data = doc.to_dict()
+        results.append({
+            'track_id': doc.id
+        })
+
+    return results
 
 
 @app.route('/autocomplete', methods=['GET'])
@@ -195,13 +191,9 @@ def create_song():
             }
         db.collection('Tracks').add(track_data)
         return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
-
+            
     else:
         return jsonify({'success': False, 'message': 'Track already exist in database'})
-
-
-
-
 
 @app.route('/process_file', methods=['POST'])
 def process_file():
@@ -248,6 +240,8 @@ def process_file():
 def create_song_internal(data):
     # Function to handle song creation
     track_spotify_id = data.get('track_spotify_id')
+    user_id = data.get('userid')
+    
     # Search for the track
     track = sp.track(track_spotify_id)
 
@@ -319,14 +313,39 @@ def create_song_internal(data):
             'key':audio_features[0]['key'], # The key the track is in
             'valence':audio_features[0]['valence'] # Tracks with high valence sound more positive , while tracks with low valence sound more negative
             }
-        
-        db.collection('Tracks').add(track_data)
+        song_ref = db.collection('Tracks').add(track_data)
+        new_song_id = song_ref[1].id
+
+        user_ref = db.collection('Users').document(user_id)
+        song_ref1 = db.collection('Tracks').document(new_song_id)
+
+        # Retrieve the current arrays
+        liked_songs_list = user_ref.get().to_dict().get('liked_songs_list', [])
+        created_songs = user_ref.get().to_dict().get('created_songs', [])
+        current_time = datetime.utcnow()
+        song_dict = {new_song_id: {'timestamp': current_time}}
+
+        # Check if new_song_id is not already in the arrays
+        if new_song_id not in liked_songs_list:
+            liked_songs_list.append(song_dict)
+
+        if new_song_id not in created_songs:
+            created_songs.append(song_dict)
+
+        # Update the arrays in Firestore
+        user_ref.update({
+        'liked_song_list': liked_songs_list,
+        'created_songs': created_songs,
+        })
+
+        song_ref1.update({
+        'like_count': firestore.Increment(1)  # Increment by one
+        })
 
         return {'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'}
 
     else:
         return {'success': False, 'message': 'Track already exists in the database'}
-
 
 
 if __name__ == '__main__':
