@@ -244,6 +244,7 @@ def create_song():
 @app.route('/process_file', methods=['POST'])
 def process_file():
     file = request.files.get('file')
+    userid = request.form.get('userid')
     if file is None:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -266,7 +267,7 @@ def process_file():
 
             # 2. Create Song API
             spotify_track_id = track['id']
-            create_song_response = create_song_internal({'track_spotify_id': spotify_track_id})
+            create_song_response = create_song_internal({'track_spotify_id': spotify_track_id, 'userid': userid})
 
             # Collect suggestions for the current song
             suggestions = {
