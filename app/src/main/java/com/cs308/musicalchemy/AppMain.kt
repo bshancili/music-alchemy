@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -88,11 +89,17 @@ import com.google.firebase.firestore.Source
 
 import com.google.firebase.firestore.firestore
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import java.util.Locale
 import androidx.compose.runtime.Composable as Composable
 
@@ -105,6 +112,7 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 import org.apache.commons.text.similarity.LevenshteinDistance
+import java.util.concurrent.TimeUnit
 
 
 //~~~~~~~~~~
@@ -960,24 +968,31 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         Spacer(modifier = Modifier.height(16.dp))
 
         var searchText by remember { mutableStateOf("") }
-        var displaySongs by remember { mutableStateOf(false) }
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
+        val songs by viewModel.songs.observeAsState(initial = emptyList())
+
+        val searchPerformed by viewModel.searchPerformed.observeAsState()
+
+        // Debounce text input
+        LaunchedEffect(searchText) {
+            snapshotFlow { searchText }
+                .filter { it.isNotBlank() }
+                .debounce(300L)  // Debounce for 300 milliseconds
+                .collect { debouncedText ->
+                    viewModel.searchSongsAndLoad(debouncedText)
+                }
+        }
+
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-
-
             TextField(
                 value = searchText,
                 onValueChange = { newText ->
                     searchText = newText
-                    displaySongs = newText.isNotBlank()
-                    if (displaySongs) {
-                        viewModel.loadSongsFuzzy(newText)
-                    }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -999,28 +1014,29 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
             Button(
                 onClick = { navController.navigate("searchUser") },
                 modifier = Modifier
-                    .width(90.dp) // Set the width to your desired value
-                    .height(56.dp), // Match the height of the TextField
+                    .width(90.dp)
+                    .height(56.dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
-                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Search User")
             }
-
-
         }
 
-        if (displaySongs && !isLoading) {
-            val songs by viewModel.songs.observeAsState(initial = emptyList())
+        // Display "Loading..." or the search results
+        if (isLoading) {
+            // Show loading indicator
+            Text(
+                "Loading...",
+                color = Color.White,
+                modifier = Modifier.align(CenterHorizontally).padding(top = 16.dp)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            // Display songs or no results message
             if (songs.isEmpty() && searchText.isNotBlank()) {
-                Text(
-                    "No result!",
-                    color = Color.White,
-                    modifier = Modifier
-                        .align(CenterHorizontally)
-                        .padding(top = 16.dp),
 
-                    )
+                Spacer(modifier = Modifier.weight(1f))
             } else if (songs.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(songs.chunked(2)) { songPair ->
@@ -1037,19 +1053,9 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
             }
-        }else if (isLoading) {
-            Text(
-                "Loading...",
-                color = Color.White,
-                modifier = Modifier
-                    .align(CenterHorizontally)
-                    .padding(top = 16.dp),
-
-                )
-            Spacer(modifier = Modifier.weight(1f))
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
         }
 
         CommonBottomBar(navController = navController)
@@ -1212,6 +1218,7 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
                         .align(CenterHorizontally)
                         .padding(top = 16.dp)
                 )
+                Spacer(modifier = Modifier.weight(1f))
             } else if (users.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(users.chunked(2)) { userPair ->
@@ -2678,92 +2685,64 @@ class SongsViewModel : ViewModel() {
         _songs.value = updatedSongs
     }
 
-    fun addSong(song: Song) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("Tracks")
-            .add(song)
-            .addOnSuccessListener { documentReference ->
-                _addSongStatus.value = "Song added successfully with ID: ${documentReference.id}"
-            }
-            .addOnFailureListener { e ->
-                _addSongStatus.value = "Error adding song: ${e.message}"
-            }
-    }
+    private val _searchPerformed = MutableLiveData<Boolean>(false)
+    val searchPerformed: LiveData<Boolean> = _searchPerformed
 
-    val fuzzyMatchThreshold = 6
-
-    fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
-        val lhsLength = lhs.length
-        val rhsLength = rhs.length
-
-        var cost = IntArray(lhsLength + 1) { it }
-        var newCost = IntArray(lhsLength + 1)
-
-        for (i in 1..rhsLength) {
-            newCost[0] = i
-
-            for (j in 1..lhsLength) {
-                val match = if (lhs[j - 1] == rhs[i - 1]) 0 else 1
-
-                val costReplace = cost[j - 1] + match
-                val costInsert = cost[j] + 1
-                val costDelete = newCost[j - 1] + 1
-
-                newCost[j] = minOf(costInsert, costDelete, costReplace)
-            }
-
-            val swap = cost
-            cost = newCost
-            newCost = swap
-        }
-
-        return cost[lhsLength]
-    }
-
-    fun loadSongsFuzzy(searchText: String) {
-        val db = FirebaseFirestore.getInstance()
-        _isLoading.value = true
-
-        db.collection("Tracks")
-            .get()
-            .addOnSuccessListener { documents ->
-                val allSongs = documents.mapNotNull { documentSnapshot ->
-                    documentSnapshot.toObject(Song::class.java)
+    fun searchSongsAndLoad(searchString: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _searchPerformed.value = true // Indicate that a search has been performed
+            _songs.value = emptyList()
+            try {
+                val response = apiService.searchSongs(searchString)
+                if (response.isSuccessful && response.body() != null) {
+                    val songIds = response.body()!!.matchingTrackIds
+                    loadSongsWithTrackId(songIds)
+                } else {
+                    Log.e("SongsViewModel", "Unsuccessful API call: ${response.code()} - ${response.message()}")
                 }
-
-                val searchTextLowercase = searchText.lowercase(Locale.getDefault())
-                val sortedFilteredSongs = allSongs.mapNotNull { song ->
-                    val trackDistance = levenshtein(song.trackName?.lowercase(Locale.getDefault()) ?: "", searchTextLowercase)
-                    val artistDistances = song.artists?.map { artist ->
-                        val artistLowercase = artist.lowercase(Locale.getDefault())
-                        if (artistLowercase.contains(searchTextLowercase)) {
-                            // Lower distance for names that contain the search text as a substring
-                            0
-                        } else {
-                            levenshtein(artistLowercase, searchTextLowercase)
-                        }
-                    }
-
-                    val bestArtistDistance = artistDistances?.minOrNull() ?: Int.MAX_VALUE
-                    val bestDistance = minOf(trackDistance, bestArtistDistance)
-
-                    if (bestDistance > fuzzyMatchThreshold) null else song to bestDistance
-                }
-                    .sortedBy { (_, distance) -> distance }
-                    .map { (song, _) -> song }
-
-                _songs.value = sortedFilteredSongs
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "Exception in searchSongsAndLoad: ${e.message}", e)
+            } finally {
                 _isLoading.value = false
             }
-            .addOnFailureListener { exception ->
-                // Handle failure...
-            }
+        }
     }
 
 
+    fun loadSongsWithTrackId(trackIds: List<String>) {
+        viewModelScope.launch {
+            Log.d("SongsViewModel", "Loading songs with Track IDs: $trackIds")
+            val db = FirebaseFirestore.getInstance()
+            _isLoading.value = true
 
+            try {
+                val tasks = trackIds.map { songId ->
+                    withContext(Dispatchers.IO) {
+                        db.collection("Tracks").document(songId).get().await()
+                    }
+                }
+
+                val filteredSongs = tasks.mapNotNull { task ->
+                    task.toObject(Song::class.java)?.apply {
+                        id = task.id
+                    }
+                }
+
+                _songs.value = filteredSongs
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "Error loading songs", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
 }
+
+
+
+
 
 interface SongsApiService {
     @GET("/search")
@@ -2776,8 +2755,13 @@ interface AutocompleteApiService {
 
     @POST("/create_song")
     suspend fun createSong(@Body requestData: CreateSongRequest): Response<CreateSongResponse>
-}
 
+    @GET("/search")
+    suspend fun searchSongs(@Query("songName") songName: String): Response<SearchResponse>
+}
+data class SearchResponse(
+    val matchingTrackIds: List<String>
+)
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
 data class CreateSongRequest(val track_spotify_id: String)
 data class CreateSongResponse(val success: Boolean, val message: String)
@@ -2797,13 +2781,19 @@ data class AlbumImage(
 object RetrofitInstance {
     private const val BASE_URL = "http://10.0.2.2:8080" // Replace with your backend URL
 
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .build()
+
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
-
 }
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
