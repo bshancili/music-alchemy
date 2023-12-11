@@ -36,9 +36,8 @@ Brief project description and purpose.
   - [Prerequisites](#prerequisites-1)
   - [Installation](#installation-1)
 - [Web App](#web-app)
-  - [Prerequisites](#prerequisites-2)
-  - [Introduction](#introductio-3)
-  - [Installation](#installation-2)
+  - [Prerequisites, Introduction and Installation](#prerequisites-2,#introductio-3, #installation-2 )
+ 
 
 ---
 
