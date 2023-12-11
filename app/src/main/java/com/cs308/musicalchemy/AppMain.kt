@@ -1,12 +1,10 @@
-//Package and imports
 package com.cs308.musicalchemy
-
-
-
 import android.app.Application
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.Intent
 import android.icu.text.SimpleDateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -24,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -34,6 +31,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,14 +89,12 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.firestore
-import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -107,30 +103,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
-import java.util.Locale
-import androidx.compose.runtime.Composable as Composable
-import java.util.*
-
-
-import retrofit2.http.POST
-import retrofit2.http.Body
-import retrofit2.http.Headers
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Url
+import retrofit2.http.Body
+import retrofit2.http.POST
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-//~~~~~~~~~~
-// Placeholder data classes
-
-
-
-
-//~~~~~~~~~~
-//~~~~~THEME~~~~~
 //Design colors, App theme and Logo
 val PastelLavender = Color(0xFF1D2123)
 
@@ -213,7 +194,7 @@ private fun initializeUserFields() {
                     val profilePictureUrl = document.getString("profile_picture_url")
                     val uid = document.getString("uid")
                     val username = document.getString("username")
-                    val Isprivate = document.getLong("Isprivate") ?: 0 // Initialize to 0 if not present
+                    document.getLong("Isprivate") ?: 0 // Initialize to 0 if not present
 
                     // Check and complete unavailable fields
                     if (comments.isEmpty()) {
@@ -239,9 +220,6 @@ private fun initializeUserFields() {
                     }
                     if (profilePictureUrl == null) {
                         userRef.update("profile_picture_url", "http://res.cloudinary.com/ddjyxzbjg/image/upload/v1699788333/pgreicq1gxpo5pbpgnib.png")
-                    }
-                    if (Isprivate == null) {
-                        userRef.update("Isprivate", 0)
                     }
                 } else {
                     // User document does not exist, initialize fields
@@ -870,7 +848,7 @@ fun SongItem(song: Song) {
 
 
 
-object RetrofitInstanceRecomendation {
+object RetrofitInstanceRecommendation {
     private const val BASE_URL = "http://10.0.2.2:3000"
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -890,7 +868,7 @@ object RetrofitInstanceRecomendation {
 
 
 data class RecommendationRequest(val uid: String)
-data class TrackIdResponse(val track_id: String)
+data class TrackIdResponse(val trackId: String)
 interface RecommendationApiService {
 
     @POST("/find_recommended_tracks")
@@ -938,12 +916,12 @@ private suspend fun fetchSongsDetails(songIds: List<String>): List<Song> {
 suspend fun fetchRecommendations(userID: String): List<String> {
     return withContext(Dispatchers.IO) {
         val requestData = RecommendationRequest(userID)
-        val response = RetrofitInstanceRecomendation.retrofit
+        val response = RetrofitInstanceRecommendation.retrofit
             .create(RecommendationApiService::class.java)
             .fetchRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.track_id } ?: emptyList()
+            response.body()?.map { it.trackId } ?: emptyList()
         } else {
             // Handle errors appropriately
             emptyList()
@@ -954,12 +932,12 @@ suspend fun fetchRecommendations(userID: String): List<String> {
 suspend fun fetchFriendRecommendations(userID: String): List<String> {
     return withContext(Dispatchers.IO) {
         val requestData = RecommendationRequest(userID)
-        val response = RetrofitInstanceRecomendation.retrofit
+        val response = RetrofitInstanceRecommendation.retrofit
             .create(RecommendationApiService::class.java)
             .fetchFriendRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.track_id } ?: emptyList()
+            response.body()?.map { it.trackId } ?: emptyList()
         } else {
             // Handle errors appropriately
             emptyList()
@@ -973,12 +951,12 @@ suspend fun fetchFriendRecommendations(userID: String): List<String> {
 suspend fun fetchTemporalRecommendations(userID: String): List<String> {
     return withContext(Dispatchers.IO) {
         val requestData = RecommendationRequest(userID)
-        val response = RetrofitInstanceRecomendation.retrofit
+        val response = RetrofitInstanceRecommendation.retrofit
             .create(RecommendationApiService::class.java)
             .fetchTemporalRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.track_id } ?: emptyList()
+            response.body()?.map { it.trackId } ?: emptyList()
         } else {
             // Handle errors appropriately
             emptyList()
@@ -990,7 +968,7 @@ suspend fun fetchTemporalRecommendations(userID: String): List<String> {
 
 @Composable
 fun RecommendationScreen(navController: NavController) {
-    val tabIndex = remember { mutableStateOf(0) }
+    val tabIndex = remember { mutableIntStateOf(0) }
     val isLoading = remember { mutableStateOf(false) }
     val recommendedTracks = remember { mutableStateOf(emptyList<Song>()) }
     val friendRecTracks = remember { mutableStateOf(emptyList<Song>()) }
@@ -1005,29 +983,29 @@ fun RecommendationScreen(navController: NavController) {
     ) {
         // TabRow and its content
         TabRow(
-            selectedTabIndex = tabIndex.value,
+            selectedTabIndex = tabIndex.intValue,
             backgroundColor = Color(0xFF1D2123),
-            contentColor = Color.Yellow
+            contentColor = Color.White
         ) {
             Tab(
                 text = { Text("Activity") },
-                selected = tabIndex.value == 0,
-                onClick = { tabIndex.value = 0 }
+                selected = tabIndex.intValue == 0,
+                onClick = { tabIndex.intValue = 0 }
             )
             Tab(
                 text = { Text("Friend") },
-                selected = tabIndex.value == 1,
-                onClick = { tabIndex.value = 1 }
+                selected = tabIndex.intValue == 1,
+                onClick = { tabIndex.intValue = 1 }
             )
             Tab(
                 text = { Text("Temporal") },
-                selected = tabIndex.value == 2,
-                onClick = { tabIndex.value = 2 }
+                selected = tabIndex.intValue == 2,
+                onClick = { tabIndex.intValue = 2 }
             )
         }
 
         // Tab content
-        when (tabIndex.value) {
+        when (tabIndex.intValue) {
             0 -> RecommendationTabContent(navController, "Activity", userID, recommendedTracks, isLoading, ::fetchRecommendations)
             1 -> RecommendationTabContent(navController, "Friend", userID, friendRecTracks, isLoading, ::fetchFriendRecommendations)
             2 -> RecommendationTabContent(navController, "Temporal", userID, tempRecSongs, isLoading, ::fetchTemporalRecommendations)
@@ -1092,13 +1070,13 @@ fun RecommendationTabContent(
         // Display loading indicator
         if (isLoading.value) {
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(CenterHorizontally)
             )
         }
 
         // Display error message if any
         errorMessage?.let {
-            Text(it, color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
+            Text(it, color = Color.Red, modifier = Modifier.align(CenterHorizontally))
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -1268,56 +1246,6 @@ fun DisplayUser(user: User, navController: NavController) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth()
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalCoilApi::class)
-@Composable
-fun UserItem(user: User) {
-    Card(
-        modifier = Modifier
-            .width(380.dp)
-            .width(380.dp)
-            .height(128.dp),
-        shape = RoundedCornerShape(20.dp),
-        backgroundColor = Color(0xFF1A1E1F)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            // Image with proper alignment
-            val imageUrl: String? = user.profilePictureUrl
-            imageUrl?.let {
-                Image(
-                    painter = rememberImagePainter(data = it),
-                    contentDescription = "User Profile Picture",
-                    modifier = Modifier
-                        .size(128.dp)
-                        .clip(shape = RoundedCornerShape(20.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            // Column for text
-            Column(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .align(Alignment.TopStart),
-                verticalArrangement = Arrangement.Top
-            ) {
-                // Text for username
-                Text(
-                    modifier = Modifier
-                        .padding(start = 128.dp),
-                    text = user.username ?: "",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
-                )
-                // Optional: Additional text for user info, if needed
-            }
         }
     }
 }
@@ -1605,7 +1533,8 @@ fun ProfileScreen(navController: NavController, userId:String) {
     var isFriend by remember { mutableStateOf(false) }
     var isPrivateToggleText by remember { mutableStateOf("Set Profile Private") }
     var selectedTab by remember { mutableStateOf(Tab.Collections)}
-    //var newUsername by remember { mutableStateOf("") }
+    var isChangeUsernameDialogVisible by remember { mutableStateOf(false) }
+    var newUsername by remember { mutableStateOf("") }
     val user = Firebase.auth.currentUser
     val currentUserId = user?.uid.orEmpty()
     val isPrivateValue by viewModel.isPrivate.observeAsState()
@@ -1619,6 +1548,33 @@ fun ProfileScreen(navController: NavController, userId:String) {
     val lineChartData = remember { mutableStateOf<LineChartData?>(null) }
     val ratedSongTimestamps by viewModel.ratedSongTimestamps.observeAsState(initial = emptyList())
     val lineChartDataR = remember { mutableStateOf<LineChartData?>(null) }
+
+    if (isChangeUsernameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { isChangeUsernameDialogVisible = false },
+            title = { Text("Change Username") },
+            text = {
+                Column {
+                    Text("Enter new username:")
+                    TextField(value = newUsername, onValueChange = { newUsername = it })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.updateUsername(userId, newUsername)
+                    isChangeUsernameDialogVisible = false
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { isChangeUsernameDialogVisible = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
 
     LaunchedEffect(userId) {
         Log.d("ProfileScreen", "Fetching data for userId: $userId")
@@ -1714,7 +1670,15 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     ),
                 )
             }
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = { navController.navigate("settings") }) {
 
+                Text("Settings")
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(onClick = { isChangeUsernameDialogVisible = true }) {
+                Text("Change Username")
+            }
             Spacer(modifier = Modifier.height(24.dp))
 
             if (userId != currentUserId) {
@@ -2422,7 +2386,7 @@ class ProfileViewModel : ViewModel() {
 
                     if (timestamp != null) {
                         val date = timestamp.toDate()
-                        Log.d("ProfileViewModel", "LikedSongsCollection document $index: songId=$songId, timestamp=${date.toString()}")
+                        Log.d("ProfileViewModel", "LikedSongsCollection document $index: songId=$songId, timestamp=$date")
                         songTimeStamps.add(date.toString())
                     } else {
                         Log.e("ProfileViewModel", "LikedSongsCollection document $index has null or missing timestamp")
@@ -2459,7 +2423,7 @@ class ProfileViewModel : ViewModel() {
 
                     if (timestamp != null) {
                         val date = timestamp.toDate()
-                        Log.d("ProfileViewModel", "RatedSongsCollection document $index: songId=$songId, timestamp=${date.toString()}")
+                        Log.d("ProfileViewModel", "RatedSongsCollection document $index: songId=$songId, timestamp=$date")
                         songTimeStamps.add(date.toString())
                     } else {
                         Log.e("ProfileViewModel", "RatedSongsCollection document $index has null or missing timestamp")
@@ -2598,8 +2562,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
-
-
+// UPDATE USERNAME
     fun updateUsername(userId: String, newUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         val userDocument = usersCollection.document(userId)
@@ -2631,7 +2594,6 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
-
     fun fetchLikedSongs(userId: String) {
         val likedSongsCollection = Firebase.firestore
             .collection("Users")
@@ -2711,7 +2673,7 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-
+    @Suppress("UNCHECKED_CAST")
     fun fetchTopRatedSongs(userId: String) {
         Log.d("ProfileViewModel", "Fetching top-rated songs details for userID: $userId")
 
@@ -2871,149 +2833,6 @@ fun FriendsList(navController: NavController, viewModel: ProfileViewModel) {
     }
 }
 
-
-
-
-
-
-class FriendProfileViewModel : ViewModel() {
-    private val _username = MutableLiveData<String>()
-    val username: LiveData<String> = _username
-    private val _likedSongs = MutableLiveData<List<Song>>()
-    val likedSongs: LiveData<List<Song>> = _likedSongs
-    private val _friendsList = MutableLiveData<List<FriendData>>()
-    val friendsList: LiveData<List<FriendData>> = _friendsList
-
-    fun fetchFriendData(friendId: String) {
-        fetchUsername(friendId)
-        fetchLikedSongs(friendId)
-        fetchFriendsList(friendId)
-    }
-    private fun fetchFriendsList(userId: String) {
-        val usersCollection = Firebase.firestore.collection("Users")
-        usersCollection.document(userId).get().addOnSuccessListener { document ->
-            val friendIds = document["friend_list"] as? List<*> ?: return@addOnSuccessListener
-
-
-            val friends = mutableListOf<FriendData>()
-
-
-
-            for (id in friendIds) {
-                usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
-                    val name = friendDoc["username"] as? String ?: "Unknown"
-                    val profilePicUrl = friendDoc["profile_pic_url"] as? String ?: "https://via.placeholder.com/150"
-
-
-                    friends.add(FriendData(id, name, profilePicUrl))
-
-
-                    if (friends.size == friendIds.size) {
-                        _friendsList.value = friends
-                    }
-                }
-            }
-        }
-    }
-
-    private fun fetchUsername(userId: String) {
-        val usersCollection = Firebase.firestore.collection("Users")
-        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
-            _username.value = documentSnapshot["username"] as? String ?: "Unknown"
-        }
-    }
-
-    private fun fetchLikedSongs(userId: String) {
-        val likedSongsCollection = Firebase.firestore
-            .collection("Users")
-            .document(userId)
-            .collection("liked_songs")
-
-        likedSongsCollection.get().addOnSuccessListener { documents ->
-            val songIds = documents.documents.map { it.id }
-            fetchSongsDetails(songIds)
-        }
-    }
-    private fun fetchSongsDetails(songIds: List<String>) {
-        if (songIds.isEmpty()) {
-            _likedSongs.value = emptyList()
-            return
-        }
-
-        val songsCollection = Firebase.firestore.collection("Tracks")
-        songsCollection.whereIn(FieldPath.documentId(), songIds).get()
-            .addOnSuccessListener { documents ->
-                val songsList = documents.map { documentSnapshot ->
-                    documentSnapshot.toObject(Song::class.java).apply {
-                        // Set the id field to the document ID
-                        id = documentSnapshot.id
-                    }
-                }
-                _likedSongs.value = songsList
-            }
-    }
-
-}
-
-@Composable
-fun FriendItem(friend: FriendData, navController: NavController) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { navController.navigate("profile/${friend.id}") }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Friend profile picture
-        Image(
-            painter = painterResource(id = R.drawable.profile_placeholder),
-            contentDescription = "Friend Profile Picture",
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        // Friend name
-        Text(text = friend.name, style = MaterialTheme.typography.subtitle1)
-    }
-}
-
-
-@Composable
-fun FriendProfileScreen(friendId: String, navController: NavController) {
-    /*
-    val viewModel: FriendProfileViewModel = viewModel()
-    val username by viewModel.username.observeAsState("Unknown")
-    val likedSongs by viewModel.likedSongs.observeAsState(initial = emptyList())
-    val friendsList by viewModel.friendsList.observeAsState(initial = emptyList())
-
-    LaunchedEffect(key1 = friendId) {
-        viewModel.fetchFriendData(friendId)
-    }
-
-    Column(modifier = Modifier
-        .padding(16.dp)
-        .fillMaxSize()) {
-        Text("Username: $username", style = MaterialTheme.typography.h6)
-        Text("Liked Songs", style = MaterialTheme.typography.h6)
-        LazyColumn {
-            items(likedSongs) { song ->
-                SongListItem(song) {
-                    navController.navigate("songDetail/${song.id}")
-                }
-            }
-        }
-        Text("Friends", style = MaterialTheme.typography.h6)
-        LazyColumn {
-            items(friendsList) { friend ->
-                FriendItem(friend, navController)
-            }
-        }
-    }
-
-     */
-
-}
 
 //~~~~~~~~~~
 //~~~~~~~~~~SONGS~~~~~~~~~~
@@ -3232,12 +3051,14 @@ fun StarRating(
         (1..10).forEach { index ->
             Icon(
                 painter = painterResource(
-                    id = if (index <= rating) R.drawable.rated else R.drawable.not_rated
+                    id = if (index <= rating) R.drawable.not_rated else R.drawable.rated
                 ),
                 contentDescription = "Star Rating",
+                tint = Color.White,
                 modifier = Modifier
                     .clickable { onRatingChanged(index.toFloat()) }
                     .size(24.dp)
+
             )
         }
 
@@ -3261,7 +3082,7 @@ fun StarRating(
 fun handleRatingUpdate(song: Song, newRating: Double, userId: String, viewModel: SongsViewModel) {
     val songRef = Firebase.firestore.collection("Tracks").document(song.id)
     val userRef = Firebase.firestore.collection("Users").document(userId)
-    var formattedRating: Double = 0.0
+    var formattedRating = 0.0
 
     Firebase.firestore.runTransaction { transaction ->
         val songSnapshot = transaction.get(songRef)
@@ -3364,7 +3185,11 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
         }
     }
 
-
+    fun openSpotifyLink(url: String, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        context.startActivity(intent)
+    }
 
     fun updateLikeCountLocally(countChange: Int) {
         val updatedSongs = songs.map {
@@ -3627,6 +3452,11 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         contentDescription = "spotify logo",
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
+                            .clickable {
+                                song?.trackUrl?.let { url ->
+                                    openSpotifyLink(url, context)
+                                }
+                            }
                             .offset(x = 12.dp, y = 13.dp)
                             .width(128.dp)
                             .height(38.dp),
@@ -3788,9 +3618,6 @@ class UsersViewModel : ViewModel() {
     private val _users = MutableLiveData<List<User>>()
     val users: LiveData<List<User>> = _users
 
-    private val _addUserStatus = MutableLiveData<String>()
-    val addUserStatus: LiveData<String> = _addUserStatus
-
     init {
         loadUsers()
     }
@@ -3803,7 +3630,7 @@ class UsersViewModel : ViewModel() {
             .addOnSuccessListener { documents ->
                 val usersList = documents.mapNotNull { documentSnapshot ->
                     try {
-                        documentSnapshot.toObject(User::class.java)?.apply {
+                        documentSnapshot.toObject(User::class.java).apply {
                             uid = documentSnapshot.id
                         }
                     } catch (e: Exception) {
@@ -3818,22 +3645,6 @@ class UsersViewModel : ViewModel() {
             }
     }
 
-    fun updateUsers(updatedUsers: List<User>) {
-        _users.value = updatedUsers
-    }
-
-    fun addUser(user: User) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("Users")
-            .add(user)
-            .addOnSuccessListener { documentReference ->
-                _addUserStatus.value = "User added successfully with ID: ${documentReference.id}"
-            }
-            .addOnFailureListener { e ->
-                _addUserStatus.value = "Error adding user: ${e.message}"
-            }
-    }
-
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     fun loadUsersWithSubstring(substring: String) {
@@ -3845,7 +3656,7 @@ class UsersViewModel : ViewModel() {
             .addOnSuccessListener { documents ->
                 val filteredUsers = documents.mapNotNull { documentSnapshot ->
                     try {
-                        documentSnapshot.toObject(User::class.java)?.apply {
+                        documentSnapshot.toObject(User::class.java).apply {
                             uid = documentSnapshot.id
                         }
                     } catch (e: Exception) {

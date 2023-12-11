@@ -58,7 +58,7 @@ dependencies {
 
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx:24.9.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
     implementation("com.google.firebase:firebase-auth:22.3.0")
@@ -75,7 +75,6 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-pager:0.19.0")
 
     implementation("co.yml:ycharts:2.1.0")
-
 
 
 
