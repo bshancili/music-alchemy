@@ -86,12 +86,28 @@ import com.google.firebase.firestore.Source
 
 
 import com.google.firebase.firestore.firestore
+import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import java.util.Locale
 import androidx.compose.runtime.Composable as Composable
+
+
+import retrofit2.http.POST
+import retrofit2.http.Body
+import retrofit2.http.Headers
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Url
+import java.util.concurrent.TimeUnit
 
 
 //~~~~~~~~~~
@@ -670,19 +686,6 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
         ){
 
             Spacer(modifier = Modifier.height(16.dp))
-            /*
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(192.dp)
-                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 20.dp))
-            ) {
-                // Add content inside the Box as needed
-            }
-
-             */
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "Top charts",
@@ -852,50 +855,196 @@ fun SongItem(song: Song) {
 }
 
 
+
+object RetrofitInstanceRecomendation {
+    private const val BASE_URL = "http://10.0.2.2:3000"
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(120, TimeUnit.SECONDS) // Set your desired timeout duration
+        .readTimeout(120, TimeUnit.SECONDS)     // Set your desired timeout duration
+        .writeTimeout(120, TimeUnit.SECONDS)   // Set your desired timeout duration
+        .build()
+
+    val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(okHttpClient)
+            .build()
+    }
+}
+
+
+data class RecommendationRequest(val uid: String)
+data class TrackIdResponse(val track_id: String)
+interface RecommendationApiService {
+
+    @POST("/find_recommended_tracks")
+    suspend fun fetchRecommendations(@Body requestData: RecommendationRequest): Response<List<TrackIdResponse>>
+
+    @POST("/friends_recommendation")
+    suspend fun fetchFriendRecommendations(@Body requestData: RecommendationRequest): Response<List<TrackIdResponse>>
+
+    @POST("/temporal_recommendation")
+    suspend fun fetchTemporalRecommendations(@Body requestData: RecommendationRequest): Response<List<TrackIdResponse>>
+}
+
+private suspend fun fetchSongsDetails(songIds: List<String>): List<Song> {
+    if (songIds.isEmpty()) return emptyList()
+
+    val songsCollection = Firebase.firestore.collection("Tracks")
+    val fetchedSongs = mutableListOf<Song>()
+    var songsFetchedCount = 0
+
+    return withContext(Dispatchers.IO) {
+        songIds.forEach { songId ->
+            try {
+                val documentSnapshot = songsCollection.document(songId).get().await()
+                val song = documentSnapshot.toObject(Song::class.java)?.apply {
+                    id = documentSnapshot.id
+                }
+                if (song != null) {
+                    fetchedSongs.add(song)
+                }
+            } catch (exception: Exception) {
+                Log.e("RecommendationViewModel", "Failed to fetch song details for ID: $songId", exception)
+            }
+            songsFetchedCount++
+        }
+
+        if (songsFetchedCount == songIds.size) {
+            fetchedSongs
+        } else {
+            emptyList()
+        }
+    }
+}
+
+
+suspend fun fetchRecommendations(userID: String): List<String> {
+    return withContext(Dispatchers.IO) {
+        val requestData = RecommendationRequest(userID)
+        val response = RetrofitInstanceRecomendation.retrofit
+            .create(RecommendationApiService::class.java)
+            .fetchRecommendations(requestData)
+
+        if (response.isSuccessful) {
+            response.body()?.map { it.track_id } ?: emptyList()
+        } else {
+            // Handle errors appropriately
+            emptyList()
+        }
+    }
+}
+
+suspend fun fetchFriendRecommendations(userID: String): List<String> {
+    return withContext(Dispatchers.IO) {
+        val requestData = RecommendationRequest(userID)
+        val response = RetrofitInstanceRecomendation.retrofit
+            .create(RecommendationApiService::class.java)
+            .fetchFriendRecommendations(requestData)
+
+        if (response.isSuccessful) {
+            response.body()?.map { it.track_id } ?: emptyList()
+        } else {
+            // Handle errors appropriately
+            emptyList()
+        }
+    }
+}
+
+
+
+
+suspend fun fetchTemporalRecommendations(userID: String): List<String> {
+    return withContext(Dispatchers.IO) {
+        val requestData = RecommendationRequest(userID)
+        val response = RetrofitInstanceRecomendation.retrofit
+            .create(RecommendationApiService::class.java)
+            .fetchTemporalRecommendations(requestData)
+
+        if (response.isSuccessful) {
+            response.body()?.map { it.track_id } ?: emptyList()
+        } else {
+            // Handle errors appropriately
+            emptyList()
+        }
+    }
+}
+
+
+
 @Composable
 fun RecommendationScreen(navController: NavController) {
     val tabIndex = remember { mutableStateOf(0) }
-    val isLoading = remember { mutableStateOf(false) } // Update this as per your logic
-    val recommendedTracks = remember { mutableStateOf(emptyList<Song>()) } // Replace Song with your actual data model
+    val isLoading = remember { mutableStateOf(false) }
+    val recommendedTracks = remember { mutableStateOf(emptyList<Song>()) }
+    val friendRecTracks = remember { mutableStateOf(emptyList<Song>()) }
     val tempRecSongs = remember { mutableStateOf(emptyList<Song>()) }
+    val userID = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1D2123))
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
     ) {
+        // TabRow and its content
         TabRow(
             selectedTabIndex = tabIndex.value,
             backgroundColor = Color(0xFF1D2123),
             contentColor = Color.Yellow
         ) {
             Tab(
-                text = { Text("Activity Recommendations") },
+                text = { Text("Activity") },
                 selected = tabIndex.value == 0,
                 onClick = { tabIndex.value = 0 }
             )
             Tab(
-                text = { Text("Friend Recommendations") },
+                text = { Text("Friend") },
                 selected = tabIndex.value == 1,
                 onClick = { tabIndex.value = 1 }
             )
             Tab(
-                text = { Text("Temporal Recommendations") },
+                text = { Text("Temporal") },
                 selected = tabIndex.value == 2,
                 onClick = { tabIndex.value = 2 }
             )
         }
 
+        // Tab content
         when (tabIndex.value) {
-            0 -> RecommendationTabContent(navController, recommendedTracks.value, isLoading.value)
-            1 -> {} // Placeholder for Friend Recommendations
-            2 -> RecommendationTabContent(navController, tempRecSongs.value, isLoading.value)
+            0 -> RecommendationTabContent(navController, "Activity", userID, recommendedTracks, isLoading, ::fetchRecommendations)
+            1 -> RecommendationTabContent(navController, "Friend", userID, friendRecTracks, isLoading, ::fetchFriendRecommendations)
+            2 -> RecommendationTabContent(navController, "Temporal", userID, tempRecSongs, isLoading, ::fetchTemporalRecommendations)
         }
+
+
+        // CommonBottomBar at the bottom
+        CommonBottomBar(navController = navController)
     }
+
 }
 
+
+
+
+
 @Composable
-fun RecommendationTabContent(navController: NavController, tracks: List<Song>, isLoading: Boolean) {
+fun RecommendationTabContent(
+    navController: NavController,
+    tabType: String,
+    userID: String,
+    tracks: MutableState<List<Song>>,
+    isLoading: MutableState<Boolean>,
+    fetchFunction: suspend (String) -> List<String>
+
+) {
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -903,34 +1052,63 @@ fun RecommendationTabContent(navController: NavController, tracks: List<Song>, i
             .background(color = Color(0xFF1D2123))
             .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 20.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Assuming you want to display the tracks in a similar grid pattern as in MainMenu
-            for (i in tracks.indices step 2) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (i < tracks.size) {
-                        DisplaySong(song = tracks[i], navController = navController)
+        Button(onClick = {
+            isLoading.value = true
+            errorMessage = null
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val trackIds = fetchFunction(userID)
+                    val detailedTracks = fetchSongsDetails(trackIds) // Fetch detailed song data
+                    if (detailedTracks.isNotEmpty()) {
+                        tracks.value = detailedTracks
+                    } else {
+                        errorMessage = "No songs found for $tabType recommendations."
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (i + 1 < tracks.size) {
-                        DisplaySong(song = tracks[i + 1], navController = navController)
-                    }
+                } catch (e: Exception) {
+                    errorMessage = "Failed to fetch $tabType recommendations: ${e.message}"
                 }
-                Spacer(modifier = Modifier.height(8.dp))
+                isLoading.value = false
             }
+        }) {
+            Text("Get $tabType Recommendations")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Display loading indicator
+        if (isLoading.value) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+
+        // Display error message if any
+        errorMessage?.let {
+            Text(it, color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Display songs
+        for (i in tracks.value.indices step 2) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (i < tracks.value.size) {
+                    DisplaySong(song = tracks.value[i], navController = navController)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                if (i + 1 < tracks.value.size) {
+                    DisplaySong(song = tracks.value[i + 1], navController = navController)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
+
+
+
 
 
 
