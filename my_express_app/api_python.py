@@ -16,7 +16,9 @@ client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIPY_CLIENT_I
 sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 # Firebase credentials and initialization
-cred = credentials.Certificate('C:\\Users\\aycaaelifaktas\\OneDrive - sabanciuniv.edu\\Desktop\\CS308\\code\\ayca_backend\\music-alchemy\\my-express-app\\music-alchemy-firebase-adminsdk.json')
+base_dir= os.path.dirname(os.path.abspath(__file__))
+json_path= os.path.join(base_dir,'music-alchemy-firebase-adminsdk.json')
+cred= credentials.Certificate(json_path)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
