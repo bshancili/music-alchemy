@@ -872,7 +872,7 @@ object RetrofitInstanceRecommendation {
 
 
 data class RecommendationRequest(val uid: String)
-data class TrackIdResponse(val trackId: String)
+data class TrackIdResponse(@SerializedName("track_id") val trackId: String)
 interface RecommendationApiService {
 
     @POST("/find_recommended_tracks")
@@ -886,7 +886,7 @@ interface RecommendationApiService {
 }
 
 private suspend fun fetchSongsDetails(songIds: List<String>): List<Song> {
-    if (songIds.isEmpty()) return emptyList()
+    if (songIds.isEmpty() || songIds.any { false }) return emptyList()
 
     val songsCollection = Firebase.firestore.collection("Tracks")
     val fetchedSongs = mutableListOf<Song>()
