@@ -123,14 +123,81 @@ Users can connect their profiles to third-party application like Spotify, for in
 
 ## Backend
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Endpoints](#api-endpoints)
+
 ### Introduction
 
 - [Node.js](https://nodejs.org/)
 - [Firebase CLI](https://firebase.google.com/docs/cli)
 
+## Installation
+
+Follow these instructions to get your project up and running on your local machine for development and testing purposes.
+
 ### Prerequisites
 
+What you need to install and how to install them:
 
+- Node.js: [Download & Installation Guide](https://nodejs.org/en/download/)
+- npm: Comes installed with Node.js
+- pip: python
+- Flask
+  
+### Setup
+
+1. Clone the repo:
+git clone https://github.com/bshancili/music-alchemy.git
+
+2. Navigate to the project directory:
+cd /music-alchemy/my-express-app
+
+3. Install NPM packages:
+npm install
+
+4. Install pip packages:
+pip install Flask
+pip install spotipy
+pip install flask.admin
+
+### Usage
+
+After installation run the servers for both api(s)python.py and server.js. For python file you can enter "python -m flask" and for nodejs file you can enter "node server.js".This command starts the server on `localhost` at the default port (3000, or whatever is specified).
+
+## API Endpoints
+
+Below are the available API endpoints for the application:
+
+- `POST /signup`: Registers a new user with email and password. Validates the password strength before registration.
+
+- `POST /signin`: Authenticates a user with email and password. Uses Firebase Auth REST API for verification.
+
+- `POST /search_songs`: Searches for songs based on provided track names and artist names. Queries the Firestore database for matching tracks.
+
+- `POST /retrieve_user_tracks`: Retrieves a list of songs (rated and liked) associated with a specific user ID.
+
+- `POST /recent_liked_songs`: Fetches the most recently liked songs of a user, based on a provided user ID.
+
+- `POST /get_track_artist`: Retrieves the artist of a track based on the provided document ID from the Firestore database.
+
+- `POST /find_song_name`: Finds the name of a song using its document ID in the Firestore database.
+
+- `POST /retrieve_friend_list`: Retrieves the friend list of a user based on the provided user ID.
+
+- `POST /get_privacy_value`: Gets the privacy setting (public or private) for a user based on the provided user ID.
+
+- `POST /find_recommended_tracks`: Generates song recommendations based on a user's rated and liked songs using OpenAI's GPT model.
+
+- `POST /temporal_recommendation`: Provides temporal recommendations based on recent user activity and preferences.
+
+- `POST /friends_recommendation`: Offers song recommendations based on the user's and their friends' liked songs, considering privacy settings.
+
+- `POST /process_file` (from `api(s)python.js`): Processes an uploaded file to suggest tracks, artists, and albums using Spotify's API.
+
+Each endpoint serves a specific function in the application and interacts with different components like Firebase, Firestore, and external APIs like Spotify and OpenAI.
 
 ## Web App
 
