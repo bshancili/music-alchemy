@@ -4,7 +4,7 @@
             "outputFile": "com.cs308.musicalchemy.app-mergeDebugResources-63:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\ASUS\\.gradle\\caches\\transforms-3\\6c46a4bf1a9f29b219f3574e1e0b2018\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\onura\\.gradle\\caches\\transforms-3\\6c46a4bf1a9f29b219f3574e1e0b2018\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -100,6 +101,8 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -114,7 +117,6 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import java.util.*
 import java.util.concurrent.TimeUnit
-
 
 //Design colors, App theme and Logo
 val PastelLavender = Color(0xFF1D2123)
@@ -373,7 +375,7 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("search") { Search(navController) }
         composable("searchUser") { SearchUser(navController)}
-        composable("addSong") { AddSongScreen() }
+        composable("addSong") { AddSongScreen(navController) }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
@@ -872,7 +874,7 @@ object RetrofitInstanceRecommendation {
 
 
 data class RecommendationRequest(val uid: String)
-data class TrackIdResponse(val trackId: String)
+data class TrackIdResponse(val track_id: String)
 interface RecommendationApiService {
 
     @POST("/find_recommended_tracks")
@@ -925,14 +927,24 @@ suspend fun fetchRecommendations(userID: String): List<String> {
             .fetchRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.trackId } ?: emptyList()
+            val trackIdResponses = response.body()
+            val trackIds = trackIdResponses?.map { it.track_id } ?: emptyList()
+
+            // Log information for debugging
+            Log.d("Recommendations", "UserID: $userID")
+            Log.d("Recommendations", "Response Body: $trackIdResponses")
+            Log.d("Recommendations", "Extracted Track IDs: $trackIds")
+
+            trackIds
         } else {
+            // Log error response
+            Log.e("Recommendations", "Error: ${response.code()}, ${response.message()}")
+
             // Handle errors appropriately
             emptyList()
         }
     }
 }
-
 suspend fun fetchFriendRecommendations(userID: String): List<String> {
     return withContext(Dispatchers.IO) {
         val requestData = RecommendationRequest(userID)
@@ -941,7 +953,7 @@ suspend fun fetchFriendRecommendations(userID: String): List<String> {
             .fetchFriendRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.trackId } ?: emptyList()
+            response.body()?.map { it.track_id } ?: emptyList()
         } else {
             // Handle errors appropriately
             emptyList()
@@ -960,7 +972,7 @@ suspend fun fetchTemporalRecommendations(userID: String): List<String> {
             .fetchTemporalRecommendations(requestData)
 
         if (response.isSuccessful) {
-            response.body()?.map { it.trackId } ?: emptyList()
+            response.body()?.map { it.track_id } ?: emptyList()
         } else {
             // Handle errors appropriately
             emptyList()
@@ -1021,9 +1033,6 @@ fun RecommendationScreen(navController: NavController) {
     }
 
 }
-
-
-
 
 
 @Composable
@@ -1102,12 +1111,6 @@ fun RecommendationTabContent(
         }
     }
 }
-
-
-
-
-
-
 @Composable
 fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     Column(
@@ -1121,24 +1124,31 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         Spacer(modifier = Modifier.height(16.dp))
 
         var searchText by remember { mutableStateOf("") }
-        var displaySongs by remember { mutableStateOf(false) }
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
+        val songs by viewModel.songs.observeAsState(initial = emptyList())
+
+        val searchPerformed by viewModel.searchPerformed.observeAsState()
+
+        // Debounce text input
+        LaunchedEffect(searchText) {
+            snapshotFlow { searchText }
+                .filter { it.isNotBlank() }
+                .debounce(300L)  // Debounce for 300 milliseconds
+                .collect { debouncedText ->
+                    viewModel.searchSongsAndLoad(debouncedText)
+                }
+        }
+
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-
-
             TextField(
                 value = searchText,
                 onValueChange = { newText ->
                     searchText = newText
-                    displaySongs = newText.isNotBlank()
-                    if (displaySongs) {
-                        viewModel.loadSongsFuzzy(newText)
-                    }
                 },
                 modifier = Modifier
                     .weight(1f)
@@ -1160,28 +1170,29 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
             Button(
                 onClick = { navController.navigate("searchUser") },
                 modifier = Modifier
-                    .width(90.dp) // Set the width to your desired value
-                    .height(56.dp), // Match the height of the TextField
+                    .width(90.dp)
+                    .height(56.dp),
                 colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant),
-                shape = RoundedCornerShape(12.dp) // Assuming the same roundness as the Logo
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Search User")
             }
-
-
         }
 
-        if (displaySongs && !isLoading) {
-            val songs by viewModel.songs.observeAsState(initial = emptyList())
+        // Display "Loading..." or the search results
+        if (isLoading) {
+            // Show loading indicator
+            Text(
+                "Loading...",
+                color = Color.White,
+                modifier = Modifier.align(CenterHorizontally).padding(top = 16.dp)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+        } else {
+            // Display songs or no results message
             if (songs.isEmpty() && searchText.isNotBlank()) {
-                Text(
-                    "No result!",
-                    color = Color.White,
-                    modifier = Modifier
-                        .align(CenterHorizontally)
-                        .padding(top = 16.dp),
 
-                    )
+                Spacer(modifier = Modifier.weight(1f))
             } else if (songs.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(songs.chunked(2)) { songPair ->
@@ -1198,25 +1209,14 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
             }
-        }else if (isLoading) {
-            Text(
-                "Loading...",
-                color = Color.White,
-                modifier = Modifier
-                    .align(CenterHorizontally)
-                    .padding(top = 16.dp),
-
-                )
-            Spacer(modifier = Modifier.weight(1f))
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
         }
 
         CommonBottomBar(navController = navController)
     }
 }
-
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun DisplayUser(user: User, navController: NavController) {
@@ -1358,11 +1358,15 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
+fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var songToAdd by remember { mutableStateOf<String?>(null) }
+    var songToAdd by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    val currentUser = Firebase.auth.currentUser
+    val currentUserId = currentUser?.uid.orEmpty()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1377,6 +1381,8 @@ fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
         var isSearchPerformed by remember { mutableStateOf(false) }
         val suggestions by viewModel.songSuggestions.observeAsState(initial = emptyList())
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
+
+
 
         TextField(
             value = songQuery,
@@ -1406,29 +1412,43 @@ fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
         } else if (suggestions.isNotEmpty()) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(suggestions) { suggestion ->
-                    val artistNames = suggestion.artists.joinToString()
+                    val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                songToAdd = suggestion.spotifyTrackId
-                            }
-                            .padding(vertical = 4.dp),
+                                songToAdd = Pair(suggestion.spotifyTrackId, suggestion.trackName) // Set both ID and Name
+                            },
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = suggestion.trackName,
-                                style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            )
-                            Text(
-                                text = "by $artistNames",
-                                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
-                            )
+                        Row(modifier = Modifier.padding(16.dp)) {
+                            if (suggestion.albumImages.isNotEmpty()) {
+                                val imageUrl = suggestion.albumImages.first().url // Example: using the first image
+                                Image(
+                                    painter = rememberImagePainter(imageUrl),
+                                    contentDescription = "Album Cover",
+                                    modifier = Modifier
+                                        .size(72.dp) // Or any other size
+                                        .align(Alignment.CenterVertically) // Align the image vertically with the text
+                                )
+
+                                Spacer(modifier = Modifier.width(16.dp)) // Add space between image and text
+                            }
+                            Column {
+                                Text(
+                                    text = suggestion.trackName,
+                                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                )
+                                Text(
+                                    text = "by $artistNames",
+                                    style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                                )
+                            }
                         }
                     }
                 }
             }
+
         } else if (isSearchPerformed) {
             Text(
                 "No results",
@@ -1440,10 +1460,15 @@ fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
         // CommonBottomBar(navController = navController) // Uncomment if you have a bottom navigation bar
     }
     LaunchedEffect(songToAdd) {
-        songToAdd?.let { trackId ->
+        songToAdd?.let { (trackId, trackName) ->
             coroutineScope.launch {
-                val resultMessage = viewModel.createSong(trackId)
-                Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
+                // Check if the user is logged in
+                if (currentUserId.isNotEmpty()) {
+                    val resultMessage = viewModel.createSong(trackId, trackName, currentUserId)
+                    Toast.makeText(context, resultMessage, Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "User not logged in", Toast.LENGTH_LONG).show()
+                }
             }
             songToAdd = null // Reset after showing the toast
         }
@@ -2854,6 +2879,9 @@ class SongsViewModel : ViewModel() {
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
 
+    private val _addSongStatus = MutableLiveData<String>()
+    val addSongStatus: LiveData<String> = _addSongStatus
+
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
     val songSuggestions = MutableLiveData<List<Suggestion>>()
@@ -2882,16 +2910,46 @@ class SongsViewModel : ViewModel() {
         }
     }
 
-    suspend fun createSong(trackSpotifyId: String): String {
+    fun addCreatedSongToUser(userId: String, songId: String) {
+        val db = FirebaseFirestore.getInstance()
+        val userRef = db.collection("Users").document(userId)
+
+        // Create a map for the song with a timestamp
+        val songWithTimestamp = mapOf(
+            "timestamp" to FieldValue.serverTimestamp() // Uses the server's timestamp
+        )
+
+        // Prepare the update for the created_songs map
+        val update = mapOf(
+            "created_songs.$songId" to songWithTimestamp
+        )
+
+        // Update the user's created_songs map
+        userRef.update(update)
+            .addOnSuccessListener {
+                Log.d("UsersViewModel", "Song added to user's created songs with timestamp")
+            }
+            .addOnFailureListener { e ->
+                Log.e("UsersViewModel", "Error adding song to user's created songs", e)
+            }
+    }
+
+    suspend fun createSong(trackSpotifyId: String, trackName: String, userId: String): String {
         return try {
             val response = apiService.createSong(CreateSongRequest(trackSpotifyId))
             if (response.isSuccessful && response.body() != null) {
-                response.body()!!.message
+                val responseBody = response.body()!!
+                if (responseBody.success) {
+                    addCreatedSongToUser(userId, trackSpotifyId)
+                    "The song '$trackName' has been added"  // Custom success message
+                } else {
+                    "Song already exists"  // Server's response message (e.g., "Track already exist in database")
+                }
             } else {
-                "Failed to create song"
+                "Failed to add $trackName"
             }
         } catch (e: Exception) {
-            "Error: ${e.message}"
+            "Error adding $trackName: ${e.message}"
         }
     }
 
@@ -2906,16 +2964,12 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-
-                        song.let {
-                            /*
-                            data class Suggestion(
+                        song.let {data class Suggestion(
                             @SerializedName("track_name") val trackName: String,
                             @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
                             @SerializedName("album_name") val albumName: String,
                             @SerializedName("spotify_track_id") val spotifyTrackId: String
                         )
-                            */
 
                             // Ensure "rating" is an integer
                             it.rating = try {
@@ -2946,93 +3000,62 @@ class SongsViewModel : ViewModel() {
     fun updateSongs(updatedSongs: List<Song>) {
         _songs.value = updatedSongs
     }
-/*
-    fun addSong(song: Song) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("Tracks")
-            .add(song)
-            .addOnSuccessListener { documentReference ->
-                _addSongStatus.value = "Song added successfully with ID: ${documentReference.id}"
-            }
-            .addOnFailureListener { e ->
-                _addSongStatus.value = "Error adding song: ${e.message}"
-            }
-    }
-*/
-    private val fuzzyMatchThreshold = 6
 
-    private fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
-        val lhsLength = lhs.length
-        val rhsLength = rhs.length
+    private val _searchPerformed = MutableLiveData<Boolean>(false)
+    val searchPerformed: LiveData<Boolean> = _searchPerformed
 
-        var cost = IntArray(lhsLength + 1) { it }
-        var newCost = IntArray(lhsLength + 1)
-
-        for (i in 1..rhsLength) {
-            newCost[0] = i
-
-            for (j in 1..lhsLength) {
-                val match = if (lhs[j - 1] == rhs[i - 1]) 0 else 1
-
-                val costReplace = cost[j - 1] + match
-                val costInsert = cost[j] + 1
-                val costDelete = newCost[j - 1] + 1
-
-                newCost[j] = minOf(costInsert, costDelete, costReplace)
-            }
-
-            val swap = cost
-            cost = newCost
-            newCost = swap
-        }
-
-        return cost[lhsLength]
-    }
-
-    fun loadSongsFuzzy(searchText: String) {
-        val db = FirebaseFirestore.getInstance()
-        _isLoading.value = true
-
-        db.collection("Tracks")
-            .get()
-            .addOnSuccessListener { documents ->
-                val allSongs = documents.mapNotNull { documentSnapshot ->
-                    documentSnapshot.toObject(Song::class.java)
+    fun searchSongsAndLoad(searchString: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _searchPerformed.value = true // Indicate that a search has been performed
+            _songs.value = emptyList()
+            try {
+                val response = apiService.searchSongs(searchString)
+                if (response.isSuccessful && response.body() != null) {
+                    val songIds = response.body()!!.matchingTrackIds
+                    loadSongsWithTrackId(songIds)
+                } else {
+                    Log.e("SongsViewModel", "Unsuccessful API call: ${response.code()} - ${response.message()}")
                 }
-
-                val searchTextLowercase = searchText.lowercase(Locale.getDefault())
-                val sortedFilteredSongs = allSongs.mapNotNull { song ->
-                    val trackDistance = levenshtein(song.trackName?.lowercase(Locale.getDefault()) ?: "", searchTextLowercase)
-                    val artistDistances = song.artists?.map { artist ->
-                        val artistLowercase = artist.lowercase(Locale.getDefault())
-                        if (artistLowercase.contains(searchTextLowercase)) {
-                            // Lower distance for names that contain the search text as a substring
-                            0
-                        } else {
-                            levenshtein(artistLowercase, searchTextLowercase)
-                        }
-                    }
-
-                    val bestArtistDistance = artistDistances?.minOrNull() ?: Int.MAX_VALUE
-                    val bestDistance = minOf(trackDistance, bestArtistDistance)
-
-                    if (bestDistance > fuzzyMatchThreshold) null else song to bestDistance
-                }
-                    .sortedBy { (_, distance) -> distance }
-                    .map { (song, _) -> song }
-
-                _songs.value = sortedFilteredSongs
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "Exception in searchSongsAndLoad: ${e.message}", e)
+            } finally {
                 _isLoading.value = false
             }
-            .addOnFailureListener {
-                // Handle failure...
-            }
+        }
     }
 
 
+    fun loadSongsWithTrackId(trackIds: List<String>) {
+        viewModelScope.launch {
+            Log.d("SongsViewModel", "Loading songs with Track IDs: $trackIds")
+            val db = FirebaseFirestore.getInstance()
+            _isLoading.value = true
 
+            try {
+                val tasks = trackIds.map { songId ->
+                    withContext(Dispatchers.IO) {
+                        db.collection("Tracks").document(songId).get().await()
+                    }
+                }
+
+                val filteredSongs = tasks.mapNotNull { task ->
+                    task.toObject(Song::class.java)?.apply {
+                        id = task.id
+                    }
+                }
+
+                _songs.value = filteredSongs
+            } catch (e: Exception) {
+                Log.e("SongsViewModel", "Error loading songs", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
 }
+
 /*
 interface SongsApiService {
     @GET("/search")
@@ -3045,29 +3068,45 @@ interface AutocompleteApiService {
 
     @POST("/create_song")
     suspend fun createSong(@Body requestData: CreateSongRequest): Response<CreateSongResponse>
-}
 
+    @GET("/search")
+    suspend fun searchSongs(@Query("songName") songName: String): Response<SearchResponse>
+}
+data class SearchResponse(
+    val matchingTrackIds: List<String>
+)
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
-data class CreateSongRequest(val trackSpotifyId: String)
+data class CreateSongRequest(val track_spotify_id: String)
 data class CreateSongResponse(val success: Boolean, val message: String)
 
 data class Suggestion(
     @SerializedName("track_name") val trackName: String,
     @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
     @SerializedName("album_name") val albumName: String,
-    @SerializedName("spotify_track_id") val spotifyTrackId: String
+    @SerializedName("spotify_track_id") val spotifyTrackId: String,
+    @SerializedName("album_images") val albumImages: List<AlbumImage>
+)
+data class AlbumImage(
+    @SerializedName("url") val url: String,
+    // Include other fields if needed, like height and width
 )
 
 object RetrofitInstance {
-    private const val BASE_URL = "http://10.0.2.2:8080" // Replace with your backend URL
+    private const val BASE_URL = "http://10.0.2.2:6060" // Replace with your backend URL
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .build()
 
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
-
 }
 
 private fun addLikedSongToFirestore(userId: String, songId: String) {
