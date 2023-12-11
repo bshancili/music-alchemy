@@ -104,6 +104,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 
+import org.apache.commons.text.similarity.LevenshteinDistance
 
 
 //~~~~~~~~~~
@@ -975,7 +976,7 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
                     searchText = newText
                     displaySongs = newText.isNotBlank()
                     if (displaySongs) {
-                        viewModel.loadSongsWithSubstring(newText)
+                        viewModel.loadSongsFuzzy(newText)
                     }
                 },
                 modifier = Modifier
@@ -2633,43 +2634,79 @@ class SongsViewModel : ViewModel() {
             }
     }
 
-    fun loadSongsWithSubstring(substring: String) {
+    val fuzzyMatchThreshold = 6
+
+    fun levenshtein(lhs: CharSequence, rhs: CharSequence): Int {
+        val lhsLength = lhs.length
+        val rhsLength = rhs.length
+
+        var cost = IntArray(lhsLength + 1) { it }
+        var newCost = IntArray(lhsLength + 1)
+
+        for (i in 1..rhsLength) {
+            newCost[0] = i
+
+            for (j in 1..lhsLength) {
+                val match = if (lhs[j - 1] == rhs[i - 1]) 0 else 1
+
+                val costReplace = cost[j - 1] + match
+                val costInsert = cost[j] + 1
+                val costDelete = newCost[j - 1] + 1
+
+                newCost[j] = minOf(costInsert, costDelete, costReplace)
+            }
+
+            val swap = cost
+            cost = newCost
+            newCost = swap
+        }
+
+        return cost[lhsLength]
+    }
+
+    fun loadSongsFuzzy(searchText: String) {
         val db = FirebaseFirestore.getInstance()
         _isLoading.value = true
 
         db.collection("Tracks")
             .get()
             .addOnSuccessListener { documents ->
-                val filteredSongs = documents.mapNotNull { documentSnapshot ->
-                    try {
-                        val song = documentSnapshot.toObject(Song::class.java)
-                        song.apply {
-                            // Handle the conversion of rating to Double
-                            rating = try {
-                                rating?.toString()?.toDoubleOrNull() ?: 0.0
-                            } catch (e: NumberFormatException) {
-                                Log.e("SongsViewModel", "Error converting rating to double for song $id", e)
-                                0.0
-                            }
-                            id = documentSnapshot.id
-                        }
-                    } catch (e: Exception) {
-                        Log.e("SongsViewModel", "Error parsing song data", e)
-                        null
-                    }
-                }.filter { song ->
-                    // Perform a case-insensitive check if trackName contains the substring
-                    song.trackName?.lowercase(Locale.getDefault())
-                        ?.contains(substring.lowercase(Locale.getDefault())) == true
+                val allSongs = documents.mapNotNull { documentSnapshot ->
+                    documentSnapshot.toObject(Song::class.java)
                 }
-                _songs.value = filteredSongs
+
+                val searchTextLowercase = searchText.lowercase(Locale.getDefault())
+                val sortedFilteredSongs = allSongs.mapNotNull { song ->
+                    val trackDistance = levenshtein(song.trackName?.lowercase(Locale.getDefault()) ?: "", searchTextLowercase)
+                    val artistDistances = song.artists?.map { artist ->
+                        val artistLowercase = artist.lowercase(Locale.getDefault())
+                        if (artistLowercase.contains(searchTextLowercase)) {
+                            // Lower distance for names that contain the search text as a substring
+                            0
+                        } else {
+                            levenshtein(artistLowercase, searchTextLowercase)
+                        }
+                    }
+
+                    val bestArtistDistance = artistDistances?.minOrNull() ?: Int.MAX_VALUE
+                    val bestDistance = minOf(trackDistance, bestArtistDistance)
+
+                    if (bestDistance > fuzzyMatchThreshold) null else song to bestDistance
+                }
+                    .sortedBy { (_, distance) -> distance }
+                    .map { (song, _) -> song }
+
+                _songs.value = sortedFilteredSongs
                 _isLoading.value = false
             }
             .addOnFailureListener { exception ->
-                Log.e("SongsViewModel", "Error loading songs", exception)
+                // Handle failure...
             }
-
     }
+
+
+
+
 }
 
 interface SongsApiService {
