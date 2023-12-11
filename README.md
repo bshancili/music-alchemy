@@ -44,7 +44,8 @@ Brief project description and purpose.
 
 ## Overview
 
-Provide an overview of the project, its goals, and key features.
+Music Alchemy is a music management and analysis platform that allows users to organize their music collection, rate songs, and receive personalized recommendations. Unlike traditional streaming services, Music Alchemy focuses on empowering users to curate their music experience without relying on continuous internet connectivity.
+
 
 ## Features
 
