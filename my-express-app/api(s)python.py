@@ -211,22 +211,20 @@ def create_song():
         song_ref1 = db.collection('Tracks').document(new_song_id)
 
         # Retrieve the current arrays
-        liked_songs_list = user_ref.get().to_dict().get('liked_songs_list', [])
-        created_songs = user_ref.get().to_dict().get('created_songs', [])
-        current_time = datetime.utcnow()
-        song_dict = {new_song_id: {'timestamp': current_time}}
+        liked_song_map = user_ref.get().to_dict().get('liked_song_list', {})
+        created_songs_map = user_ref.get().to_dict().get('created_songs', {})
+        
 
         # Check if new_song_id is not already in the arrays
-        if new_song_id not in liked_songs_list:
-            liked_songs_list.append(song_dict)
-
-        if new_song_id not in created_songs:
-            created_songs.append(song_dict)
+        if new_song_id not in liked_song_map:
+            liked_song_map[new_song_id] = {'timestamp': datetime.utcnow()}
+        if new_song_id not in created_songs_map:
+            created_songs_map[new_song_id] =  {'timestamp': datetime.utcnow()}
 
         # Update the arrays in Firestore
         user_ref.update({
-        'liked_song_list': liked_songs_list,
-        'created_songs': created_songs,
+        'liked_song_list': liked_song_map,
+        'created_songs': created_songs_map,
         })
 
         song_ref1.update({
@@ -370,22 +368,20 @@ def create_song_internal(data):
         song_ref1 = db.collection('Tracks').document(new_song_id)
 
         # Retrieve the current arrays
-        liked_songs_list = user_ref.get().to_dict().get('liked_songs_list', [])
-        created_songs = user_ref.get().to_dict().get('created_songs', [])
-        current_time = datetime.utcnow()
-        song_dict = {new_song_id: {'timestamp': current_time}}
+        liked_song_map = user_ref.get().to_dict().get('liked_song_list', {})
+        created_songs_map = user_ref.get().to_dict().get('created_songs', {})
+        
 
         # Check if new_song_id is not already in the arrays
-        if new_song_id not in liked_songs_list:
-            liked_songs_list.append(song_dict)
-
-        if new_song_id not in created_songs:
-            created_songs.append(song_dict)
+        if new_song_id not in liked_song_map:
+            liked_song_map[new_song_id] = {'timestamp': datetime.utcnow()}
+        if new_song_id not in created_songs_map:
+            created_songs_map[new_song_id] =  {'timestamp': datetime.utcnow()}
 
         # Update the arrays in Firestore
         user_ref.update({
-        'liked_song_list': liked_songs_list,
-        'created_songs': created_songs,
+        'liked_song_list': liked_song_map,
+        'created_songs': created_songs_map,
         })
 
         song_ref1.update({
