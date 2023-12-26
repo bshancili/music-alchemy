@@ -189,6 +189,7 @@ def create_song():
             'lowercased_artists': lower_artists,
             'lowercased_track_name': lowercased_track_name,
             'rating':0.0,
+            'comments':[],
             'like_count':0,
             'rating_count':0,
             'added_at': firestore.SERVER_TIMESTAMP, 
@@ -229,7 +230,8 @@ def create_song():
         })
 
         song_ref1.update({
-        'like_count': firestore.Increment(1)  # Increment by one
+        'like_count': firestore.Increment(1),  # Increment by one
+        'firebase_id':new_song_id
         })
 
         return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
@@ -346,6 +348,7 @@ def create_song_internal(data):
             'lowercased_artists': lower_artists,
             'lowercased_track_name': lowercased_track_name,
             'rating':0.0,
+            'comments':[],
             'like_count':0,
             'rating_count':0,
             'added_at': firestore.SERVER_TIMESTAMP, 
@@ -386,7 +389,8 @@ def create_song_internal(data):
         })
 
         song_ref1.update({
-        'like_count': firestore.Increment(1)  # Increment by one
+        'like_count': firestore.Increment(1), # Increment by one
+        'firebase_id':new_song_id
         })
 
         return {'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'}
