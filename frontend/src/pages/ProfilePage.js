@@ -19,6 +19,7 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
   const [isFriend, setIsFriend] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("userID");
@@ -133,12 +134,33 @@ function ProfilePage() {
     }
   };
 
+  const fetchPlaylists = async () => {
+    try {
+      const userDocRef = doc(db, "Users", id);
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap) {
+        const userData = userSnap.data();
+        if (userData.playlists) {
+          const playlists = userData.playlists;
+          setPlaylists(playlists);
+          console.log(playlists);
+        } else {
+          await updateDoc(userDocRef, {
+            playlists: [],
+          });
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
   useEffect(() => {
     const fetchData = async () => {
       await fetchUser();
       await fetchNonRatedSongs();
       await fetchAllLikedSongs(id, setLikedSongs);
       //await fetchFriends();
+      await fetchPlaylists();
     };
 
     fetchData();
@@ -161,7 +183,13 @@ function ProfilePage() {
       )}
       {user && // Check if user is available before checking conditions
         (isFriend || isUserProfile || user?.Isprivate === 0) && (
-          <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
+          <ProfileMusicList
+            tracks={likedSongs}
+            non_rated={nonRatedSongs}
+            userID={userID}
+            playlists={playlists}
+            setPlaylists={setPlaylists}
+          />
         )}
     </Box>
   );
