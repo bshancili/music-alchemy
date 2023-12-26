@@ -9,7 +9,14 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { db } from "../firebase";
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 const Comments = ({ track }) => {
   const [comment, setComment] = useState("");
@@ -44,7 +51,11 @@ const Comments = ({ track }) => {
       return;
     }
     try {
+      const userRef = doc(db, "Users", userID);
+      const userDoc = await getDoc(userRef);
+      const commentsArray = userDoc.data().comments;
       const trackDocRef = doc(db, "Tracks", track.id);
+      const commentsRef = collection(userRef, "comments");
       const timestamp = new Date();
       const commentObject = {
         text: comment,
@@ -53,7 +64,14 @@ const Comments = ({ track }) => {
         userProfilePic: pp,
         userId: userID,
       };
+      const newCommentRef = await addDoc(commentsRef, commentObject);
+      const commentID = newCommentRef.id;
+      commentObject.commentID = commentID;
+
       await updateDoc(trackDocRef, {
+        comments: arrayUnion(commentObject),
+      });
+      await updateDoc(userRef, {
         comments: arrayUnion(commentObject),
       });
       setComments((prevComments) => [commentObject, ...prevComments]);
@@ -70,7 +88,6 @@ const Comments = ({ track }) => {
         const cmts = trackData.comments;
         const sortedComments = cmts.sort((a, b) => b.timestamp - a.timestamp);
         setComments(sortedComments);
-        console.log(sortedComments);
       } else {
         await updateDoc(trackDocRef, {
           comments: [],
@@ -82,7 +99,6 @@ const Comments = ({ track }) => {
   useEffect(() => {
     fetchUserInfoForComment();
     fetchComments();
-    console.log(username, pp);
   }, []);
 
   return (

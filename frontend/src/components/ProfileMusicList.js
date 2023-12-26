@@ -44,7 +44,7 @@ const ProfileMusicList = ({
       const userData = userDoc.data();
 
       if (userData.playlists) {
-        const playlistsRef = collection(userRef, "playlists");
+        const playlistsCollectionRef = collection(db, "Playlists");
 
         const timestamp = new Date();
         const playlistObject = {
@@ -55,9 +55,14 @@ const ProfileMusicList = ({
           description: "",
           imgURL: "https://www.afrocharts.com/images/song_cover.png",
         };
-        const newPlaylistRef = await addDoc(playlistsRef, playlistObject);
+        const newPlaylistRef = await addDoc(
+          playlistsCollectionRef,
+          playlistObject
+        );
+        const newPlaylistId = newPlaylistRef.id;
+        playlistObject.id = newPlaylistId;
         await updateDoc(userRef, {
-          playlists: arrayUnion(newPlaylistRef),
+          playlists: arrayUnion(newPlaylistId),
         });
 
         setPlaylists((prevPlaylists) => [playlistObject, ...prevPlaylists]);
@@ -112,7 +117,7 @@ const ProfileMusicList = ({
             </Button>
             <Grid templateColumns="repeat(5, 1fr)" gap={4}>
               {playlists.map((playlist) => (
-                <GridItem>
+                <GridItem key={playlist.id}>
                   <PlaylistListItem playlist={playlist} />
                 </GridItem>
               ))}

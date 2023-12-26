@@ -19,7 +19,9 @@ const PlaylistListItem = ({ playlist }) => {
       pb={5}
       mt={4}
       onClick={() => {
-        navigate(`/playlists/${playlist.name}`);
+        navigate(`/playlists/${playlist.id}`, {
+          state: { playlistData: playlist },
+        });
       }}
     >
       <Image
@@ -36,9 +38,6 @@ const PlaylistListItem = ({ playlist }) => {
       />
       <Text mt={1} color={"white"}>
         {playlist.name}
-      </Text>
-      <Text mt={1} color={"white"}>
-        {playlist.description}
       </Text>
     </Box>
   );

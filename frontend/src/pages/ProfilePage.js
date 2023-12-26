@@ -5,7 +5,11 @@ import Profile from "../components/Profile";
 import ProfileMusicList from "../components/ProfileMusicList";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
-import { fetchTrackDetails, fetchAllLikedSongs } from "../api/api";
+import {
+  fetchTrackDetails,
+  fetchAllLikedSongs,
+  fetchPlaylists,
+} from "../api/api";
 import {
   doc,
   getDoc,
@@ -134,33 +138,13 @@ function ProfilePage() {
     }
   };
 
-  const fetchPlaylists = async () => {
-    try {
-      const userDocRef = doc(db, "Users", id);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap) {
-        const userData = userSnap.data();
-        if (userData.playlists) {
-          const playlists = userData.playlists;
-          setPlaylists(playlists);
-          console.log(playlists);
-        } else {
-          await updateDoc(userDocRef, {
-            playlists: [],
-          });
-        }
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
   useEffect(() => {
     const fetchData = async () => {
       await fetchUser();
       await fetchNonRatedSongs();
       await fetchAllLikedSongs(id, setLikedSongs);
       //await fetchFriends();
-      await fetchPlaylists();
+      await fetchPlaylists(id, setPlaylists);
     };
 
     fetchData();

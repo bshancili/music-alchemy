@@ -2,6 +2,32 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { api } from "./axios";
 
+const fetchHeader = async (id) => {
+  const playlistRef = doc(db, "Playlists", id);
+  const playlistSnap = await getDoc(playlistRef);
+  const data = playlistSnap.data();
+  return { id, ...data };
+};
+
+const fetchPlaylists = async (id, setPlaylists) => {
+  try {
+    const userDocRef = doc(db, "Users", id);
+    const userSnap = await getDoc(userDocRef);
+    if (userSnap) {
+      const userData = userSnap.data();
+      if (userData.playlists) {
+        const playlists = userData.playlists;
+        const playlistDetails = await Promise.all(
+          playlists.map((trackId) => fetchHeader(trackId))
+        );
+        setPlaylists(playlistDetails);
+      }
+    }
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 const fetchTrackDetails = async (id) => {
   const trackRef = doc(db, "Tracks", id);
   try {
@@ -369,4 +395,5 @@ export {
   fetchTemp,
   fetchFriendRecommendations,
   fetchRatingCounts,
+  fetchPlaylists,
 };
