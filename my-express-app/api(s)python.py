@@ -182,6 +182,7 @@ def create_song():
             'artist_urls':artist_urls, #array
             'artist_images':artist_images,#array
             'spotify_artist_id(s)':artist_ids,#array
+            'spotify_artist_ids':artist_ids,#array
             'length_in_seconds':track['duration_ms']/1000,
             'spotify_track_id':track_id,
             'track_url':track['external_urls']['spotify'],
@@ -231,6 +232,34 @@ def create_song():
         'like_count': firestore.Increment(1),  # Increment by one
         'firebase_id':new_song_id
         })
+
+        for artist_id in artist_ids:
+        # Search for the artist
+            field = 'spotify_artist_id'
+            op = '=='
+            value = artist_id
+            artist_query = db.collection('Artists').where(filter=FieldFilter(field, op, value)).limit(1)
+            existing_artists = artist_query.stream()
+            artist_exists = len(list(existing_artists)) > 0
+
+            if artist_exists:
+                query_results = artist_query.get()
+                for doc in query_results:
+                    existing_artist_id = doc.id
+
+                    # Get the existing array of existing_tracks
+                    artist_data = db.collection('Artists').document(existing_artist_id).get().to_dict()
+                    existing_tracks = artist_data.get('existing_tracks', [])
+                    
+
+                    # Add the new song_id to the array if it's not already there
+                    if new_song_id not in existing_tracks:
+                        existing_tracks.append(new_song_id)
+                        # Update the existing_tracks field in the artist's document
+                        artist_ref = db.collection('Artists').document(existing_artist_id)
+                        artist_ref.update({
+                            'existing_tracks': existing_tracks
+                        })
 
         return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
             
@@ -339,6 +368,7 @@ def create_song_internal(data):
             'artist_urls':artist_urls, #array
             'artist_images':artist_images,#array
             'spotify_artist_id(s)':artist_ids,#array
+            'spotify_artist_ids':artist_ids,#array
             'length_in_seconds':track['duration_ms']/1000,
             'spotify_track_id':track_id,
             'track_url':track['external_urls']['spotify'],
@@ -388,6 +418,34 @@ def create_song_internal(data):
         'like_count': firestore.Increment(1), # Increment by one
         'firebase_id':new_song_id
         })
+
+        for artist_id in artist_ids:
+        # Search for the artist
+            field = 'spotify_artist_id'
+            op = '=='
+            value = artist_id
+            artist_query = db.collection('Artists').where(filter=FieldFilter(field, op, value)).limit(1)
+            existing_artists = artist_query.stream()
+            artist_exists = len(list(existing_artists)) > 0
+
+            if artist_exists:
+                query_results = artist_query.get()
+                for doc in query_results:
+                    existing_artist_id = doc.id
+
+                    # Get the existing array of existing_tracks
+                    artist_data = db.collection('Artists').document(existing_artist_id).get().to_dict()
+                    existing_tracks = artist_data.get('existing_tracks', [])
+                    
+
+                    # Add the new song_id to the array if it's not already there
+                    if new_song_id not in existing_tracks:
+                        existing_tracks.append(new_song_id)
+                        # Update the existing_tracks field in the artist's document
+                        artist_ref = db.collection('Artists').document(existing_artist_id)
+                        artist_ref.update({
+                            'existing_tracks': existing_tracks
+                        })
 
         return {'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'}
 
