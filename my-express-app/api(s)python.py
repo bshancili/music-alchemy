@@ -261,6 +261,32 @@ def create_song():
                             'existing_tracks': existing_tracks
                         })
 
+        field = 'spotify_album_id'
+        op = '=='
+        value = album_id
+        album_query = db.collection('Albums').where(filter=FieldFilter(field, op, value)).limit(1)
+        existing_albums = album_query.stream()
+        album_exists = len(list(existing_albums)) > 0
+
+        if album_exists:
+            query_results = album_query.get()
+            for doc in query_results:
+                existing_album_id = doc.id
+
+                # Get the existing array of existing_tracks
+                album_data = db.collection('Albums').document(existing_album_id).get().to_dict()
+                existing_tracks = album_data.get('existing_tracks', [])
+                    
+
+                # Add the new song_id to the array if it's not already there
+                if new_song_id not in existing_tracks:
+                    existing_tracks.append(new_song_id)
+                    # Update the existing_tracks field in the album's document
+                    album_ref = db.collection('Albums').document(existing_album_id)
+                    album_ref.update({
+                        'existing_tracks': existing_tracks
+                    })
+
         return jsonify({'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'})
             
     else:
@@ -446,6 +472,33 @@ def create_song_internal(data):
                         artist_ref.update({
                             'existing_tracks': existing_tracks
                         })
+
+        field = 'spotify_album_id'
+        op = '=='
+        value = album_id
+        album_query = db.collection('Albums').where(filter=FieldFilter(field, op, value)).limit(1)
+        existing_albums = album_query.stream()
+        album_exists = len(list(existing_albums)) > 0
+
+        if album_exists:
+            query_results = album_query.get()
+            for doc in query_results:
+                existing_album_id = doc.id
+
+                # Get the existing array of existing_tracks
+                album_data = db.collection('Albums').document(existing_album_id).get().to_dict()
+                existing_tracks = album_data.get('existing_tracks', [])
+                    
+
+                # Add the new song_id to the array if it's not already there
+                if new_song_id not in existing_tracks:
+                    existing_tracks.append(new_song_id)
+                    # Update the existing_tracks field in the album's document
+                    album_ref = db.collection('Albums').document(existing_album_id)
+                    album_ref.update({
+                        'existing_tracks': existing_tracks
+                    })
+
 
         return {'success': True, 'message': f'Song "{track["name"]}" saved to Firestore'}
 
