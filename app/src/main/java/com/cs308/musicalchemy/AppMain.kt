@@ -79,6 +79,7 @@ import co.yml.charts.ui.linechart.model.SelectionHighlightPopUp
 import co.yml.charts.ui.linechart.model.ShadowUnderLine
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
+import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -98,6 +99,7 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.firestore
 import com.google.gson.annotations.SerializedName
+import com.google.accompanist.pager.HorizontalPager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -370,8 +372,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("initialMenu") { InitialMenu(navController, startGoogleSignIn) }
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") {
-            val viewModel = viewModel<SongsViewModel>() // Instantiate your SongsViewModel here
-            MainMenu(navController, viewModel)
+            val viewModel = viewModel<SongsViewModel>()
+            val artistViewModel = viewModel<ArtistViewModel>()// Instantiate your SongsViewModel here
+            MainMenu(navController, viewModel, artistViewModel)
         }
         composable("search") { Search(navController) }
         composable("searchUser") { SearchUser(navController)}
@@ -390,11 +393,16 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("songDetail/{songId}", arguments = listOf(navArgument("songId") { type = NavType.StringType })) { backStackEntry ->
             SongDetailScreen(navController, songId = backStackEntry.arguments?.getString("songId") ?: "")
         }
+        composable("artistDetail/{artistID}", arguments = listOf(navArgument("artistID") { type = NavType.StringType })) { backStackEntry ->
+            ArtistDetailScreen(navController, artistID = backStackEntry.arguments?.getString("artistID") ?: "")
+        }
         composable("recommendations") {
             RecommendationScreen(navController)
         }
     }
 }
+
+
 
 
 //~~~~~~~~~~
@@ -608,147 +616,242 @@ fun TopNav(navController: NavController) {
 }
 
 @Composable
-fun CommonBottomBar(navController: NavController) {
+fun CommonBottomBar(navController: NavController, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(64.dp)
             .background(color = Color(0xFF1D2123)),
-        //.padding(bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             painter = painterResource(id = R.drawable.home),
             contentDescription = "image description",
-            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight() // Make the image fill the height of the row
-                .aspectRatio(1f) // Maintain aspect ratio
+                .fillMaxHeight()
                 .clickable { navController.navigate("mainMenu") }
         )
 
         Image(
             painter = painterResource(id = R.drawable.search),
             contentDescription = "image description",
-            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight() // Make the image fill the height of the row
-                .aspectRatio(1f) // Maintain aspect ratio
+                .fillMaxHeight()
                 .clickable { navController.navigate("search") }
         )
 
         Image(
             painter = painterResource(id = R.drawable.recommendation),
             contentDescription = "image description",
-            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight() // Make the image fill the height of the row
-                .aspectRatio(1f) // Maintain aspect ratio
+                .fillMaxHeight()
                 .clickable { navController.navigate("recommendations") }
         )
 
         Image(
             painter = painterResource(id = R.drawable.dm),
             contentDescription = "image description",
-            contentScale = ContentScale.Crop, // Adjust the content scale as needed
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight() // Make the image fill the height of the row
-                .aspectRatio(1f) // Maintain aspect ratio
+                .fillMaxHeight()
                 .clickable { navController.navigate("friendslist") }
         )
     }
 }
+
+
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
+@OptIn(ExperimentalPagerApi::class)
 @Composable
-fun MainMenu(navController: NavController, viewModel: SongsViewModel) {
-    val songs by viewModel.songs.observeAsState(emptyList())
+fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistViewModel: ArtistViewModel) {
 
-    // Use verticalScroll modifier for vertical scrolling
-    Column(
+    val songs by viewModel.songs.observeAsState(emptyList())
+    val artists by artistViewModel.artists.observeAsState(emptyList())
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFF1D2123))
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp), // Add verticalScroll to enable scrolling
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp),
     ) {
-
-        TopNav(navController = navController)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column( modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .weight(1f) // Takes up all available vertical space
-        ){
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            TopNav(navController = navController)
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Top charts",
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    lineHeight = 24.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(0xFFEFEEE0),
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(24.dp)
-            )
+            HorizontalPager(2) { page ->
+                when (page) {
+                    0 -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            Text(
+                                text = "Top charts",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(700),
+                                    color = Color(0xFFEFEEE0),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-            // Keep the first LazyRow unchanged
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(128.dp)
-                    .background(color = Color(0xFF1A1E1F), shape = RoundedCornerShape(size = 20.dp))
-            ) {
-                items(songs) { song ->
-                    SongItem(song = song)
-                }
-            }
+                            // Keep the first LazyRow unchanged
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(128.dp)
+                                    .background(
+                                        color = Color(0xFF1A1E1F),
+                                        shape = RoundedCornerShape(size = 20.dp)
+                                    )
+                            ) {
+                                items(songs) { song ->
+                                    SongItem(song = song)
+                                }
+                            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Music",
-                style = TextStyle(
-                    fontSize = 20.sp,
-                    lineHeight = 24.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(0xFFEFEEE0),
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(24.dp)
-            )
+                            Text(
+                                text = "Music",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(700),
+                                    color = Color(0xFFEFEEE0),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-            // Display images in a static way with 2 images per row
-            for (i in songs.indices step 2) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    if (i < songs.size) {
-                        DisplaySong(song = songs[i], navController = navController)
+                            // Display images in a static way with 2 images per row
+                            for (i in songs.indices step 2) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    if (i < songs.size) {
+                                        DisplaySong(song = songs[i], navController = navController)
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (i + 1 < songs.size) {
+                                        DisplaySong(song = songs[i + 1], navController = navController)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    if (i + 1 < songs.size) {
-                        DisplaySong(song = songs[i + 1], navController = navController)
+                    1 -> {
+
+                        LaunchedEffect(Unit) {
+                            artistViewModel.fetchArtists()
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            // Fetch artists when navigating to Page 1
+
+                            Text(
+                                text = "Artists",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(700),
+                                    color = Color(0xFFEFEEE0),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Print artist information in Page 1
+                            for (i in artists.indices step 2) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    if (i < artists.size) {
+                                        DisplayArtist(artist = artists[i], navController = navController)
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (i + 1 < artists.size) {
+                                        DisplayArtist(artist = artists[i + 1], navController = navController)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
-        CommonBottomBar(navController = navController)
+        // Overlay CommonBottomBar at the bottom of the screen
+        CommonBottomBar(navController = navController, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun DisplayArtist(artist: Artist, navController: NavController) {
+    val imageUrl: String? = artist.artistImages?.firstOrNull()
+    imageUrl?.let {
+        Column(
+            modifier = Modifier
+                .width(185.dp)
+                .clickable {
+                    navController.navigate("artistDetail/${artist.artistID}")
+                }
+                .padding(bottom = 24.dp)
+        ) {
+            // Image
+            Image(
+                painter = rememberImagePainter(data = it),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.FillBounds
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Text for artist name
+            Text(
+                text = "${artist.artistName}",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
@@ -1185,7 +1288,9 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
             Text(
                 "Loading...",
                 color = Color.White,
-                modifier = Modifier.align(CenterHorizontally).padding(top = 16.dp)
+                modifier = Modifier
+                    .align(CenterHorizontally)
+                    .padding(top = 16.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
         } else {
@@ -1417,7 +1522,10 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                songToAdd = Pair(suggestion.spotifyTrackId, suggestion.trackName) // Set both ID and Name
+                                songToAdd = Pair(
+                                    suggestion.spotifyTrackId,
+                                    suggestion.trackName
+                                ) // Set both ID and Name
                             },
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -2870,6 +2978,94 @@ data class Song(
     @get:PropertyName("like_count") @set:PropertyName("like_count") var likeCount: Int? = 0,
 )
 
+data class SuggestedTrack(
+    @get:PropertyName("album_images") @set:PropertyName("album_images") var albumImages: List<String>? = listOf(),
+    @get:PropertyName("album_name") @set:PropertyName("album_name") var albumName: String? = "",
+    @get:PropertyName("album_release_date") @set:PropertyName("album_release_date") var albumReleaseDate: String? = "",
+    @get:PropertyName("album_url") @set:PropertyName("album_url") var albumUrl: String? = "",
+    @get:PropertyName("artist") @set:PropertyName("artist") var artists: List<String>? = listOf(),
+    @get:PropertyName("artist_urls") @set:PropertyName("artist_urls") var artistUrls: List<String>? = listOf(),
+    @get:PropertyName("spotify_album_id") @set:PropertyName("spotify_album_id") var spotifyAlbumId: String? = "",
+    @get:PropertyName("spotify_artist_ids") @set:PropertyName("spotify_artist_ids") var spotifyArtistIds: List<String>? = listOf(),
+    @get:PropertyName("spotify_track_id") @set:PropertyName("spotify_track_id") var spotifyTrackId: String? = "",
+    @get:PropertyName("track_duration_ms") @set:PropertyName("track_duration_ms") var trackDurationMs: Long? = 0,
+    @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
+    @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = ""
+)
+
+
+data class Artist(
+
+    @get:PropertyName("firebase_id") @set:PropertyName("firebase_id") var artistID: String? = "",
+    @get:PropertyName("artist_genres") @set:PropertyName("artist_genres") var artistGenre: List<String>? = listOf(),
+    @get:PropertyName("artist_images") @set:PropertyName("artist_images") var artistImages: List<String>? = listOf(),
+    @get:PropertyName("artist_name") @set:PropertyName("artist_name") var artistName: String? = "",
+    @get:PropertyName("artist_url") @set:PropertyName("artist_url") var artistURL: String? = "",
+    @get:PropertyName("existing_tracks") @set:PropertyName("existing_tracks") var existingTracks: List<String>? = listOf(),
+    @get:PropertyName("spotify_artist_id") @set:PropertyName("spotify_artist_id") var spotifyArtistId: String? = "",
+    @get:PropertyName("suggested_tracks") @set:PropertyName("suggested_tracks") var suggestedTracks: List<SuggestedTrack>? = listOf()
+
+)
+
+class ArtistViewModel : ViewModel() {
+
+    private val db = FirebaseFirestore.getInstance()
+
+    private val _artists = MutableLiveData<List<Artist>>()
+    val artists: LiveData<List<Artist>> = _artists
+
+    private val _artistName = MutableLiveData<String>()
+    val artistName: LiveData<String> = _artistName
+
+    private val _artistImages = MutableLiveData<String>()
+    val artistImages: LiveData<String> = _artistImages
+
+    private val _suggestedTracks = MutableLiveData<List<SuggestedTrack>>()
+    val suggestedTracks: LiveData<List<SuggestedTrack>> = _suggestedTracks
+
+    fun fetchArtists() {
+        // Assuming you have a "artists" collection in Firestore
+        db.collection("Artists")
+            .get()
+            .addOnSuccessListener { result ->
+                val artistsList = mutableListOf<Artist>()
+
+                for (document in result) {
+                    val artist = document.toObject(Artist::class.java)
+                    artistsList.add(artist)
+                }
+
+                _artists.value = artistsList
+            }
+            .addOnFailureListener { exception ->
+                // Handle errors here
+            }
+    }
+
+    fun fetchArtistDetails(artistId: String) {
+        db.collection("Artists").document(artistId)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                val artist = documentSnapshot.toObject(Artist::class.java)
+                artist?.let {
+                    // Update LiveData variables
+                    _artistName.value = it.artistName
+
+                    // Extract the first image URL and update LiveData
+                    _artistImages.value = it.artistImages?.firstOrNull() ?: ""
+
+                    _suggestedTracks.value = it.suggestedTracks ?: emptyList()
+                }
+            }
+            .addOnFailureListener { exception ->
+                // Handle errors here
+            }
+    }
+}
+
+
+
+
 class SongsViewModel : ViewModel() {
 
     private val apiService: AutocompleteApiService by lazy {
@@ -3053,7 +3249,6 @@ class SongsViewModel : ViewModel() {
             }
         }
     }
-
 }
 
 /*
@@ -3714,6 +3909,121 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     }
 }
 
+
+
+@Composable
+fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel: ArtistViewModel = viewModel()) {
+
+    val artistName by viewModel.artistName.observeAsState("")
+    val artistImages by viewModel.artistImages.observeAsState("")
+    val suggestedTracks by viewModel.suggestedTracks.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchArtistDetails(artistID)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+
+        TopNav(navController = navController)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .weight(1f)
+        ) {
+
+            Image(
+                painter = rememberImagePainter(data = artistImages),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 49.dp, end = 49.dp, top = 12.dp)
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp))
+                    .align(CenterHorizontally),
+                contentScale = ContentScale.FillBounds
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 49.dp, end = 49.dp)
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = artistName,
+                    style = TextStyle(
+                        fontSize = 36.sp,
+                        lineHeight = 43.2.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+
+            suggestedTracks.forEach { suggestedTrack ->
+                // Display album image and track name for each suggested track
+                AlbumTrackItem(suggestedTrack)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+        CommonBottomBar(navController = navController)
+    }
+}
+
+@Composable
+fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
+    // Use the first album image URL and the corresponding track name
+    val firstAlbumImage = suggestedTrack.albumImages?.firstOrNull() ?: ""
+    val trackName = suggestedTrack.trackName ?: ""
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        // Display the album image
+        Image(
+            painter = rememberImagePainter(data = firstAlbumImage),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(shape = RoundedCornerShape(20.dp)),
+            contentScale = ContentScale.FillBounds
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Text for track name
+        Text(
+            text = trackName,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
 
 
 
