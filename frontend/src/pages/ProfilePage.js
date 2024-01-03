@@ -5,7 +5,11 @@ import Profile from "../components/Profile";
 import ProfileMusicList from "../components/ProfileMusicList";
 import { db } from "../firebase";
 import { useParams } from "react-router-dom";
-import { fetchTrackDetails, fetchAllLikedSongs } from "../api/api";
+import {
+  fetchTrackDetails,
+  fetchAllLikedSongs,
+  fetchPlaylists,
+} from "../api/api";
 import {
   doc,
   getDoc,
@@ -19,6 +23,7 @@ function ProfilePage() {
   const [likedSongs, setLikedSongs] = useState([]);
   const [nonRatedSongs, setNonRatedSongs] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [playlists, setPlaylists] = useState([]);
   const [isFriend, setIsFriend] = useState(false);
   const { id } = useParams();
   const userID = localStorage.getItem("userID");
@@ -139,6 +144,7 @@ function ProfilePage() {
       await fetchNonRatedSongs(id); // Pass the viewed user's ID
       await fetchAllLikedSongs(id, setLikedSongs); // Pass the viewed user's ID
       //await fetchFriends();
+      await fetchPlaylists(id, setPlaylists);
     };
 
     fetchData();
@@ -161,7 +167,13 @@ function ProfilePage() {
       )}
       {user && // Check if user is available before checking conditions
         (isFriend || isUserProfile || user?.Isprivate === 0) && (
-          <ProfileMusicList tracks={likedSongs} non_rated={nonRatedSongs} />
+          <ProfileMusicList
+            tracks={likedSongs}
+            non_rated={nonRatedSongs}
+            userID={userID}
+            playlists={playlists}
+            setPlaylists={setPlaylists}
+          />
         )}
     </Box>
   );

@@ -8,18 +8,28 @@ import {
   HStack,
   IconButton,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Button,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
 import heart from "../utils/heart.svg";
 import lined_heart from "../utils/lined_heart.svg";
-import add2 from "../utils/add2.svg";
 import share from "../utils/share.svg";
+import add2 from "../utils/add2.svg";
 import comment from "../utils/comment.svg";
 import bookmark from "../utils/bookmark.svg";
 import spotify_logo from "../utils/spotify_logo.png";
 import { db } from "../firebase";
-import { getDoc, doc, updateDoc } from "firebase/firestore";
+import { getDoc, doc, updateDoc, collection } from "firebase/firestore";
 import RatingStars from "./RatingStars";
+import { fetchPlaylists } from "../api/api";
 
 const MusicDetail = ({ t }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -28,6 +38,9 @@ const MusicDetail = ({ t }) => {
   const [ratingText, setRatingText] = useState(0.0);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+
+  const [playlists, setPlaylists] = useState([]);
   const handleStarClick = (star) => {
     setRating(star);
   };
@@ -107,6 +120,27 @@ const MusicDetail = ({ t }) => {
       }
     }
   };
+
+  const handleAddToPlaylist = async () => {
+    if (selectedPlaylist) {
+      const playlistRef = doc(db, "Playlists", selectedPlaylist.id);
+      const playlistDoc = await getDoc(playlistRef);
+      const songs = playlistDoc.data().songs;
+      const timestamp = new Date();
+      const updatedSongs = {
+        ...songs,
+        [t.id]: { timestamp },
+      };
+      await updateDoc(playlistRef, {
+        songs: updatedSongs,
+      });
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    fetchPlaylists(userID, setPlaylists);
+  }, []);
 
   const likeSong = async () => {
     if ((userID || !isLiked) && !loading) {
@@ -202,10 +236,12 @@ const MusicDetail = ({ t }) => {
       setLikeCount(lC);
     }
   };
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     fetchStarsAndLikes();
     fetchIsLiked();
+    //console.log(playlists);
   }, []);
 
   return (
@@ -302,6 +338,7 @@ const MusicDetail = ({ t }) => {
             _hover={{ bg: isLiked ? "#085e32" : "#000" }}
             onClick={isLiked ? unlikeSong : likeSong}
           />
+
           <IconButton
             borderRadius="15px"
             w="64px"
@@ -309,7 +346,44 @@ const MusicDetail = ({ t }) => {
             bg="#33373b5e"
             icon={<Image src={add2} />}
             _hover={{ bg: "#000" }}
+            onClick={onOpen}
           />
+
+          <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Add To Playlist</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                {playlists.map((playlist) => (
+                  <Button
+                    key={playlist.id}
+                    onClick={() => {
+                      setSelectedPlaylist(playlist);
+                    }}
+                    variant={
+                      selectedPlaylist && selectedPlaylist.id === playlist.id
+                        ? "solid"
+                        : "outline"
+                    }
+                  >
+                    {playlist.name}
+                  </Button>
+                ))}
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  colorScheme="yellow"
+                  mr={3}
+                  onClick={handleAddToPlaylist}
+                >
+                  Add
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+
           <IconButton
             borderRadius="15px"
             w="64px"

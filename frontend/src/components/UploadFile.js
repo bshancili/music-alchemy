@@ -5,6 +5,7 @@ import axios from "axios";
 const UploadFile = () => {
   const toast = useToast();
   const [file, setFile] = useState(null);
+  const userID = localStorage.getItem("userID");
   const [responseArray, setResponseArray] = useState([]);
 
   const [isUploaded, setIsUploaded] = useState(false);
@@ -23,7 +24,7 @@ const UploadFile = () => {
       // Create a FormData object to send the file
       const formData = new FormData();
       formData.append("file", file);
-
+      formData.append("userid", userID);
       // Send the file to the server using axios
       const response = await axios.post(
         "http://127.0.0.1:8080/process_file",
