@@ -38,7 +38,7 @@ function Profile({
   const userID = localStorage.getItem("userID");
 
   const handleSettingsClick = () => {
-    navigate(`/settings/${userID}`);
+    setShowLogoutButton(true);
   };
 
   const handleAddFriend = () => {
@@ -196,6 +196,17 @@ function Profile({
                 icon={<Image src={settings} />}
                 onClick={handleSettingsClick}
               />
+            )}
+            {showLogoutButton && (
+              <Button
+                mt={2}
+                bg="#33373B5E"
+                _hover={{ bg: "#000" }}
+                color="#FFFFFF"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
             )}
           </>
         )}

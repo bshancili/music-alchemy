@@ -56,18 +56,7 @@ function ProfilePage() {
       console.error("Error fetching user:", error);
     }
   };
-  const fetchFriends = async () => {
-    try {
-      const userDocRef = doc(db, "Users", userID);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap) {
-        const userData = userSnap.data();
-        //console.log(userData);
-        const friends = userData.friends_list;
-        setFriends(friends);
-      }
-    } catch (error) {}
-  };
+
   const fetchNonRatedSongs = async () => {
     try {
       const userDocRef = doc(db, "Users", id);
