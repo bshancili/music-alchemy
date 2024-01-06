@@ -1,4 +1,12 @@
-import { Grid, GridItem, Button, Box, Text } from "@chakra-ui/react";
+import {
+  Grid,
+  GridItem,
+  Select,
+  Box,
+  Text,
+  FormLabel,
+  FormControl,
+} from "@chakra-ui/react";
 import React from "react";
 import AlbumCardItem from "./AlbumCardItem";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -18,12 +26,17 @@ const HomePageMusicList = () => {
   const observer = useRef();
   const [lastVisible, setLastVisible] = useState();
   const [hasMore, setHasMore] = useState(true); // New state variable
+  const [sortOption, setSortOption] = useState("rating");
 
   const fetchInitialTracks = async () => {
+    let sortOrder = "desc"; // Default sorting order
+    if (sortOption === "track_name") {
+      sortOrder = "asc"; // Change sorting order to ascending for track names
+    }
     let queryOptions = query(
       collection(db, "Tracks"),
       limit(24),
-      orderBy("rating", "desc")
+      orderBy(sortOption, sortOrder)
     );
     try {
       const snap = await getDocs(queryOptions);
@@ -45,10 +58,13 @@ const HomePageMusicList = () => {
 
   const fetchAllTracks = async () => {
     if (loading || !lastVisible | !hasMore) return;
-
+    let sortOrder = "desc"; // Default sorting order
+    if (sortOption === "track_name") {
+      sortOrder = "asc"; // Change sorting order to ascending for track names
+    }
     let queryOptions = query(
       collection(db, "Tracks"),
-      orderBy("rating", "desc"),
+      orderBy(sortOption, sortOrder),
       limit(18),
       startAfter(lastVisible)
     );
@@ -78,6 +94,13 @@ const HomePageMusicList = () => {
     }
   };
 
+  const handleSortChange = (event) => {
+    setSortOption(event.target.value);
+    setAllTracks([]);
+    setLastVisible(null);
+    setHasMore(true);
+  };
+
   const lastTrack = useCallback(
     (node) => {
       if (!loading && node) {
@@ -97,8 +120,7 @@ const HomePageMusicList = () => {
 
   useEffect(() => {
     fetchInitialTracks();
-    console.log("errror");
-  }, []);
+  }, [sortOption]);
 
   return (
     <Box bg="#1D2123" padding="50px 96px" flexDirection={"column"}>
@@ -113,7 +135,22 @@ const HomePageMusicList = () => {
       >
         Music
       </Text>
-      <Grid templateColumns="repeat(6, 1fr)" gap={6}>
+
+      <FormControl>
+        <FormLabel color="white">Sort by:</FormLabel>
+        <Select
+          color="white"
+          value={sortOption}
+          onChange={handleSortChange}
+          width="150px"
+        >
+          <option value="rating">Rating</option>
+          <option value="like_count">Like Count</option>
+          <option value="track_name">Track Name</option>
+        </Select>
+      </FormControl>
+
+      <Grid mt={3} templateColumns="repeat(6, 1fr)" gap={6}>
         {allTracks.map((track, index) => {
           if (allTracks.length === index + 1) {
             return (
