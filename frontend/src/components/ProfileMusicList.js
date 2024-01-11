@@ -10,6 +10,7 @@ import {
   Input,
   Button,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import {
   doc,
@@ -32,12 +33,21 @@ const ProfileMusicList = ({
   setPlaylists,
 }) => {
   const [playlistName, setPlaylistName] = useState("");
-
+  const toast = useToast();
   const handlePlaylistNameChange = (event) => {
     setPlaylistName(event.target.value);
   };
 
   const handleCreatePlaylist = async () => {
+    if (playlistName.length === 0) {
+      toast({
+        title: "Playlist Name cannot be null!",
+        status: "warning",
+        position: "bottom",
+        isClosable: "true",
+      });
+      return;
+    }
     try {
       const userRef = doc(db, "Users", userID);
       const userDoc = await getDoc(userRef);

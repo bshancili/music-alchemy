@@ -13,6 +13,7 @@ import AddSongPage from "./pages/AddSongPage";
 import StatsPage from "./pages/StatsPage";
 import PlaylistPage from "./pages/PlaylistPage";
 import SettingsPage from "./pages/SettingsPage";
+import ChatPage from "./pages/ChatPage";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -31,6 +32,7 @@ root.render(
         <Route path="stats/:id" element={<StatsPage />} />
         <Route path="playlists/:name" element={<PlaylistPage />} />
         <Route path="settings/:id" element={<SettingsPage />} />
+        <Route path="chat/:id" element={<ChatPage />} />
       </Routes>
     </ChakraProvider>
   </BrowserRouter>

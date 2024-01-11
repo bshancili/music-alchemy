@@ -340,6 +340,9 @@ const Header = () => {
           w="64px"
           h="64px"
           icon={<Image src={chat} />}
+          onClick={() => {
+            navigate(`/chat/${userID}`);
+          }}
         />
         <IconButton
           bg="#33373B5E"

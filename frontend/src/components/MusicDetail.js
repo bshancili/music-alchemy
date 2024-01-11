@@ -21,15 +21,15 @@ import {
 import { StarIcon } from "@chakra-ui/icons";
 import heart from "../utils/heart.svg";
 import lined_heart from "../utils/lined_heart.svg";
-import share from "../utils/share.svg";
 import add2 from "../utils/add2.svg";
 import comment from "../utils/comment.svg";
 import bookmark from "../utils/bookmark.svg";
 import spotify_logo from "../utils/spotify_logo.png";
 import { db } from "../firebase";
-import { getDoc, doc, updateDoc, collection } from "firebase/firestore";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 import RatingStars from "./RatingStars";
 import { fetchPlaylists } from "../api/api";
+import ShareTrackModal from "./ShareTrackModal";
 
 const MusicDetail = ({ t }) => {
   const [isLiked, setIsLiked] = useState(false);
@@ -241,7 +241,6 @@ const MusicDetail = ({ t }) => {
   useEffect(() => {
     fetchStarsAndLikes();
     fetchIsLiked();
-    //console.log(playlists);
   }, []);
 
   return (
@@ -392,14 +391,7 @@ const MusicDetail = ({ t }) => {
             icon={<Image src={comment} />}
             _hover={{ bg: "#000" }}
           />
-          <IconButton
-            borderRadius="15px"
-            w="64px"
-            h="64px"
-            bg="#33373b5e"
-            icon={<Image src={share} />}
-            _hover={{ bg: "#000" }}
-          />
+          <ShareTrackModal track={t} />
           <IconButton
             borderRadius="15px"
             w="64px"
