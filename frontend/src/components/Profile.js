@@ -28,6 +28,7 @@ function Profile({
   isF,
   id,
   isPrivate,
+  songCount,
 }) {
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);

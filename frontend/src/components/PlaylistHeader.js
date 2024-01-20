@@ -23,7 +23,16 @@ import {
 
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  where,
+  query,
+  getDocs,
+} from "firebase/firestore";
 import { fetchUserByID } from "../api/api";
 import { useNavigate } from "react-router-dom";
 
@@ -95,7 +104,6 @@ const PlaylistHeader = ({ playlist }) => {
     const userData = userSnap.data();
     const existingPlaylists = userData.playlists;
     const newPlaylists = [...existingPlaylists, playlist.id];
-
     // Update the user document with the updated playlists array
     await updateDoc(userDocRef, {
       playlists: newPlaylists,
@@ -105,6 +113,54 @@ const PlaylistHeader = ({ playlist }) => {
   const [editedDescription, setEditedDescription] = useState(
     playlist?.description || ""
   );
+
+  const removePlaylist = async (contributors) => {
+    try {
+      // Step 1: Remove the playlist from the Playlists collection
+      const playlistDocRef = collection(db, "Playlists");
+      const querySnapshot = await getDocs(
+        query(playlistDocRef, where("name", "==", playlist.name))
+      );
+      const playlistId = querySnapshot.docs[0].id;
+      console.log(playlistId);
+
+      await deleteDoc(doc(db, "Playlists", playlistId));
+
+      // Step 2: Remove the playlist from each contributor's playlists array
+      for (const contributorId of contributors) {
+        if (contributors.length === 0) {
+          break;
+        }
+        const contributorDocRef = doc(db, "Users", contributorId);
+        const contributorSnap = await getDoc(contributorDocRef);
+        const contributorData = contributorSnap.data();
+
+        if (contributorData && contributorData.playlists) {
+          const updatedPlaylists = contributorData.playlists.filter(
+            (id) => id !== playlistId
+          );
+
+          // Update the contributor's playlists array
+          await updateDoc(contributorDocRef, { playlists: updatedPlaylists });
+        }
+      }
+      const userDocRef = doc(db, "Users", userID);
+      const userSnap = await getDoc(userDocRef);
+      const userData = userSnap.data();
+      console.log(userData.playlists);
+      if (userData && userData.playlists) {
+        const updatedPlaylists = userData.playlists.filter(
+          (id) => id !== playlistId
+        );
+
+        // Update the contributor's playlists array
+        await updateDoc(userDocRef, { playlists: updatedPlaylists });
+      }
+      console.log(`Playlist with ID ${playlistId} removed successfully.`);
+    } catch (error) {
+      console.error("Error removing playlist:", error);
+    }
+  };
 
   const fetchFriends = async () => {
     try {
@@ -261,6 +317,14 @@ const PlaylistHeader = ({ playlist }) => {
         {!isCurrentUserCreator && (
           <Button colorScheme="red" onClick={handleLeaveClick}>
             Leave
+          </Button>
+        )}
+        {isCurrentUserCreator && (
+          <Button
+            colorScheme="red"
+            onClick={() => removePlaylist(playlist.contributors)}
+          >
+            Delete Playlist
           </Button>
         )}
       </HStack>

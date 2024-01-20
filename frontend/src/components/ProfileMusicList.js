@@ -9,8 +9,18 @@ import {
   Tabs,
   Input,
   Button,
-  Text,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Stack,
+  Avatar,
   useToast,
+  HStack,
 } from "@chakra-ui/react";
 import {
   doc,
@@ -21,9 +31,10 @@ import {
   collection,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import MusicListItem from "./MusicListItem";
 import PlaylistListItem from "./PlaylistListItem";
+import { fetchUserByID } from "../api/api";
 
 const ProfileMusicList = ({
   tracks,
@@ -31,12 +42,132 @@ const ProfileMusicList = ({
   userID,
   playlists,
   setPlaylists,
+  friends,
+  username,
 }) => {
   const [playlistName, setPlaylistName] = useState("");
   const toast = useToast();
+  const [friendsList, setFriendsList] = useState([]);
+  const [selectedFriend, setSelectedFriend] = useState([]);
   const handlePlaylistNameChange = (event) => {
     setPlaylistName(event.target.value);
   };
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const fetchFriendsDetails = async (friendIds) => {
+    const detailsPromises = friendIds.map((id) => fetchUserByID(id));
+    const friendsDetails = await Promise.all(detailsPromises);
+    setFriendsList(friendsDetails.filter(Boolean)); // Filter out null values
+  };
+
+  const getRandomSongsFromArray = (array, count) => {
+    const shuffledArray = array.slice(); // Create a shallow copy of the array
+    let currentIndex = shuffledArray.length,
+      randomIndex,
+      temporaryValue;
+
+    // While there remain elements to shuffle...
+    while (currentIndex !== 0) {
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      temporaryValue = shuffledArray[currentIndex];
+      shuffledArray[currentIndex] = shuffledArray[randomIndex];
+      shuffledArray[randomIndex] = temporaryValue;
+    }
+
+    return shuffledArray.slice(0, count);
+  };
+
+  const combineRandomSongArrays = (a, b, c, d, commonTimestamp) => {
+    const timestamp = commonTimestamp;
+
+    const combinedMap = new Map();
+
+    // Helper function to add IDs to the map
+    const addIdsToMap = (ids) => {
+      ids.forEach((id) => {
+        if (id) {
+          combinedMap.set(id, { timestamp });
+        }
+      });
+    };
+
+    addIdsToMap(a);
+    addIdsToMap(b);
+    addIdsToMap(c);
+    addIdsToMap(d);
+
+    const combinedObject = {};
+    combinedMap.forEach((value, key) => {
+      combinedObject[key] = value;
+    });
+
+    return combinedObject;
+  };
+
+  const handleOnGenerate = async (friend) => {
+    const friendDocRef = doc(db, "Users", friend.uid);
+    const friendSnap = await getDoc(friendDocRef);
+    const friendData = friendSnap.data();
+    const friendLikedSongs = Object.keys(friendData.liked_song_list);
+    const friendRatedSongs = Object.keys(friendData.rated_song_list);
+    const userDocRef = doc(db, "Users", userID);
+    const userSnap = await getDoc(userDocRef);
+    const userData = userSnap.data();
+    const userLikedSongs = Object.keys(friendData.liked_song_list);
+    const userRatedSongs = Object.keys(friendData.rated_song_list);
+
+    const generatePlaylistName = friend.username + " + " + username;
+
+    if (userData.playlists) {
+      const playlistsCollectionRef = collection(db, "Playlists");
+      const a = getRandomSongsFromArray(friendLikedSongs, 5);
+      const b = getRandomSongsFromArray(friendRatedSongs, 5);
+      const c = getRandomSongsFromArray(userLikedSongs, 5);
+      const d = getRandomSongsFromArray(userRatedSongs, 5);
+      const timestamp = new Date();
+
+      const combinedArray = combineRandomSongArrays(a, b, c, d, timestamp);
+      const playlistObject = {
+        contributors: [friend.uid],
+        name: generatePlaylistName,
+        timestamp: timestamp,
+        songs: combinedArray,
+        createdBy: userID,
+        description: "",
+        imgURL: "https://www.afrocharts.com/images/song_cover.png",
+      };
+      const newPlaylistRef = await addDoc(
+        playlistsCollectionRef,
+        playlistObject
+      );
+      const newPlaylistId = newPlaylistRef.id;
+      playlistObject.id = newPlaylistId;
+      await updateDoc(userDocRef, {
+        playlists: arrayUnion(newPlaylistId),
+      });
+      await updateDoc(friendDocRef, {
+        playlists: arrayUnion(newPlaylistId),
+      });
+
+      setPlaylists((prevPlaylists) => [playlistObject, ...prevPlaylists]);
+    }
+    console.log(playlistName);
+    toast({
+      title: "Playlist is created!",
+      status: "success",
+      position: "bottom",
+      isClosable: "true",
+    });
+    onClose();
+  };
+
+  useEffect(() => {
+    fetchFriendsDetails(friends);
+  }, [friends]);
 
   const handleCreatePlaylist = async () => {
     if (playlistName.length === 0) {
@@ -122,10 +253,59 @@ const ProfileMusicList = ({
               color={"white"}
             />
 
-            <Button colorScheme="teal" size="lg" onClick={handleCreatePlaylist}>
-              Create Playlist
-            </Button>
-            <Grid templateColumns="repeat(5, 1fr)" gap={4}>
+            <HStack>
+              <Button
+                colorScheme="teal"
+                size="lg"
+                onClick={handleCreatePlaylist}
+              >
+                Create Playlist
+              </Button>
+
+              <Button colorScheme="yellow" size="lg" onClick={onOpen}>
+                Generate Playlist with A Friend
+              </Button>
+              <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                  <ModalHeader>Modal Title</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                    <ModalBody>
+                      {friendsList.map((friend) => (
+                        <Button
+                          colorScheme="yellow"
+                          margin={1}
+                          key={friend.uid}
+                          onClick={() => {
+                            setSelectedFriend(friend);
+                          }}
+                          variant={
+                            selectedFriend && friend.uid === selectedFriend.uid
+                              ? "solid"
+                              : "outline"
+                          }
+                        >
+                          {friend.username}
+                        </Button>
+                      ))}
+                    </ModalBody>
+                  </ModalBody>
+
+                  <ModalFooter>
+                    <Button
+                      colorScheme="yellow"
+                      mr={3}
+                      onClick={() => handleOnGenerate(selectedFriend)}
+                    >
+                      Generate
+                    </Button>
+                  </ModalFooter>
+                </ModalContent>
+              </Modal>
+            </HStack>
+
+            <Grid templateColumns="repeat(4, 1fr)" gap={4}>
               {playlists.map((playlist) => (
                 <GridItem key={playlist.id}>
                   <PlaylistListItem playlist={playlist} />

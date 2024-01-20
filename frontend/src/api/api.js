@@ -392,7 +392,7 @@ const fetchTemporalRecommendation = async (userID, setTempRecSongs) => {
       }),
     });
     console.log(response.data);
-    if (false) {
+    if (response?.data) {
       const recommendations = response.data;
       const trackIds = recommendations.map(
         (recommendation) => recommendation.track_id
