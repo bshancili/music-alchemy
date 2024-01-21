@@ -1,7 +1,7 @@
-import { Grid, GridItem, Button, Box, Text } from "@chakra-ui/react";
-import React from "react";
+import { Box, Grid, GridItem, Text } from "@chakra-ui/react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import AlbumCardItem from "./AlbumCardItem";
-import { useState, useEffect, useRef, useCallback } from "react";
+import ArtistCardItem from "./ArtistCardItem";
 import {
   collection,
   getDocs,
@@ -12,18 +12,17 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
-const HomePageMusicList = () => {
-  const [allTracks, setAllTracks] = useState([]);
+const HomePageArtistList = () => {
+  const [allArtists, setAllArtists] = useState([]);
   const [loading, setLoading] = useState(false);
   const observer = useRef();
   const [lastVisible, setLastVisible] = useState();
-  const [hasMore, setHasMore] = useState(true); // New state variable
+  const [hasMore, setHasMore] = useState(true);
 
-  const fetchInitialTracks = async () => {
+  const fetchInitialArtists = async () => {
     let queryOptions = query(
-      collection(db, "Tracks"),
+      collection(db, "Artists"),
       limit(24),
-      orderBy("rating", "desc")
     );
     try {
       const snap = await getDocs(queryOptions);
@@ -32,23 +31,22 @@ const HomePageMusicList = () => {
       if (!lastVisible || lastDoc.id !== lastVisible.id) {
         setLastVisible(lastDoc);
       }
-      const trackData = snap.docs.map((doc) => ({
+      const artistData = snap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setAllTracks((prevTracks) => [...prevTracks, ...trackData]);
+      setAllArtists((prevArtists) => [...prevArtists, ...artistData]);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching tracks:", error);
+      console.error("Error fetching artists:", error);
     }
   };
 
-  const fetchAllTracks = async () => {
-    if (loading || !lastVisible | !hasMore) return;
+  const fetchAllArtists = async () => {
+    if (loading || !lastVisible || !hasMore) return;
 
     let queryOptions = query(
-      collection(db, "Tracks"),
-      orderBy("rating", "desc"),
+      collection(db, "Artists"),
       limit(18),
       startAfter(lastVisible)
     );
@@ -65,39 +63,37 @@ const HomePageMusicList = () => {
         if (!lastVisible || lastDoc.id !== lastVisible.id) {
           setLastVisible(lastDoc);
         }
-        const trackData = snap.docs.map((doc) => ({
+        const artistData = snap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setAllTracks((prevTracks) => [...prevTracks, ...trackData]);
-        console.log(allTracks);
+        setAllArtists((prevArtists) => [...prevArtists, ...artistData]);
         setLoading(false);
       }
     } catch (error) {
-      console.error("Error fetching tracks:", error);
+      console.error("Error fetching artists:", error);
     }
   };
 
-  const lastTrack = useCallback(
+  const lastArtist = useCallback(
     (node) => {
       if (!loading && node) {
         if (observer.current) observer.current.disconnect();
 
         observer.current = new IntersectionObserver((entries) => {
           if (entries[0].isIntersecting) {
-            fetchAllTracks();
+            fetchAllArtists();
           }
         });
 
         observer.current.observe(node);
       }
     },
-    [loading, allTracks]
+    [loading, allArtists]
   );
 
   useEffect(() => {
-    fetchInitialTracks();
-    console.log("errror");
+    fetchInitialArtists();
   }, []);
 
   return (
@@ -110,22 +106,22 @@ const HomePageMusicList = () => {
         fontWeight="bold"
         lineHeight={1.3}
         mb={1.5}
-        textColor="teal"
+        textColor="green"
       >
-        Music
+        Artists
       </Text>
       <Grid templateColumns="repeat(6, 1fr)" gap={6}>
-        {allTracks.map((track, index) => {
-          if (allTracks.length === index + 1) {
+        {allArtists.map((artist, index) => {
+          if (allArtists.length === index + 1) {
             return (
-              <GridItem ref={lastTrack} key={track.id}>
-                <AlbumCardItem track={track} />
+              <GridItem ref={lastArtist} key={artist.id}>
+                <ArtistCardItem artist={artist} />
               </GridItem>
             );
           } else {
             return (
-              <GridItem key={track.id}>
-                <AlbumCardItem track={track} />
+              <GridItem key={artist.id}>
+                <ArtistCardItem artist={artist} />
               </GridItem>
             );
           }
@@ -135,4 +131,4 @@ const HomePageMusicList = () => {
   );
 };
 
-export default HomePageMusicList;
+export default HomePageArtistList;
