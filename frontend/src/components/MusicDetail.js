@@ -30,8 +30,16 @@ import { getDoc, doc, updateDoc } from "firebase/firestore";
 import RatingStars from "./RatingStars";
 import { fetchPlaylists } from "../api/api";
 import ShareTrackModal from "./ShareTrackModal";
+import { Link, useNavigate } from 'react-router-dom';
 
 const MusicDetail = ({ t }) => {
+
+  const navigate = useNavigate();
+
+  const handleTextClick = (artistId) => {
+    // Navigate to the specified route when the text is clicked
+    navigate(`/artist/${artistId}`);
+  };
   const [isLiked, setIsLiked] = useState(false);
   const toast = useToast();
   const [rating, setRating] = useState(0);
@@ -45,9 +53,7 @@ const MusicDetail = ({ t }) => {
     setRating(star);
   };
   const userID = localStorage.getItem("userID");
-  const handleExternalLink = () => {
-    window.open(t.track_url, "_blank");
-  };
+  
   const handleRateButtonClick = async () => {
     if (userID && !loading) {
       setLoading(true);
@@ -273,9 +279,13 @@ const MusicDetail = ({ t }) => {
         <Text fontSize="48px" fontWeight="bold" lineHeight="120%">
           {t?.track_name}
         </Text>
-        <Text fontSize="24px" fontWeight="w.600" lineHeight="120%">
-          {t?.artists[0]}
-        </Text>
+      <Text
+        fontSize="24px"
+        fontWeight="w.600"
+        lineHeight="120%"
+      >
+        {t?.artists[0]}
+      </Text>
         <HStack
           width="100%"
           mt={6}
@@ -326,7 +336,6 @@ const MusicDetail = ({ t }) => {
             p={4}
             icon={<Image src={spotify_logo} />}
             _hover={{ bg: "#147040" }}
-            onClick={handleExternalLink}
           />
           <IconButton
             borderRadius="15px"

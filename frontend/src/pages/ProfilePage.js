@@ -56,9 +56,9 @@ function ProfilePage() {
     }
   };
 
-  const fetchNonRatedSongs = async () => {
+  const fetchNonRatedSongs = async (userId) => {
     try {
-      const userDocRef = doc(db, "Users", id);
+      const userDocRef = doc(db, "Users", userId);
       const userSnap = await getDoc(userDocRef);
       if (userSnap) {
         const userData = userSnap.data();
@@ -129,8 +129,8 @@ function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       await fetchUser();
-      await fetchNonRatedSongs();
-      await fetchAllLikedSongs(id, setLikedSongs);
+      await fetchNonRatedSongs(id); // Pass the viewed user's ID
+      await fetchAllLikedSongs(id, setLikedSongs); // Pass the viewed user's ID
       //await fetchFriends();
       await fetchPlaylists(id, setPlaylists);
     };

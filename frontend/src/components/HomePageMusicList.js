@@ -132,6 +132,7 @@ const HomePageMusicList = () => {
         fontWeight="bold"
         lineHeight={1.3}
         mb={1.5}
+        textColor="teal"
       >
         Music
       </Text>
