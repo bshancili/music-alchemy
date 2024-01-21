@@ -2902,6 +2902,7 @@ class ProfileViewModel : ViewModel() {
             if (documentSnapshot.exists()) {
                 // User exists, update the username
                 userDocument.update("username", newUsername)
+                userDocument.update("profile_picture_url", "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg")
                     .addOnSuccessListener {
                         // Handle success
                     }
