@@ -3958,7 +3958,9 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .weight(1f)
                         .clickable { showCommentDialog = true },
                 )
+                /*
                 Image(
+
                     painter = painterResource(id = R.drawable.comment),
                     contentDescription = "comment",
                     contentScale = ContentScale.FillBounds,
@@ -3969,6 +3971,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .weight(1f)
                         .clickable { showDebugInfo() }
                 )
+                */
                 Image(
                     painter = painterResource(id = R.drawable.share),
                     contentDescription = "share",
