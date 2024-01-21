@@ -102,11 +102,29 @@ const PlaylistHeader = ({ playlist }) => {
     const userDocRef = doc(db, "Users", userIdToAdd);
     const userSnap = await getDoc(userDocRef);
     const userData = userSnap.data();
-    const existingPlaylists = userData.playlists;
+    let existingPlaylists = userData.playlists;
+    if (!existingPlaylists) {
+      const defaultPlaylists = []; // You can initialize with default playlists if needed
+      const updateData = { playlists: defaultPlaylists };
+
+      await updateDoc(userDocRef, updateData);
+
+      // Now, you can fetch the updated data if needed
+      const updatedUserSnap = await getDoc(userDocRef);
+      const updatedUserData = updatedUserSnap.data();
+      existingPlaylists = updatedUserData.playlists;
+    }
     const newPlaylists = [...existingPlaylists, playlist.id];
     // Update the user document with the updated playlists array
     await updateDoc(userDocRef, {
       playlists: newPlaylists,
+    });
+    onClose();
+    toast({
+      title: "Friend invited to the playlist successfully.",
+      status: "success",
+      position: "bottom",
+      isClosable: "true",
     });
   };
 
@@ -313,7 +331,6 @@ const PlaylistHeader = ({ playlist }) => {
               <Button colorScheme="blue" mr={3} onClick={onClose}>
                 Close
               </Button>
-              <Button variant="ghost">Secondary Action</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

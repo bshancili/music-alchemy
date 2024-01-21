@@ -148,6 +148,9 @@ const HomePageMusicList = () => {
           <option value="rating">Rating</option>
           <option value="like_count">Like Count</option>
           <option value="track_name">Track Name</option>
+          <option value="danceability">Danceability</option>
+          <option value="energy">Energy</option>
+          <option value="liveness">Liveness</option>
         </Select>
       </FormControl>
 

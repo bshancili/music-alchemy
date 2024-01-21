@@ -30,10 +30,9 @@ import { getDoc, doc, updateDoc } from "firebase/firestore";
 import RatingStars from "./RatingStars";
 import { fetchPlaylists } from "../api/api";
 import ShareTrackModal from "./ShareTrackModal";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 
 const MusicDetail = ({ t }) => {
-
   const navigate = useNavigate();
 
   const handleTextClick = (artistId) => {
@@ -53,7 +52,7 @@ const MusicDetail = ({ t }) => {
     setRating(star);
   };
   const userID = localStorage.getItem("userID");
-  
+
   const handleRateButtonClick = async () => {
     if (userID && !loading) {
       setLoading(true);
@@ -279,13 +278,9 @@ const MusicDetail = ({ t }) => {
         <Text fontSize="48px" fontWeight="bold" lineHeight="120%">
           {t?.track_name}
         </Text>
-      <Text
-        fontSize="24px"
-        fontWeight="w.600"
-        lineHeight="120%"
-      >
-        {t?.artists[0]}
-      </Text>
+        <Text fontSize="24px" fontWeight="w.600" lineHeight="120%">
+          {t?.artists[0]}
+        </Text>
         <HStack
           width="100%"
           mt={6}
@@ -392,23 +387,7 @@ const MusicDetail = ({ t }) => {
             </ModalContent>
           </Modal>
 
-          <IconButton
-            borderRadius="15px"
-            w="64px"
-            h="64px"
-            bg="#33373b5e"
-            icon={<Image src={comment} />}
-            _hover={{ bg: "#000" }}
-          />
           <ShareTrackModal track={t} />
-          <IconButton
-            borderRadius="15px"
-            w="64px"
-            h="64px"
-            bg="#33373b5e"
-            icon={<Image src={bookmark} />}
-            _hover={{ bg: "#000" }}
-          />
         </HStack>
       </Box>
     </Flex>
