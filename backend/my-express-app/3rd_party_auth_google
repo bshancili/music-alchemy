@@ -1,17 +1,32 @@
-import { GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, setDoc, doc } from "firebase/firestore";
-import { getAuth, signInWithRedirect, getRedirectResult } from "firebase/auth";
 
+const admin_g = require("firebase-admin");
+const { getFirestore, setDoc, doc, deleteDoc } = require("firebase/firestore");
+const { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider } = require("firebase/auth");
+
+const serviceAccount_g = require("./music-alchemy-firebase-adminsdk.json");
+
+const FIREBASE_API_KEY_g = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0";
+
+// Initialize Firebase
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount_g),
+});
+const db_g = admin.firestore();
+const auth_g = admin.getAuth();
 const provider = new GoogleAuthProvider();
-const auth = getAuth();
-const db = getFirestore();
 
-signInWithRedirect(auth, provider);
+
+
+
+
+// Initialize Firebase Web SDK for client-side authentication
+
+signInWithRedirect(auth_g, provider);
 //redirects to google authentication
-getRedirectResult(auth)
+getRedirectResult(auth_g)
   .then((result) => {
     // This gives you a Google Access Token. You can use it to access Google APIs.
-    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const credential = provider.credentialFromResult(result);
     const token = credential.accessToken;
 
     // The signed-in user info.
@@ -31,7 +46,7 @@ getRedirectResult(auth)
             username: user.displayName || user.email.split('@')[0], // Use displayName or create a username from the email
           };
         // Create a new user document in Firestore
-        setDoc(doc(db, "users", user.uid),defaultValues)
+        setDoc(doc(db_g, "users", user.uid),defaultValues)
         .then(() => {
           // Handle success if needed
         }).catch((error) => {
@@ -46,5 +61,5 @@ getRedirectResult(auth)
     // The email of the user's account used.
     const email = error.customData.email;
     // The AuthCredential type that was used.
-    const credential = GoogleAuthProvider.credentialFromError(error);
+    const credential = provider.credentialFromError(error);
   });

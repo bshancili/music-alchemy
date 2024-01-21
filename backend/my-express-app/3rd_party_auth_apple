@@ -1,11 +1,18 @@
-import { OAuthProvider } from "firebase/auth";
-import { getFirestore, setDoc, doc } from "firebase/firestore";
 
-const provider = new OAuthProvider('apple.com');
-import { getAuth, signInWithRedirect } from "firebase/auth";
-import { getAuth, getRedirectResult, OAuthProvider } from "firebase/auth";
+const admin = require("firebase-admin");
+const { OAuthProvider } = require("firebase/auth");
 
-const db = getFirestore();
+const serviceAccount = require("./music-alchemy-firebase-adminsdk.json");
+
+const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0";
+
+
+
+// Initialize Firebase
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+const db = admin.firestore();
 const auth = getAuth();
 
 signInWithRedirect(auth, provider);
