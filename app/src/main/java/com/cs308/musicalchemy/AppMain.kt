@@ -17,6 +17,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -373,8 +374,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         composable("login") { LoginScreen(navController) }
         composable("mainMenu") {
             val viewModel = viewModel<SongsViewModel>()
-            val artistViewModel = viewModel<ArtistViewModel>()// Instantiate your SongsViewModel here
-            MainMenu(navController, viewModel, artistViewModel)
+            val artistViewModel = viewModel<ArtistViewModel>()
+            val albumViewModel = viewModel<AlbumViewModel>()// Instantiate your SongsViewModel here
+            MainMenu(navController, viewModel, artistViewModel, albumViewModel)
         }
         composable("search") { Search(navController) }
         composable("searchUser") { SearchUser(navController)}
@@ -395,6 +397,9 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("artistDetail/{artistID}", arguments = listOf(navArgument("artistID") { type = NavType.StringType })) { backStackEntry ->
             ArtistDetailScreen(navController, artistID = backStackEntry.arguments?.getString("artistID") ?: "")
+        }
+        composable("albumDetail/{albumID}", arguments = listOf(navArgument("albumID") { type = NavType.StringType })) { backStackEntry ->
+            AlbumDetailScreen(navController, albumID = backStackEntry.arguments?.getString("albumID") ?: "")
         }
         composable("recommendations") {
             RecommendationScreen(navController)
@@ -667,12 +672,47 @@ fun CommonBottomBar(navController: NavController, modifier: Modifier = Modifier)
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
+enum class SortOption {
+    _Rating, _Rating_Count, _Like, _Liveness, _Danceability, _Energy, _Name
+}
+@Composable
+fun ScrollableSortMenu(selectedSortOption: SortOption, onOptionSelected: (SortOption) -> Unit) {
+    val sortOptions = SortOption.values() // Retrieve all enum values
+
+    // Horizontal Scrollable Row
+    Row(
+        modifier = Modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        sortOptions.forEach { option ->
+            // Each option is a Text composable that can be clicked
+            Text(
+                text = option.name.replace('_', ' '),
+                modifier = Modifier
+                    .clickable { onOptionSelected(option) }
+                    .background(
+                        color = Color(0xFF1A1E1F),
+                    )
+                    .border(1.dp, if (option == selectedSortOption) Color.White else Color.Gray, RoundedCornerShape(4.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                color = if (option == selectedSortOption) Color.White else Color.Gray
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalPagerApi::class)
 @Composable
-fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistViewModel: ArtistViewModel) {
+fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistViewModel: ArtistViewModel, albumViewModel: AlbumViewModel) {
+
 
     val songs by viewModel.songs.observeAsState(emptyList())
     val artists by artistViewModel.artists.observeAsState(emptyList())
+    val albums by albumViewModel.albums.observeAsState(emptyList())
+
+    val selectedSortOption by viewModel.selectedSortOption.observeAsState(SortOption._Rating)
 
     Box(
         modifier = Modifier
@@ -688,7 +728,7 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistView
             TopNav(navController = navController)
             Spacer(modifier = Modifier.height(16.dp))
 
-            HorizontalPager(2) { page ->
+            HorizontalPager(3) { page ->
                 when (page) {
                     0 -> {
                         Column(
@@ -728,6 +768,28 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistView
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Text(
+                                text = "Sort By",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(700),
+                                    color = Color(0xFFEFEEE0),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            ScrollableSortMenu(selectedSortOption) { option ->
+                                viewModel.selectedSortOption.value = option // Update the ViewModel
+                                viewModel.sortSongs(option)
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
                                 text = "Music",
                                 style = TextStyle(
                                     fontSize = 20.sp,
@@ -760,7 +822,7 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistView
                             }
                         }
                     }
-                    1 -> {
+                    2 -> {
 
                         LaunchedEffect(Unit) {
                             artistViewModel.fetchArtists()
@@ -805,6 +867,52 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistView
                             }
                         }
                     }
+
+                    1 -> {
+
+                        LaunchedEffect(Unit) {
+                            albumViewModel.fetchAlbums()
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            // Fetch artists when navigating to Page 1
+
+                            Text(
+                                text = "Albums",
+                                style = TextStyle(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight(700),
+                                    color = Color(0xFFEFEEE0),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(24.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Print artist information in Page 1
+                            for (i in albums.indices step 2) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    if (i < albums.size) {
+                                        DisplayAlbum(album = albums[i], navController = navController)
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    if (i + 1 < albums.size) {
+                                        DisplayAlbum(album = albums[i + 1], navController = navController)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -812,6 +920,59 @@ fun MainMenu(navController: NavController, viewModel: SongsViewModel, artistView
         CommonBottomBar(navController = navController, modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun DisplayAlbum(album: Album, navController: NavController) {
+    val imageUrl: String? = album.albumImages?.firstOrNull()
+    imageUrl?.let {
+        Column(
+            modifier = Modifier
+                .width(185.dp)
+                .clickable {
+                    navController.navigate("albumDetail/${album.albumID}")
+                }
+                .padding(bottom = 24.dp)
+        ) {
+            // Image
+            Image(
+                painter = rememberImagePainter(data = it),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.FillBounds
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Text for artist name
+            Text(
+                text = "${album.albumName}",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "${album.artistNames?.joinToString("\n")}",
+                color = Color.White,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
@@ -1737,58 +1898,92 @@ fun ProfileScreen(navController: NavController, userId:String) {
                 contentScale = ContentScale.FillBounds
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
 
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(start = 49.dp, end = 49.dp)
                     .fillMaxWidth()
             ) {
+                // Image Composable with fixed size
+                // Determine the image resource based on the likedSongs count
+                val imageResource = when {
+                    likedSongs.size in 10..24 -> R.drawable.emerald
+                    likedSongs.size in 25..49 -> R.drawable.blue
+                    likedSongs.size in 50..99 -> R.drawable.silver
+                    likedSongs.size >= 100 -> R.drawable.gold
+                    else -> null // No image for less than 10 likes
+                }
 
-                Text(
-                    text = currentUsername,
-                    style = TextStyle(
-                        fontSize = 36.sp,
-                        lineHeight = 43.2.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color(0xFFFFFFFF),
-                    ),
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Spacer(modifier = Modifier.height(6.dp)) // Space between the texts and liked songs count
+                    Text(
+                        text = "${likedSongs.size}",
+                        style = TextStyle(
+                            color = Color.White,
+                            fontSize = 36.sp
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Display the image if the resource is not null
+                imageResource?.let {
+                    Image(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp) // Fixed size for the image
+                            .clip(shape = RoundedCornerShape(20.dp)),
+                        contentScale = ContentScale.FillBounds
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                Spacer(modifier = Modifier.width(16.dp)) // Space between image and texts
+
+                // Column for Texts
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Text for current username
+                    Text(
+                        text = currentUsername,
+                        style = TextStyle(
+                            fontSize = 36.sp,
+                            lineHeight = 43.2.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFFFFFFFF),
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp)) // Space between the two texts
+
+                    // Text for handle
+                    Text(
+                        text = "@$currentUsername",
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            lineHeight = 28.8.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0x80FFFFFF),
+                        )
+                    )
+                }
+
             }
 
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(start = 49.dp, end = 49.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = "@$currentUsername",
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        lineHeight = 28.8.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color(0x80FFFFFF),
-                    ),
-                )
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = { navController.navigate("settings") }) {
-
-                Text("Settings")
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = { isChangeUsernameDialogVisible = true }) {
-                Text("Change Username")
-            }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             if (userId != currentUserId) {
+
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top,
@@ -1903,6 +2098,17 @@ fun ProfileScreen(navController: NavController, userId:String) {
             }
 
             else{
+
+                Button(onClick = { navController.navigate("settings") }) {
+
+                    Text("Settings")
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(onClick = { isChangeUsernameDialogVisible = true }) {
+                    Text("Change Username")
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2221,63 +2427,63 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                 val sortedDateCountMap = dateCountMap.entries.sortedBy { it.key }
 
 
-                        val pointsData: List<Point> = sortedDateCountMap.mapIndexed { index, entry ->
-                            Point(index.toFloat(), entry.value.toFloat())
-                        }
-
-                        Log.d("Profile Screen", "After the date is parsed: $dateCountMap")
-                        Log.d("Profile Screen", "Points Data: $pointsData")
-
-                        if(pointsData.isNotEmpty()){
-
-                            val steps = pointsData.size
-                            // Build the chart using the retrieved data
-                            val xAxisData = AxisData.Builder()
-                                .axisStepSize(100.dp)
-                                .backgroundColor(Color.DarkGray)
-                                .steps(pointsData.size - 1)
-                                .labelData { i ->
-                                    sortedDateCountMap.getOrNull(i)?.key ?: ""
+                                val pointsData: List<Point> = sortedDateCountMap.mapIndexed { index, entry ->
+                                    Point(index.toFloat(), entry.value.toFloat())
                                 }
-                                .labelAndAxisLinePadding(15.dp)
-                                .axisLineColor(Color.White)
-                                .axisLabelColor(Color.White)
-                                .build()
 
-                            val yAxisData = AxisData.Builder()
-                                .steps(steps)
-                                .backgroundColor(Color.DarkGray)
-                                .labelAndAxisLinePadding(20.dp)
-                                .labelData { i ->
-                                    val yScale = 8f / steps.toFloat()
-                                    (i * yScale).toInt().toString()
-                                }
-                                .axisLineColor(Color.White)
-                                .axisLabelColor(Color.White)
-                                .build()
+                                Log.d("Profile Screen", "After the date is parsed: $dateCountMap")
+                                Log.d("Profile Screen", "Points Data: $pointsData")
 
-                            val lineChartDataUpdate = LineChartData(
-                                linePlotData = LinePlotData(
-                                    lines = listOf(
-                                        Line(
-                                            dataPoints = pointsData,
-                                            LineStyle(),
-                                            IntersectionPoint(),
-                                            SelectionHighlightPoint(),
-                                            ShadowUnderLine(),
-                                            SelectionHighlightPopUp()
-                                        )
-                                    ),
-                                ),
-                                xAxisData = xAxisData,
-                                yAxisData = yAxisData,
-                                gridLines = GridLines(),
-                                backgroundColor = Color.DarkGray
-                            )
+                                if(pointsData.isNotEmpty()){
 
-                            lineChartData.value = lineChartDataUpdate
+                                    val steps = pointsData.size
+                                    // Build the chart using the retrieved data
+                                    val xAxisData = AxisData.Builder()
+                                        .axisStepSize(100.dp)
+                                        .backgroundColor(Color.DarkGray)
+                                        .steps(pointsData.size - 1)
+                                        .labelData { i ->
+                                            sortedDateCountMap.getOrNull(i)?.key ?: ""
+                                        }
+                                        .labelAndAxisLinePadding(15.dp)
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
 
-                        } }
+                                    val yAxisData = AxisData.Builder()
+                                        .steps(steps)
+                                        .backgroundColor(Color.DarkGray)
+                                        .labelAndAxisLinePadding(20.dp)
+                                        .labelData { i ->
+                                            val yScale = 8f / steps.toFloat()
+                                            (i * yScale).toInt().toString()
+                                        }
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
+
+                                    val lineChartDataUpdate = LineChartData(
+                                        linePlotData = LinePlotData(
+                                            lines = listOf(
+                                                Line(
+                                                    dataPoints = pointsData,
+                                                    LineStyle(),
+                                                    IntersectionPoint(),
+                                                    SelectionHighlightPoint(),
+                                                    ShadowUnderLine(),
+                                                    SelectionHighlightPopUp()
+                                                )
+                                            ),
+                                        ),
+                                        xAxisData = xAxisData,
+                                        yAxisData = yAxisData,
+                                        gridLines = GridLines(),
+                                        backgroundColor = Color.DarkGray
+                                    )
+
+                                    lineChartData.value = lineChartDataUpdate
+
+                                } }
                             // Check if the LiveData is not empty
                             if (ratedSongTimestamps.isNotEmpty()) {
                                 // Parse and format timestamps
@@ -2669,7 +2875,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
-// UPDATE USERNAME
+    // UPDATE USERNAME
     fun updateUsername(userId: String, newUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         val userDocument = usersCollection.document(userId)
@@ -2993,9 +3199,18 @@ data class SuggestedTrack(
     @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = ""
 )
 
+data class AlbumTrack(
+    @get:PropertyName("track_artist(s)") @set:PropertyName("track_artist(s)") var trackArtists: List<String>? = listOf(),
+    @get:PropertyName("artist_urls") @set:PropertyName("artist_urls") var artistUrls: List<String>? = listOf(),
+    @get:PropertyName("spotify_artist_ids") @set:PropertyName("spotify_artist_ids") var spotifyArtistIds: List<String>? = listOf(),
+    @get:PropertyName("spotify_track_id") @set:PropertyName("spotify_track_id") var spotifyTrackId: String? = "",
+    @get:PropertyName("track_duration_ms") @set:PropertyName("track_duration_ms") var trackDurationMs: Long? = 0,
+    @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
+    @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = ""
+)
+
 
 data class Artist(
-
     @get:PropertyName("firebase_id") @set:PropertyName("firebase_id") var artistID: String? = "",
     @get:PropertyName("artist_genres") @set:PropertyName("artist_genres") var artistGenre: List<String>? = listOf(),
     @get:PropertyName("artist_images") @set:PropertyName("artist_images") var artistImages: List<String>? = listOf(),
@@ -3004,8 +3219,21 @@ data class Artist(
     @get:PropertyName("existing_tracks") @set:PropertyName("existing_tracks") var existingTracks: List<String>? = listOf(),
     @get:PropertyName("spotify_artist_id") @set:PropertyName("spotify_artist_id") var spotifyArtistId: String? = "",
     @get:PropertyName("suggested_tracks") @set:PropertyName("suggested_tracks") var suggestedTracks: List<SuggestedTrack>? = listOf()
-
 )
+
+data class Album(
+    @get:PropertyName("firebase_id") @set:PropertyName("firebase_id") var albumID: String? = "",
+    @get:PropertyName("album_artists_ids") @set:PropertyName("album_arists_id") var albumArtistID: List<String>? = listOf(),
+    @get:PropertyName("album_artists_names") @set:PropertyName("album_artists_names") var artistNames: List<String>? = listOf(),
+    @get:PropertyName("album_images") @set:PropertyName("album_images") var albumImages: List<String>? = listOf(),
+    @get:PropertyName("album_name") @set:PropertyName("album_name") var albumName: String? = "",
+    @get:PropertyName("album_release_date") @set:PropertyName("album_release_date") var albumReleaseDate: String? = "",
+    @get:PropertyName("album_artists_url") @set:PropertyName("album_artists_url") var albumArtistURL: List<String>? = listOf(),
+    @get:PropertyName("existing_tracks") @set:PropertyName("existing_tracks") var existingTracks: List<String>? = listOf(),
+    @get:PropertyName("album_tracks") @set:PropertyName("album_tracks") var albumTracks: List<AlbumTrack>? = listOf(),
+    @get:PropertyName("album_url") @set:PropertyName("album_url") var albumUrl: String? = "",
+)
+
 
 class ArtistViewModel : ViewModel() {
 
@@ -3022,6 +3250,13 @@ class ArtistViewModel : ViewModel() {
 
     private val _suggestedTracks = MutableLiveData<List<SuggestedTrack>>()
     val suggestedTracks: LiveData<List<SuggestedTrack>> = _suggestedTracks
+
+    private val _artistGenre = MutableLiveData<List<String>>()
+    val artistGenre: LiveData<List<String>> = _artistGenre
+
+    private val _artistUrl = MutableLiveData<String>()
+    val artistUrl: LiveData<String> = _artistUrl
+
 
     fun fetchArtists() {
         // Assuming you have a "artists" collection in Firestore
@@ -3055,6 +3290,10 @@ class ArtistViewModel : ViewModel() {
                     _artistImages.value = it.artistImages?.firstOrNull() ?: ""
 
                     _suggestedTracks.value = it.suggestedTracks ?: emptyList()
+
+                    _artistGenre.value = it.artistGenre ?: emptyList()
+
+                    _artistUrl.value = it.artistURL
                 }
             }
             .addOnFailureListener { exception ->
@@ -3063,7 +3302,76 @@ class ArtistViewModel : ViewModel() {
     }
 }
 
+class AlbumViewModel : ViewModel() {
 
+    private val db = FirebaseFirestore.getInstance()
+
+    private val _albums = MutableLiveData<List<Album>>()
+    val albums: LiveData<List<Album>> = _albums
+
+    private val _albumName = MutableLiveData<String>()
+    val albumName: LiveData<String> = _albumName
+
+    private val _albumImages = MutableLiveData<String>()
+    val albumImages: LiveData<String> = _albumImages
+
+    private val _albumTracks = MutableLiveData<List<AlbumTrack>>()
+    val albumTracks: LiveData<List<AlbumTrack>> = _albumTracks
+
+    private val _albumReleaseData = MutableLiveData<String>()
+    val albumReleaseDate: LiveData<String> = _albumReleaseData
+
+    private val _albumArtists = MutableLiveData<List<String>>()
+    val albumArtists: LiveData<List<String>> = _albumArtists
+
+    private val _albumUrl = MutableLiveData<String>()
+    val albumUrl: LiveData<String> = _albumUrl
+
+    fun fetchAlbums() {
+        // Assuming you have a "artists" collection in Firestore
+        db.collection("Albums")
+            .get()
+            .addOnSuccessListener { result ->
+                val albumsList = mutableListOf<Album>()
+
+                for (document in result) {
+                    val album = document.toObject(Album::class.java)
+                    albumsList.add(album)
+                }
+
+                _albums.value = albumsList
+            }
+            .addOnFailureListener { exception ->
+                // Handle errors here
+            }
+    }
+
+    fun fetchAlbumDetails(albumID: String) {
+        db.collection("Albums").document(albumID)
+            .get()
+            .addOnSuccessListener { documentSnapshot ->
+                val album = documentSnapshot.toObject(Album::class.java)
+                album?.let {
+                    // Update LiveData variables
+                    _albumName.value = it.albumName
+
+                    // Extract the first image URL and update LiveData
+                    _albumImages.value = it.albumImages?.firstOrNull() ?: ""
+
+                    _albumTracks.value = it.albumTracks ?: emptyList()
+
+                    _albumReleaseData.value = it.albumReleaseDate
+
+                    _albumArtists.value = it.artistNames
+
+                    _albumUrl.value = it.albumUrl
+                }
+            }
+            .addOnFailureListener { exception ->
+                // Handle errors here
+            }
+    }
+}
 
 
 class SongsViewModel : ViewModel() {
@@ -3082,8 +3390,26 @@ class SongsViewModel : ViewModel() {
     val isLoading: LiveData<Boolean> = _isLoading
     val songSuggestions = MutableLiveData<List<Suggestion>>()
 
+    val selectedSortOption = MutableLiveData(SortOption._Rating)
+
     init {
         loadSongs()
+    }
+
+    fun sortSongs(sortOption: SortOption) {
+        _songs.value = _songs.value?.sortedWith(Comparator { song1, song2 ->
+            when (sortOption) {
+                SortOption._Rating -> (song2.rating ?: 0.0).compareTo(song1.rating ?: 0.0)
+                SortOption._Rating_Count -> (song2.ratingCount ?: 0).compareTo(song1.ratingCount ?: 0)
+                SortOption._Like -> (song2.likeCount ?: 0).compareTo(song1.likeCount ?: 0)
+                SortOption._Liveness -> (song2.liveness ?: 0.0).compareTo(song1.liveness ?: 0.0)
+                SortOption._Danceability -> (song2.danceability ?: 0.0).compareTo(song1.danceability ?: 0.0)
+                SortOption._Energy -> (song2.energy ?: 0.0).compareTo(song1.energy ?: 0.0)
+                SortOption._Name -> (song1.trackName ?: "").compareTo(song2.trackName ?: "")
+                // Add cases for other sort options
+                else -> 0
+            }
+        })
     }
 
 
@@ -3909,18 +4235,212 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     }
 }
 
+@Composable
+fun AlbumDetailScreen(navController: NavController, albumID: String, viewModel: AlbumViewModel = viewModel()){
 
+    val context = LocalContext.current
+    val albumName by viewModel.albumName.observeAsState("")
+    val albumImages by viewModel.albumImages.observeAsState("")
+    val albumUrl by viewModel.albumUrl.observeAsState("")
+    val albumTracks by viewModel.albumTracks.observeAsState(emptyList())
+    val albumReleaseDate by viewModel.albumReleaseDate.observeAsState("")
+    val albumArtists by viewModel.albumArtists.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchAlbumDetails(albumID)
+    }
+
+    fun openSpotifyLink(url: String, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        context.startActivity(intent)
+    }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFF1D2123))
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 15.dp)
+    ) {
+
+        TopNav(navController = navController)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .weight(1f)
+        ) {
+
+            Image(
+                painter = rememberImagePainter(data = albumImages),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(shape = RoundedCornerShape(20.dp))
+                    .align(CenterHorizontally),
+                contentScale = ContentScale.FillBounds
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = albumReleaseDate,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight(600),
+                        color = Color(0x80FFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = albumName,
+                    style = TextStyle(
+                        fontSize = 48.sp,
+                        lineHeight = 48.sp,
+                        fontWeight = FontWeight(700),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = albumArtists.joinToString (" ⋅ "),
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight(300),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, CenterHorizontally),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(
+                            color = Color(0xFF1DB954),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.spotify_logo),
+                        contentDescription = "spotify logo",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .clickable{
+                                openSpotifyLink(albumUrl, context)
+                            }
+                            .align(Center)
+                            .width(128.dp)
+                            .height(38.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = "Tracks",
+                    style = TextStyle(
+                        fontSize = 35.sp,
+                        lineHeight = 42.sp,
+                        fontWeight = FontWeight(700),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            for (i in albumTracks.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (i < albumTracks.size) {
+                        AlbumTrackItem2(albumTracks[i], albumImages);
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (i + 1 < albumTracks.size) {
+                        AlbumTrackItem2(albumTracks[i + 1], albumImages);
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+        CommonBottomBar(navController = navController)
+    }
+
+}
 
 @Composable
 fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel: ArtistViewModel = viewModel()) {
 
+    val context = LocalContext.current
     val artistName by viewModel.artistName.observeAsState("")
     val artistImages by viewModel.artistImages.observeAsState("")
+    val artistUrl by viewModel.artistUrl.observeAsState("")
     val suggestedTracks by viewModel.suggestedTracks.observeAsState(emptyList())
+    val artistGenres by viewModel.artistGenre.observeAsState(emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.fetchArtistDetails(artistID)
     }
+
+    fun openSpotifyLink(url: String, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        context.startActivity(intent)
+    }
+
 
     Column(
         modifier = Modifier
@@ -3944,7 +4464,6 @@ fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 49.dp, end = 49.dp, top = 12.dp)
                     .aspectRatio(1f)
                     .clip(shape = RoundedCornerShape(20.dp))
                     .align(CenterHorizontally),
@@ -3954,30 +4473,110 @@ fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel
             Spacer(modifier = Modifier.height(6.dp))
 
             Row(
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .padding(start = 49.dp, end = 49.dp)
                     .fillMaxWidth()
             ) {
 
                 Text(
                     text = artistName,
                     style = TextStyle(
-                        fontSize = 36.sp,
-                        lineHeight = 43.2.sp,
+                        fontSize = 48.sp,
+                        lineHeight = 48.sp,
+                        fontWeight = FontWeight(700),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = artistGenres.joinToString(separator = " ⋅ "),
+                    style = TextStyle(
+                        fontSize = 24.sp, // Adjust font size as needed
+                        lineHeight = 28.8.sp,
                         fontWeight = FontWeight(400),
                         color = Color(0xFFFFFFFF),
                     ),
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
 
-            suggestedTracks.forEach { suggestedTrack ->
-                // Display album image and track name for each suggested track
-                AlbumTrackItem(suggestedTrack)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp, CenterHorizontally),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(
+                            color = Color(0xFF1DB954),
+                            shape = RoundedCornerShape(size = 15.dp)
+                        )
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.spotify_logo),
+                        contentDescription = "spotify logo",
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier
+                            .clickable {
+                                openSpotifyLink(artistUrl, context)
+                            }
+                            .align(Center)
+                            .width(128.dp)
+                            .height(38.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                Text(
+                    text = "Tracks",
+                    style = TextStyle(
+                        fontSize = 35.sp,
+                        lineHeight = 42.sp,
+                        fontWeight = FontWeight(700),
+                        color = Color(0xFFFFFFFF),
+                    ),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            for (i in suggestedTracks.indices step 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    if (i < suggestedTracks.size) {
+                        AlbumTrackItem(suggestedTracks[i]);
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    if (i + 1 < suggestedTracks.size) {
+                        AlbumTrackItem(suggestedTracks[i + 1]);
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -3990,21 +4589,30 @@ fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel
 @Composable
 fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
     // Use the first album image URL and the corresponding track name
+    val context = LocalContext.current
     val firstAlbumImage = suggestedTrack.albumImages?.firstOrNull() ?: ""
     val trackName = suggestedTrack.trackName ?: ""
+    val trackUrl = suggestedTrack.trackUrl ?: ""
+
+    fun openSpotifyLink(url: String, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        context.startActivity(intent)
+    }
 
     Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .width(185.dp)
+            .padding(bottom = 24.dp)
     ) {
         // Display the album image
         Image(
             painter = rememberImagePainter(data = firstAlbumImage),
             contentDescription = null,
             modifier = Modifier
+                .clickable {
+                    openSpotifyLink(trackUrl, context)
+                }
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(shape = RoundedCornerShape(20.dp)),
@@ -4017,6 +4625,67 @@ fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
             text = trackName,
             color = Color.White,
             fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun AlbumTrackItem2(albumTrack: AlbumTrack, albumImage: String) {
+    // Use the first album image URL and the corresponding track name
+    val context = LocalContext.current
+    val trackName = albumTrack.trackName ?: ""
+    val artists = albumTrack.trackArtists?: emptyList()
+    val trackSpotify = albumTrack.trackUrl?: ""
+
+    fun openSpotifyLink(url: String, context: Context) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        context.startActivity(intent)
+    }
+
+
+    Column(
+        modifier = Modifier
+            .width(185.dp)
+            .padding(bottom = 24.dp)
+    ) {
+        // Display the album image
+        Image(
+            painter = rememberImagePainter(data = albumImage),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(shape = RoundedCornerShape(20.dp))
+                .clickable{
+                          openSpotifyLink(trackSpotify, context)
+                },
+            contentScale = ContentScale.FillBounds
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Text for track name
+        Text(
+            text = trackName,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Text for track name
+        Text(
+            text = artists.joinToString("\n"),
+            color = Color.White,
+            fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
