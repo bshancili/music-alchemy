@@ -2223,63 +2223,63 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                 val sortedDateCountMap = dateCountMap.entries.sortedBy { it.key }
 
 
-                        val pointsData: List<Point> = sortedDateCountMap.mapIndexed { index, entry ->
-                            Point(index.toFloat(), entry.value.toFloat())
-                        }
-
-                        Log.d("Profile Screen", "After the date is parsed: $dateCountMap")
-                        Log.d("Profile Screen", "Points Data: $pointsData")
-
-                        if(pointsData.isNotEmpty()){
-
-                            val steps = pointsData.size
-                            // Build the chart using the retrieved data
-                            val xAxisData = AxisData.Builder()
-                                .axisStepSize(100.dp)
-                                .backgroundColor(Color.DarkGray)
-                                .steps(pointsData.size - 1)
-                                .labelData { i ->
-                                    sortedDateCountMap.getOrNull(i)?.key ?: ""
+                                val pointsData: List<Point> = sortedDateCountMap.mapIndexed { index, entry ->
+                                    Point(index.toFloat(), entry.value.toFloat())
                                 }
-                                .labelAndAxisLinePadding(15.dp)
-                                .axisLineColor(Color.White)
-                                .axisLabelColor(Color.White)
-                                .build()
 
-                            val yAxisData = AxisData.Builder()
-                                .steps(steps)
-                                .backgroundColor(Color.DarkGray)
-                                .labelAndAxisLinePadding(20.dp)
-                                .labelData { i ->
-                                    val yScale = 8f / steps.toFloat()
-                                    (i * yScale).toInt().toString()
-                                }
-                                .axisLineColor(Color.White)
-                                .axisLabelColor(Color.White)
-                                .build()
+                                Log.d("Profile Screen", "After the date is parsed: $dateCountMap")
+                                Log.d("Profile Screen", "Points Data: $pointsData")
 
-                            val lineChartDataUpdate = LineChartData(
-                                linePlotData = LinePlotData(
-                                    lines = listOf(
-                                        Line(
-                                            dataPoints = pointsData,
-                                            LineStyle(),
-                                            IntersectionPoint(),
-                                            SelectionHighlightPoint(),
-                                            ShadowUnderLine(),
-                                            SelectionHighlightPopUp()
-                                        )
-                                    ),
-                                ),
-                                xAxisData = xAxisData,
-                                yAxisData = yAxisData,
-                                gridLines = GridLines(),
-                                backgroundColor = Color.DarkGray
-                            )
+                                if(pointsData.isNotEmpty()){
 
-                            lineChartData.value = lineChartDataUpdate
+                                    val steps = pointsData.size
+                                    // Build the chart using the retrieved data
+                                    val xAxisData = AxisData.Builder()
+                                        .axisStepSize(100.dp)
+                                        .backgroundColor(Color.DarkGray)
+                                        .steps(pointsData.size - 1)
+                                        .labelData { i ->
+                                            sortedDateCountMap.getOrNull(i)?.key ?: ""
+                                        }
+                                        .labelAndAxisLinePadding(15.dp)
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
 
-                        } }
+                                    val yAxisData = AxisData.Builder()
+                                        .steps(steps)
+                                        .backgroundColor(Color.DarkGray)
+                                        .labelAndAxisLinePadding(20.dp)
+                                        .labelData { i ->
+                                            val yScale = 8f / steps.toFloat()
+                                            (i * yScale).toInt().toString()
+                                        }
+                                        .axisLineColor(Color.White)
+                                        .axisLabelColor(Color.White)
+                                        .build()
+
+                                    val lineChartDataUpdate = LineChartData(
+                                        linePlotData = LinePlotData(
+                                            lines = listOf(
+                                                Line(
+                                                    dataPoints = pointsData,
+                                                    LineStyle(),
+                                                    IntersectionPoint(),
+                                                    SelectionHighlightPoint(),
+                                                    ShadowUnderLine(),
+                                                    SelectionHighlightPopUp()
+                                                )
+                                            ),
+                                        ),
+                                        xAxisData = xAxisData,
+                                        yAxisData = yAxisData,
+                                        gridLines = GridLines(),
+                                        backgroundColor = Color.DarkGray
+                                    )
+
+                                    lineChartData.value = lineChartDataUpdate
+
+                                } }
                             // Check if the LiveData is not empty
                             if (ratedSongTimestamps.isNotEmpty()) {
                                 // Parse and format timestamps
@@ -2671,7 +2671,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
-// UPDATE USERNAME
+    // UPDATE USERNAME
     fun updateUsername(userId: String, newUsername: String) {
         val usersCollection = Firebase.firestore.collection("Users")
         val userDocument = usersCollection.document(userId)
@@ -3958,7 +3958,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .weight(1f)
                         .clickable { showCommentDialog = true },
                 )
-                /*
+
                 Image(
 
                     painter = painterResource(id = R.drawable.comment),
@@ -3971,7 +3971,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .weight(1f)
                         .clickable { showDebugInfo() }
                 )
-                */
+
                 Image(
                     painter = painterResource(id = R.drawable.share),
                     contentDescription = "share",
@@ -3998,23 +3998,23 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column {
-                Text(
-                    text = "Comments",
-                    style = TextStyle(
-                        fontSize = 35.sp,
-                        lineHeight = 42.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                )
-                LazyColumn {
-                    items(comments) { comment ->
-                        CommentItem(comment)
-                    }
-                }
 
+            Text(
+                text = "Comments",
+                style = TextStyle(
+                    fontSize = 35.sp,
+                    lineHeight = 42.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            )
+            Column {
+                comments.forEach { comment ->
+                    CommentItem(comment)
+                }
             }
+
+
         }
 
         CommonBottomBar(navController = navController)
