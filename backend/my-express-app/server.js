@@ -56,7 +56,12 @@ app.post("/signup", async (req, res) => {
   try {
     const userRecord = await admin.auth().createUser({ email, password });
     console.log("User created:", userRecord.uid);
-    res.status(201).send({ uid: userRecord.uid });
+    await db.collection("Users").doc(userRecord.uid).set({
+      Isprivate: Isprivate || 'no',
+      //other if needed
+  });
+    res.status(201).send({ uid: userRecord.uid});
+    // ... other custom claims
   } catch (e) {
     res.status(400).send(e.message);
   }
@@ -204,7 +209,28 @@ app.get('/copy-documents', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+//endpoint to update user settings
+app.post("/update_settings", async (req, res) => {
+  const uid = req.body.uid;
+  const newSettings = req.body.settings;
+  try {
+    // Check if 'isPrivate' is included in the request
+    if ('isPrivate' in newSettings) {
+        // Update the user document with new 'isPrivate' setting
+        await db.collection("Users").doc(uid).update({
+            isPrivate: newSettings.isPrivate,
+            // ... other settings you may want to update
+        });
 
+        res.status(200).send({ message: "Settings updated successfully" });
+    } else {
+        res.status(400).send({ message: "'isPrivate' setting is required" });
+    }
+} catch (error) {
+    console.error("Error updating settings: ", error);
+    res.status(500).send({ message: "Error updating settings", error });
+}
+});
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
     const uid = req.body["uid"];
@@ -362,7 +388,6 @@ async function find_recommended_track(prompt_chatgpt) {
 
   return [];
 }
-
 app.post("/find_recommended_tracks", async (req, res) => {
   const userUid = req.body["uid"]; 
 
