@@ -1,4 +1,5 @@
 const express = require("express");
+const app = express();
 const cors = require("cors");
 const admin = require("firebase-admin");
 const serviceAccount = require("./music-alchemy-firebase-adminsdk.json");
@@ -17,10 +18,13 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 const db = admin.firestore();
-const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.status(200).send('Hello World!');
+});
 
 // Function to validate password
 function validatePassword(password) {
@@ -109,11 +113,7 @@ app.post("/signin", async (req, res) => {
 });
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-// Start the server
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+
 app.post('/search_songs', async (req, res) => {
   const data = req.body;
   const tracks = data.tracks;
@@ -208,10 +208,19 @@ app.get('/copy-documents', async (req, res) => {
 app.post("/retrieve_user_tracks", async (req, res) => {
   try {
     const uid = req.body["uid"];
+
+    // Check if UID is provided
+    if (!uid) {
+      return res.status(404).json({ error: "UID is required" });
+    }
+
     const songsSnapshot = await db.collection("Users").get();
     const songsList = [];
+    let userFound = false;
+
     songsSnapshot.forEach((doc) => {
-      if (doc.data()["uid"] == uid) {
+      if (doc.data()["uid"] === uid) {
+        userFound = true;
         songsList.push({
           id: doc.data()["uid"],
           rated_songs: doc.data()["rated_song_list"],
@@ -219,45 +228,61 @@ app.post("/retrieve_user_tracks", async (req, res) => {
         });
       }
     });
+
+    // Check if user with the given UID is found
+    if (!userFound) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     res.status(200).send(songsList);
   } catch (error) {
     console.error("Error retrieving songs: ", error);
-    res.status(500).send(error);
+    res.status(500).send({ error: "Internal Server Error" });
   }
 });
 
 app.post('/recent_liked_songs', async (req, res) => {
   try {
     const uid = req.body["uid"];
-    const querySnapshot = await db.collection('Users').get();
+
+    // Check if the UID is provided
+    if (!uid) {
+      return res.status(400).json({ error: "UID is required" });
+    }
+
+    const querySnapshot = await db.collection('Users').doc(uid).get();
+
+    // Check if the user exists
+    if (!querySnapshot.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = querySnapshot.data();
+    const likedSongs = userData["liked_song_list"] || {};
     const songs = [];
 
-    querySnapshot.forEach((doc) => {
-      if (doc.data()["uid"] == uid) {
-        const likedSongs = doc.data()["liked_song_list"];
-        for (const songId in likedSongs) {
-          const timestamp = likedSongs[songId].timestamp;
-          const date = new Date((timestamp._seconds * 1000) + (timestamp._nanoseconds / 1000000));
-          date.setHours(date.getHours() + 3);
+    for (const songId in likedSongs) {
+      const timestamp = likedSongs[songId].timestamp;
+      const date = new Date((timestamp._seconds * 1000) + (timestamp._nanoseconds / 1000000));
+      date.setHours(date.getHours() + 3);
 
-          songs.push({
-            songid: songId,
-            timestamp: date
-          });
-        }
-      }
-    });
-    //console.log("Before sorting:", songs);
-    songs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // sort by timestamp 
-    //console.log("After sorting:", songs);
-    const recentSongs = songs.slice(0, 5); // most recent 5 songs
-    //console.log("Recent 5 songs:", recentSongs);
+      songs.push({
+        songid: songId,
+        timestamp: date
+      });
+    }
+
+    // Sort by timestamp and get the most recent 5 songs
+    songs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    const recentSongs = songs.slice(0, 5);
+    
     res.status(200).send(recentSongs);
   } catch (error) {
     console.error("Error fetching recent songs: ", error);
-    res.status(500).send("Error fetching recent songs");
+    res.status(500).send({ error: "Internal server error" });
   }
 });
+
 
 app.post("/get_track_artist", async (req, res) => {
   const docId = req.body["docId"]; 
@@ -297,6 +322,7 @@ app.post("/find_song_name", async (req, res) => {
   }
 });
 
+/*
 app.post("/retrieve_friend_list", async (req, res) => {
   try{
     const uid = req.body["uid"];
@@ -313,6 +339,38 @@ app.post("/retrieve_friend_list", async (req, res) => {
   }catch(error){
     console.error("Error retrieving songs: ", error);
     res.status(500).send(error);
+  }
+});
+*/
+app.post("/retrieve_friend_list", async (req, res) => {
+  try {
+    const uid = req.body["uid"];
+
+    // Check if UID is provided
+    if (!uid) {
+      return res.status(400).json({ error: "UID is required" });
+    }
+
+    const userRef = db.collection('Users').doc(uid);
+    const userDoc = await userRef.get();
+
+    // Check if the user exists
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = userDoc.data();
+    const friendsList = userData.friends_list || [];
+
+    // Check if the friend list is empty
+    if (friendsList.length === 0) {
+      return res.status(200).json({ message: "Friend list is empty" });
+    }
+
+    res.status(200).json({ friends_list: friendsList });
+  } catch (error) {
+    console.error("Error retrieving friend list: ", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -553,4 +611,6 @@ app.post("/friends_recommendation", async (req, res) => {
     console.error("Error in /friends_recommendation:", error);
     res.status(error.response?.status || 500).json({ message: "Error retrieving friends' recommendations" });
   }
+  
 });
+module.exports = app;
