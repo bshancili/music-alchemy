@@ -694,7 +694,7 @@ enum class SortOption {
 }
 @Composable
 fun ScrollableSortMenu(selectedSortOption: SortOption, onOptionSelected: (SortOption) -> Unit) {
-    val sortOptions = SortOption.values() // Retrieve all enum values
+    val sortOptions = SortOption.entries.toTypedArray() // Retrieve all enum values
 
     // Horizontal Scrollable Row
     Row(
@@ -1935,7 +1935,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                 }
 
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = CenterHorizontally
                 ) {
 
                     Spacer(modifier = Modifier.height(6.dp)) // Space between the texts and liked songs count
@@ -1968,7 +1968,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
 
                 // Column for Texts
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = CenterHorizontally
                 ) {
                     // Text for current username
                     Text(
