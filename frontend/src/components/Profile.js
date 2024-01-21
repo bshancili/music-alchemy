@@ -28,6 +28,7 @@ function Profile({
   isF,
   id,
   isPrivate,
+  songCount,
 }) {
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
@@ -35,9 +36,10 @@ function Profile({
 
   const [Isprivate, setIsPrivate] = useState(isPrivate);
   const toast = useToast();
+  const userID = localStorage.getItem("userID");
 
   const handleSettingsClick = () => {
-    setShowLogoutButton(!showLogoutButton);
+    setShowLogoutButton(true);
   };
 
   const handleAddFriend = () => {

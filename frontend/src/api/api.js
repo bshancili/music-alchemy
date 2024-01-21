@@ -47,6 +47,27 @@ const fetchTrackDetails = async (id) => {
     return null;
   }
 };
+
+const fetchUserByID = async (id) => {
+  const userRef = doc(db, "Users", id);
+  try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userDetails = {
+        id: userSnap.id,
+        ...userSnap.data(),
+      };
+      return userDetails;
+    } else {
+      console.error(userSnap.id, "Track not found");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching track details:", error);
+    return null;
+  }
+};
+
 const fetchFriendRecommendations = async (
   userID,
   setFriendRecSongs,
@@ -371,7 +392,7 @@ const fetchTemporalRecommendation = async (userID, setTempRecSongs) => {
       }),
     });
     console.log(response.data);
-    if (false) {
+    if (response?.data) {
       const recommendations = response.data;
       const trackIds = recommendations.map(
         (recommendation) => recommendation.track_id
@@ -396,4 +417,5 @@ export {
   fetchFriendRecommendations,
   fetchRatingCounts,
   fetchPlaylists,
+  fetchUserByID,
 };

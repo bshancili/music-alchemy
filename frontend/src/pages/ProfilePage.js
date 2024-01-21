@@ -44,10 +44,9 @@ function ProfilePage() {
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        console.log(userData.friends_list);
-        const friends = userData.friends_list;
+        const friendsL = userData.friends_list;
         setUser(userData);
-        setFriends(friends);
+        setFriends(friendsL);
         setIsFriend(userData.friends_list.includes(userID));
       } else {
         console.log("User not found");
@@ -56,18 +55,7 @@ function ProfilePage() {
       console.error("Error fetching user:", error);
     }
   };
-  const fetchFriends = async () => {
-    try {
-      const userDocRef = doc(db, "Users", userID);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap) {
-        const userData = userSnap.data();
-        //console.log(userData);
-        const friends = userData.friends_list;
-        setFriends(friends);
-      }
-    } catch (error) {}
-  };
+
   const fetchNonRatedSongs = async (userId) => {
     try {
       const userDocRef = doc(db, "Users", userId);
@@ -146,7 +134,7 @@ function ProfilePage() {
       //await fetchFriends();
       await fetchPlaylists(id, setPlaylists);
     };
-
+    //console.log(likedSongs.length);
     fetchData();
   }, [id]);
 
@@ -163,6 +151,7 @@ function ProfilePage() {
           id={id}
           isPrivate={user?.Isprivate}
           friends={friends}
+          songCount={likedSongs.length}
         />
       )}
       {user && // Check if user is available before checking conditions
@@ -173,6 +162,8 @@ function ProfilePage() {
             userID={userID}
             playlists={playlists}
             setPlaylists={setPlaylists}
+            friends={friends}
+            username={user.username}
           />
         )}
     </Box>
