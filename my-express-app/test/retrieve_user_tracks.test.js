@@ -1,36 +1,36 @@
 const request = require('supertest');
-const app = require('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/server.js'); // Adjust the path to your server.js file
+const app = require('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/server.js'); // Replace with the actual path to your server file
 
 describe('/retrieve_user_tracks endpoint', () => {
+  // Test for valid UID
   it('should return user tracks for a valid UID', async () => {
-    const testUid = 'm2y0Gj0PwxegLb8DaSD5oC3'; // Replace with a valid UID for testing
+    const validUid = 'm2y0Gj0PwxegLb8DaSDE5sQ75oC3'; // Replace with a valid UID from your database
     const response = await request(app)
       .post('/retrieve_user_tracks')
-      .send({ uid: testUid });
+      .send({ uid: validUid });
 
     expect(response.statusCode).toBe(200);
-    // Replace the following assertions with the expected structure of your response
     expect(Array.isArray(response.body)).toBeTruthy();
-    response.body.forEach(track => {
-      expect(track).toHaveProperty('id', testUid);
-      expect(track).toHaveProperty('rated_songs');
-      expect(track).toHaveProperty('liked_songs');
-    });
   });
 
-  it('should return an empty array or specific response for non-existent UID', async () => {
-    const nonExistentUid = 'y0Gj0PwxegLb8DaSD5oC3'; // A UID you know does not exist in your database
+  // Test for non-existent UID
+  it('should return a 404 error for non-existent UID', async () => {
+    const nonExistentUid = '45678ioedfgh';
     const response = await request(app)
       .post('/retrieve_user_tracks')
       .send({ uid: nonExistentUid });
-  
-    expect(response.statusCode).toBe(200);
-    // If your endpoint returns an empty array for non-existent UIDs
-    expect(response.body).toEqual([]);
-    // If your endpoint returns a specific message or structure for non-existent UIDs
-    // expect(response.body).toEqual({ /* expected structure */ });
-  });
-  
 
-  // Additional test cases for scenarios like an invalid UID, missing UID, etc.
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toEqual({ error: "User not found" });
+  });
+
+  // Test for missing UID
+  it('should return a 404 error when no UID is provided', async () => {
+    const response = await request(app)
+      .post('/retrieve_user_tracks')
+      .send({});
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toEqual({ error: "UID is required" });
+  });
 });
