@@ -140,7 +140,7 @@ const HomePageMusicList = () => {
       <FormControl>
         <FormLabel color="white">Sort by:</FormLabel>
         <Select
-          color="white"
+          color="teal"
           value={sortOption}
           onChange={handleSortChange}
           width="150px"
