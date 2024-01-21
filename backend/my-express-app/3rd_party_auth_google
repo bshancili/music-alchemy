@@ -1,0 +1,50 @@
+import { GoogleAuthProvider } from "firebase/auth";
+import { getFirestore, setDoc, doc } from "firebase/firestore";
+import { getAuth, signInWithRedirect, getRedirectResult } from "firebase/auth";
+
+const provider = new GoogleAuthProvider();
+const auth = getAuth();
+const db = getFirestore();
+
+signInWithRedirect(auth, provider);
+//redirects to google authentication
+getRedirectResult(auth)
+  .then((result) => {
+    // This gives you a Google Access Token. You can use it to access Google APIs.
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential.accessToken;
+
+    // The signed-in user info.
+    const user = result.user;
+    // IdP data available using getAdditionalUserInfo(result)
+    if (result.additionalUserInfo.isNewUser) {
+        const defaultValues = {
+            Isprivate: 0,
+            comments: [],
+            created_songs: {},
+            friends_list: [],
+            liked_song_list: {},
+            liked_songs: [],
+            profile_picture_url: "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg",
+            rated_song_list: {},
+            uid: user.uid,
+            username: user.displayName || user.email.split('@')[0], // Use displayName or create a username from the email
+          };
+        // Create a new user document in Firestore
+        setDoc(doc(db, "users", user.uid),defaultValues)
+        .then(() => {
+          // Handle success if needed
+        }).catch((error) => {
+          // Handle errors if needed
+        });
+      }
+    })
+  .catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The AuthCredential type that was used.
+    const credential = GoogleAuthProvider.credentialFromError(error);
+  });

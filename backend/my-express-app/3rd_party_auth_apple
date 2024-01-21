@@ -1,0 +1,65 @@
+import { OAuthProvider } from "firebase/auth";
+import { getFirestore, setDoc, doc } from "firebase/firestore";
+
+const provider = new OAuthProvider('apple.com');
+import { getAuth, signInWithRedirect } from "firebase/auth";
+import { getAuth, getRedirectResult, OAuthProvider } from "firebase/auth";
+
+const db = getFirestore();
+const auth = getAuth();
+
+signInWithRedirect(auth, provider);
+
+// Result from Redirect auth flow.
+
+getRedirectResult(auth)
+  .then((result) => {
+    const credential = OAuthProvider.credentialFromResult(result);
+    if (result.additionalUserInfo.isNewUser) {
+    // Set default values for user fields
+    const defaultValues = {
+        Isprivate: 0,
+        comments: [],
+        created_songs: {},
+        friends_list: [],
+        liked_song_list: {},
+        liked_songs: [],
+        profile_picture_url: "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg",
+        rated_song_list: {},
+        uid: result.user.uid,
+        // Generate a username using the Apple user ID as a base
+        username: `appleUser${result.user.uid.substring(0, 6)}`,
+    };
+    // The signed-in user info.
+    setDoc(doc(db, "users", result.user.uid), defaultValues)
+        .then(() => {
+          console.log("User document created successfully");
+          // Handle success if needed
+        })
+        .catch((error) => {
+          console.error("Error creating user document:", error);
+          // Handle errors if needed
+        });
+    }
+  })
+  .catch((error) => {
+    // Handle Errors here.
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    // The email of the user's account used.
+    const email = error.customData.email;
+    // The credential that was used.
+    const credential = OAuthProvider.credentialFromError(error);
+
+    // ...
+  });
+
+  //DELETION LOGIC
+  //apple forces us to make one
+  async function deleteAppleAccount(uid) {
+    const userDocRef = doc(db, "users", uid);
+
+    // Delete the document
+    await deleteDoc(userDocRef);
+  }
+  
