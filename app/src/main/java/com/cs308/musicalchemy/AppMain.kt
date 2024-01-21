@@ -21,11 +21,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -33,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -400,6 +404,17 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("recommendations") {
             RecommendationScreen(navController)
+        }
+        composable(
+            "ChatScreen/{currentUserId}/{friendId}",
+            arguments = listOf(
+                navArgument("currentUserId") { type = NavType.StringType },
+                navArgument("friendId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val currentUserId = backStackEntry.arguments?.getString("currentUserId") ?: ""
+            val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+            ChatScreen(navController, currentUserId, friendId)
         }
     }
 }
@@ -1779,14 +1794,16 @@ fun ProfileScreen(navController: NavController, userId:String) {
                     ),
                 )
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Button(onClick = { navController.navigate("settings") }) {
+            if(userId == currentUserId) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = { navController.navigate("settings") }) {
 
-                Text("Settings")
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Button(onClick = { isChangeUsernameDialogVisible = true }) {
-                Text("Change Username")
+                    Text("Settings")
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(onClick = { isChangeUsernameDialogVisible = true }) {
+                    Text("Change Username")
+                }
             }
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -1869,6 +1886,7 @@ fun ProfileScreen(navController: NavController, userId:String) {
                                 color = Color(0x5E33373B),
                                 shape = RoundedCornerShape(size = 15.dp)
                             )
+                            .clickable { navController.navigate("ChatScreen/$currentUserId/$userId") }
                     ) {
                         // Content for the second box
                         Row(
@@ -3019,6 +3037,8 @@ data class Artist(
 
 )
 
+
+
 class ArtistViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
@@ -3576,6 +3596,81 @@ fun addComment(songId: String, commentText: String, userId: String) {
 }
 
 
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun ShareTrackDialog(
+    friends: List<FriendData>,
+    onFriendSelected: (FriendData) -> Unit,
+    onDismiss: () -> Unit,
+    context: Context, // Context for the Toast
+    song: Song // Song object for the Toast message
+) {
+    var selectedFriend by remember { mutableStateOf<FriendData?>(null) }
+
+    if (selectedFriend != null) {
+        onFriendSelected(selectedFriend!!)
+        Toast.makeText(context, "Sent ${song.trackName} to ${selectedFriend!!.name}", Toast.LENGTH_SHORT).show()
+        onDismiss()
+        selectedFriend = null // Reset selectedFriend
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Send to Friend") },
+        text = {
+            LazyColumn {
+                items(friends) { friend ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selectedFriend = friend }
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = rememberImagePainter(data = friend.profilePictureUrl),
+                            contentDescription = "Friend's Profile Picture",
+                            modifier = Modifier.size(40.dp).clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(friend.name)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+
+
+fun shareTrackWithFriend(song: Song, senderId: String, receiver: FriendData) {
+    val message = mapOf(
+        "trackName" to song.trackName,
+        "trackPic" to song.albumImages?.firstOrNull()?.get("url").toString(),
+        "timestamp" to Timestamp.now(),
+        "artist" to song.artists?.firstOrNull(),
+        "sender" to senderId,
+        "receiver" to receiver.id,
+        "trackID" to song.id
+    )
+
+    Firebase.firestore.runBatch { batch ->
+        val senderDocRef = Firebase.firestore.collection("Users").document(senderId)
+        val receiverDocRef = Firebase.firestore.collection("Users").document(receiver.id.toString())
+
+        batch.update(senderDocRef, "messages", FieldValue.arrayUnion(message))
+        batch.update(receiverDocRef, "messages", FieldValue.arrayUnion(message))
+    }
+}
+
+
+
+
 
 
 @OptIn(ExperimentalCoilApi::class)
@@ -3591,6 +3686,10 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     var currentRating by remember { mutableFloatStateOf(0f) }
     var comments by remember { mutableStateOf<List<Comment>>(emptyList()) }
 
+
+    var friendsList by remember { mutableStateOf<List<FriendData>>(emptyList()) }
+
+    var showShareDialog by remember { mutableStateOf(false) }
     var showCommentDialog by remember { mutableStateOf(false) }
 
 
@@ -3686,6 +3785,49 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             isLiked.value = likedSongs?.containsKey(songId) ?: false
         }
     }
+
+    fun fetchFriendsList(userId: String, onResult: (List<FriendData>) -> Unit) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { document ->
+            val friendIds = document["friends_list"] as? List<*> ?: return@addOnSuccessListener
+
+            val friends = mutableListOf<FriendData>()
+
+            for (id in friendIds) {
+                usersCollection.document(id.toString()).get().addOnSuccessListener { friendDoc ->
+                    val name = friendDoc["username"] as? String ?: "Unknown"
+                    val profilePicUrl = friendDoc["profile_picture_url"] as? String
+
+                    if (profilePicUrl != null) {
+                        friends.add(FriendData(id.toString(), name, profilePicUrl))
+                    } else {
+                        Log.e("fetchFriendsList", "Profile picture URL is null for friend: $id")
+                    }
+
+                    if (friends.size == friendIds.size) {
+                        onResult(friends)
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            fetchFriendsList(userId) { fetchedFriends ->
+                friendsList = fetchedFriends
+            }
+        }
+    }
+
+
+
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -3981,7 +4123,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable {},
+                        .clickable { showShareDialog = true },
                 )
                 Image(
                     painter = painterResource(id = R.drawable.save),
@@ -4035,6 +4177,26 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             }
         )
     }
+
+    if (showShareDialog && song != null && userId != null) {
+        ShareTrackDialog(
+            friends = friendsList,
+            onFriendSelected = { selectedFriend ->
+                shareTrackWithFriend(song, userId, selectedFriend)
+                showShareDialog = false
+            },
+            onDismiss = { showShareDialog = false },
+            context = LocalContext.current,
+            song = song
+        )
+    }
+
+
+
+
+
+
+
 }
 
 
@@ -4161,6 +4323,224 @@ fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
 //~~~~~~~~~~
 //~~~~~~~~~~USERS~~~~~~~~~~
 //
+
+
+
+data class Message(
+    val artist: String = "",
+    val receiver: String = "",
+    val sender: String = "",
+    val timestamp: Date = Date(),
+    val trackID: String = "",
+    val trackName: String = "",
+    val trackPic: String = ""
+)
+
+@Composable
+fun ChatBox(currentUserId: String, friendId: String, navController: NavController) {
+    var messageText by remember { mutableStateOf("") }
+    val messages = remember { mutableStateListOf<Message>() }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(friendId, currentUserId) {
+        fetchMessages(friendId, currentUserId) { fetchedMessages ->
+            messages.clear() // Clear old messages
+            messages.addAll(fetchedMessages)
+            if (messages.isNotEmpty()) {
+                coroutineScope.launch {
+                    listState.scrollToItem(messages.size - 1) // Scroll to the latest message
+                }
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.weight(1f), state = listState, reverseLayout = true) {
+            items(messages.reversed()) { message ->
+                MessageBubble(message, isCurrentUser = message.sender == currentUserId, navController = navController)
+            }
+        }
+        }
+
+        Row {
+            TextField(
+                value = messageText,
+                onValueChange = { messageText = it },
+                placeholder = { Text("Type a message") },
+                modifier = Modifier.weight(1f)
+            )
+            Button(onClick = {
+                sendMessage(currentUserId, friendId, messageText)
+                messageText = "" // Clear the text field
+            }) {
+                Text("Send")
+            }
+        }
+    }
+
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun MessageBubble(message: Message, isCurrentUser: Boolean, navController: NavController) {
+    val isSongMessage = message.artist.isNotEmpty() && message.trackPic.isNotEmpty() && message.trackID.isNotEmpty()
+
+    Box(
+        contentAlignment = Center,
+        modifier = Modifier
+            .background(
+                color = if (isCurrentUser) Color(0xFFFFA500) else Color(0xFFFFEFD5),
+                shape = RoundedCornerShape(10.dp)
+            )
+            .padding(8.dp)
+            .clickable {
+                if (isSongMessage) {
+                    // Navigate to the song detail page
+                    navController.navigate("songDetail/${message.trackID}")
+                }
+            }
+    ) {
+        if (isSongMessage) {
+            // Display song details
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = rememberImagePainter(data = message.trackPic),
+                    contentDescription = "Song Image",
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(message.trackName, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(message.artist, color = Color.White)
+                }
+            }
+        } else {
+            // Display text message
+            Text(text = message.trackName, color = Color.White)
+        }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun fetchMessages(friendId: String, currentUserId: String, onResult: (List<Message>) -> Unit) {
+    val userDocRef = Firebase.firestore.collection("Users").document(currentUserId)
+
+    userDocRef.addSnapshotListener { snapshot, e ->
+        if (e != null) {
+            Log.w("ChatBox", "Listen failed.", e)
+            return@addSnapshotListener
+        }
+
+        val messageList = mutableListOf<Message>()
+        val messages = snapshot?.get("messages") as? List<Map<String, Any>> ?: listOf()
+
+        for (messageMap in messages) {
+            val sender = messageMap["sender"] as? String
+            val receiver = messageMap["receiver"] as? String
+            if (sender == currentUserId && receiver == friendId || sender == friendId && receiver == currentUserId) {
+                val message = Message(
+                    artist = messageMap["artist"] as? String ?: "",
+                    receiver = receiver,
+                    sender = sender,
+                    timestamp = (messageMap["timestamp"] as? Timestamp)?.toDate() ?: Date(),
+                    trackID = messageMap["trackID"] as? String ?: "",
+                    trackName = messageMap["trackName"] as? String ?: "",
+                    trackPic = messageMap["trackPic"] as? String ?: ""
+                )
+                messageList.add(message)
+            }
+        }
+        onResult(messageList)
+    }
+}
+
+
+
+fun sendMessage(senderId: String, receiverId: String, text: String) {
+    val message = mapOf(
+        "trackName" to text,
+        "sender" to senderId,
+        "receiver" to receiverId,
+        "timestamp" to Timestamp.now()
+    )
+
+    Firebase.firestore.runBatch { batch ->
+        val senderDocRef = Firebase.firestore.collection("Users").document(senderId)
+        val receiverDocRef = Firebase.firestore.collection("Users").document(receiverId)
+
+        batch.update(senderDocRef, "messages", FieldValue.arrayUnion(message))
+        batch.update(receiverDocRef, "messages", FieldValue.arrayUnion(message))
+    }
+}
+
+class ChatViewModel : ViewModel() {
+    private val _username = MutableLiveData<String>()
+    val username: LiveData<String> = _username
+    private val _profilePictureURL = MutableLiveData<String>()
+    val profilePictureURL: LiveData<String> = _profilePictureURL
+
+    fun fetchUsername(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            _username.value = documentSnapshot["username"] as? String ?: "Unknown"
+        }
+    }
+
+    fun fetchProfilePictureURL(userId: String) {
+        val usersCollection = Firebase.firestore.collection("Users")
+        usersCollection.document(userId).get().addOnSuccessListener { documentSnapshot ->
+            _profilePictureURL.value =
+                documentSnapshot["profile_picture_url"] as? String ?: "Unknown"
+        }
+    }
+}
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun ChatScreen(navController: NavController, currentUserId: String, friendId: String) {
+    val viewModel: ChatViewModel = viewModel()
+    val friendUsername by viewModel.username.observeAsState("Unknown")
+    val friendProfilePic by viewModel.profilePictureURL.observeAsState("")
+
+    LaunchedEffect(friendId) {
+        viewModel.fetchUsername(friendId)
+        viewModel.fetchProfilePictureURL(friendId)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (friendProfilePic.isNotEmpty()) {
+                            Image(
+                                painter = rememberImagePainter(data = friendProfilePic),
+                                contentDescription = "Friend's Profile Picture",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(friendUsername)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("friendslist") }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            ChatBox(currentUserId = currentUserId, friendId = friendId, navController)
+        }
+    }
+}
+
+
+
 
 data class User(
     var uid: String = "",
