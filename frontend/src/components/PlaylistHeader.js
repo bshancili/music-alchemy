@@ -127,23 +127,26 @@ const PlaylistHeader = ({ playlist }) => {
       await deleteDoc(doc(db, "Playlists", playlistId));
 
       // Step 2: Remove the playlist from each contributor's playlists array
-      for (const contributorId of contributors) {
-        if (contributors.length === 0) {
-          break;
-        }
-        const contributorDocRef = doc(db, "Users", contributorId);
-        const contributorSnap = await getDoc(contributorDocRef);
-        const contributorData = contributorSnap.data();
+      if (playlist.contributors && playlist.contributors.length > 0) {
+        for (const contributorId of contributors) {
+          if (contributors.length === 0) {
+            break;
+          }
+          const contributorDocRef = doc(db, "Users", contributorId);
+          const contributorSnap = await getDoc(contributorDocRef);
+          const contributorData = contributorSnap.data();
 
-        if (contributorData && contributorData.playlists) {
-          const updatedPlaylists = contributorData.playlists.filter(
-            (id) => id !== playlistId
-          );
+          if (contributorData && contributorData.playlists) {
+            const updatedPlaylists = contributorData.playlists.filter(
+              (id) => id !== playlistId
+            );
 
-          // Update the contributor's playlists array
-          await updateDoc(contributorDocRef, { playlists: updatedPlaylists });
+            // Update the contributor's playlists array
+            await updateDoc(contributorDocRef, { playlists: updatedPlaylists });
+          }
         }
       }
+
       const userDocRef = doc(db, "Users", userID);
       const userSnap = await getDoc(userDocRef);
       const userData = userSnap.data();

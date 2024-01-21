@@ -137,7 +137,7 @@ const ProfileMusicList = ({
         timestamp: timestamp,
         songs: combinedArray,
         createdBy: userID,
-        description: "",
+        description: `A combination of music for ${username} and ${friend.username}`,
         imgURL: "https://www.afrocharts.com/images/song_cover.png",
       };
       const newPlaylistRef = await addDoc(

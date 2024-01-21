@@ -19,6 +19,10 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import badge1 from "../utils/badge1.png";
+import badge2 from "../utils/badge2.png";
+import badge3 from "../utils/badge3.png";
+import badge4 from "../utils/badge4.png";
 
 function Profile({
   user,
@@ -33,6 +37,7 @@ function Profile({
   const navigate = useNavigate();
   const [showLogoutButton, setShowLogoutButton] = useState(false);
   const [isFriend, setIsFriend] = useState(isF);
+  const [badge, setBadge] = useState("none");
 
   const [Isprivate, setIsPrivate] = useState(isPrivate);
   const toast = useToast();
@@ -93,6 +98,18 @@ function Profile({
     }
   };
 
+  useEffect(() => {
+    if (songCount >= 10 && songCount < 25) {
+      setBadge(badge1);
+    } else if (songCount >= 25 && songCount < 50) {
+      setBadge(badge2);
+    } else if (songCount >= 50 && songCount < 100) {
+      setBadge(badge3);
+    } else {
+      setBadge(badge4);
+    }
+  }, []);
+
   if (!user) {
     return (
       <Container>
@@ -126,6 +143,7 @@ function Profile({
         w="256px"
         borderRadius="9px"
       />
+
       <Box
         pt={5}
         display="flex"
@@ -173,7 +191,17 @@ function Profile({
           )}
         </Box>
       </Box>
-
+      <Image />
+      {badge !== "none" && (
+        <Image
+          src={badge} // Update the path based on your badge images
+          w={20}
+          h={20}
+          mt={2}
+          borderRadius="50%" // Make it a circle if needed
+          alt={`Badge ${badge}`}
+        />
+      )}
       <Spacer />
       <HStack align="start">
         <IconButton
