@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -102,6 +103,7 @@ import com.google.gson.annotations.SerializedName
 import com.google.accompanist.pager.HorizontalPager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
@@ -378,7 +380,7 @@ fun App(startGoogleSignIn: () -> Unit) {
         }
         composable("search") { Search(navController) }
         composable("searchUser") { SearchUser(navController)}
-        composable("addSong") { AddSongScreen(navController) }
+        composable("addSong") { AddSongScreen() }
         composable("signUp") { SignUpScreen(navController) }
         composable("profile/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
@@ -977,6 +979,7 @@ object RetrofitInstanceRecommendation {
 
 
 data class RecommendationRequest(val uid: String)
+@Suppress("PropertyName")
 data class TrackIdResponse(val track_id: String)
 interface RecommendationApiService {
 
@@ -1214,6 +1217,7 @@ fun RecommendationTabContent(
         }
     }
 }
+@OptIn(FlowPreview::class)
 @Composable
 fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()) {
     Column(
@@ -1229,8 +1233,6 @@ fun Search(navController: NavController, viewModel: SongsViewModel = viewModel()
         var searchText by remember { mutableStateOf("") }
         val isLoading by viewModel.isLoading.observeAsState(initial = false)
         val songs by viewModel.songs.observeAsState(initial = emptyList())
-
-        val searchPerformed by viewModel.searchPerformed.observeAsState()
 
         // Debounce text input
         LaunchedEffect(searchText) {
@@ -1463,9 +1465,9 @@ fun SearchUser(navController: NavController, viewModel: UsersViewModel = viewMod
 }
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = viewModel()) {
+fun AddSongScreen(viewModel: SongsViewModel = viewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var songToAdd by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -1517,7 +1519,7 @@ fun AddSongScreen(navController: NavController, viewModel: SongsViewModel = view
         } else if (suggestions.isNotEmpty()) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(suggestions) { suggestion ->
-                    val artistNames = suggestion.artists?.joinToString() ?: "Unknown Artists"
+                    val artistNames = suggestion.artists.joinToString()
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2948,6 +2950,8 @@ fun FriendsList(navController: NavController, viewModel: ProfileViewModel) {
 data class Song(
     var id: String = "",
 
+    @get:PropertyName("comments") @set:PropertyName("comments") var comments: List<Comment>? = listOf(),
+
     @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
     @get:PropertyName("artists") @set:PropertyName("artists") var artists: List<String>? = listOf(),
     @get:PropertyName("album_name") @set:PropertyName("album_name") var albumName: String? = "",
@@ -2991,6 +2995,14 @@ data class SuggestedTrack(
     @get:PropertyName("track_duration_ms") @set:PropertyName("track_duration_ms") var trackDurationMs: Long? = 0,
     @get:PropertyName("track_name") @set:PropertyName("track_name") var trackName: String? = "",
     @get:PropertyName("track_url") @set:PropertyName("track_url") var trackUrl: String? = ""
+)
+
+data class Comment(
+    val text: String = "",
+    val timestamp: Timestamp = Timestamp.now(),
+    val userId: String = "",
+    val userProfilePic: String = "",
+    val username: String = ""
 )
 
 
@@ -3037,7 +3049,7 @@ class ArtistViewModel : ViewModel() {
 
                 _artists.value = artistsList
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
                 // Handle errors here
             }
     }
@@ -3057,7 +3069,7 @@ class ArtistViewModel : ViewModel() {
                     _suggestedTracks.value = it.suggestedTracks ?: emptyList()
                 }
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
                 // Handle errors here
             }
     }
@@ -3074,9 +3086,6 @@ class SongsViewModel : ViewModel() {
 
     private val _songs = MutableLiveData<List<Song>>()
     val songs: LiveData<List<Song>> = _songs
-
-    private val _addSongStatus = MutableLiveData<String>()
-    val addSongStatus: LiveData<String> = _addSongStatus
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
@@ -3106,7 +3115,7 @@ class SongsViewModel : ViewModel() {
         }
     }
 
-    fun addCreatedSongToUser(userId: String, songId: String) {
+    private fun addCreatedSongToUser(userId: String, songId: String) {
         val db = FirebaseFirestore.getInstance()
         val userRef = db.collection("Users").document(userId)
 
@@ -3160,12 +3169,7 @@ class SongsViewModel : ViewModel() {
                 val songsList = documents.mapNotNull { documentSnapshot ->
                     try {
                         val song = documentSnapshot.toObject(Song::class.java)
-                        song.let {data class Suggestion(
-                            @SerializedName("track_name") val trackName: String,
-                            @SerializedName("artist(s)") val artists: List<String>, // Corrected field name with annotation
-                            @SerializedName("album_name") val albumName: String,
-                            @SerializedName("spotify_track_id") val spotifyTrackId: String
-                        )
+                        song.let {
 
                             // Ensure "rating" is an integer
                             it.rating = try {
@@ -3197,8 +3201,7 @@ class SongsViewModel : ViewModel() {
         _songs.value = updatedSongs
     }
 
-    private val _searchPerformed = MutableLiveData<Boolean>(false)
-    val searchPerformed: LiveData<Boolean> = _searchPerformed
+    private val _searchPerformed = MutableLiveData(false)
 
     fun searchSongsAndLoad(searchString: String) {
         viewModelScope.launch {
@@ -3222,7 +3225,7 @@ class SongsViewModel : ViewModel() {
     }
 
 
-    fun loadSongsWithTrackId(trackIds: List<String>) {
+    private fun loadSongsWithTrackId(trackIds: List<String>) {
         viewModelScope.launch {
             Log.d("SongsViewModel", "Loading songs with Track IDs: $trackIds")
             val db = FirebaseFirestore.getInstance()
@@ -3251,12 +3254,7 @@ class SongsViewModel : ViewModel() {
     }
 }
 
-/*
-interface SongsApiService {
-    @GET("/search")
-    suspend fun searchSongs(@Query("songName") songName: String): Response<List<Song>>
-}
-*/
+
 interface AutocompleteApiService {
     @GET("/autocomplete")
     suspend fun autocompleteSong(@Query("song") songQuery: String): Response<AutocompleteResponse>
@@ -3271,6 +3269,7 @@ data class SearchResponse(
     val matchingTrackIds: List<String>
 )
 data class AutocompleteResponse(val suggestions: List<Suggestion>)
+@Suppress("PropertyName")
 data class CreateSongRequest(val track_spotify_id: String)
 data class CreateSongResponse(val success: Boolean, val message: String)
 
@@ -3287,7 +3286,7 @@ data class AlbumImage(
 )
 
 object RetrofitInstance {
-    private const val BASE_URL = "http://10.0.2.2:6060" // Replace with your backend URL
+    private const val BASE_URL = "http://10.0.2.2:6060"
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -3450,7 +3449,7 @@ fun handleRatingUpdate(song: Song, newRating: Double, userId: String, viewModel:
 @Suppress("UNCHECKED_CAST")
 suspend fun getUserRatingForSong(userId: String?, songId: String): Double? {
     if (userId == null) {
-        Log.w("getUserRatingForSong", "UserId is null")
+
         return null
     }
 
@@ -3462,17 +3461,119 @@ suspend fun getUserRatingForSong(userId: String?, songId: String): Double? {
         val ratedSongList = userSnapshot.get("rated_song_list") as? Map<String, Map<String, Any>>
 
         val rating = ratedSongList?.get(songId)?.get("rating") as? Double
-        Log.w("getUserRatingForSong", "Current User rating: $rating")
+
         rating
     } catch (e: Exception) {
-        Log.e("getUserRatingForSong", "Error fetching user rating", e)
+
         null
     }
 }
 
+@Composable
+fun CommentDialog(onDismissRequest: () -> Unit, onSubmitComment: (String) -> Unit) {
+    var commentText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Leave a Comment") },
+        text = {
+            TextField(
+                value = commentText,
+                onValueChange = { commentText = it },
+                placeholder = { Text("Write your comment here...") }
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (commentText.isNotBlank()) {
+                        onSubmitComment(commentText)
+                        commentText = "" // Clear the comment text field
+                        onDismissRequest()
+                    }
+                }
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
+}
 
 
 
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun CommentItem(comment: Comment) {
+    Card(
+        backgroundColor = Color.Gray,
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = rememberImagePainter(data = comment.userProfilePic),
+                contentDescription = "Profile Picture",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+            )
+            Column(modifier = Modifier.padding(start = 8.dp)) {
+                Text(text = comment.username, fontWeight = FontWeight.Bold)
+                Text(text = comment.text)
+            }
+        }
+    }
+}
+
+
+fun fetchComments(songId: String, onResult: (List<Comment>) -> Unit) {
+    val trackDocRef = Firebase.firestore.collection("Tracks").document(songId)
+    trackDocRef.addSnapshotListener { snapshot, _ ->
+        if (snapshot != null && snapshot.exists()) {
+            val track = snapshot.toObject(Song::class.java)
+            val comments = track?.comments ?: emptyList()
+
+            // Log the fetched comments
+            Log.d("CommentsFetch", "Fetched comments for songId $songId: $comments")
+
+            onResult(comments)
+        } else {
+            Log.d("CommentsFetch", "No comments found for songId $songId")
+        }
+    }
+}
+
+fun fetchUserProfileForComments(userId: String, onResult: (String, String) -> Unit) {
+    val userDocRef = Firebase.firestore.collection("Users").document(userId)
+    userDocRef.get().addOnSuccessListener { document ->
+        if (document != null) {
+            val username = document.getString("username") ?: "Unknown"
+            val userProfilePic = document.getString("profile_picture_url") ?: ""
+            onResult(username, userProfilePic)
+        }
+    }
+}
+
+fun addComment(songId: String, commentText: String, userId: String) {
+    fetchUserProfileForComments(userId) { username, userProfilePic ->
+        val newComment = Comment(
+            text = commentText,
+            timestamp = Timestamp.now(),
+            userId = userId,
+            userProfilePic = userProfilePic,
+            username = username
+        )
+        val trackDocRef = Firebase.firestore.collection("Tracks").document(songId)
+        trackDocRef.update("comments", FieldValue.arrayUnion(newComment))
+    }
+}
 
 
 
@@ -3488,30 +3589,44 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
     val user = Firebase.auth.currentUser
     val userId = user?.uid
     var currentRating by remember { mutableFloatStateOf(0f) }
+    var comments by remember { mutableStateOf<List<Comment>>(emptyList()) }
+
+    var showCommentDialog by remember { mutableStateOf(false) }
 
 
-
+// For fetching ratings
     LaunchedEffect(songId, userId) {
+        Log.d("LaunchedSong", "Launched Song!")
         coroutineScope.launch {
-            // Log the userId and songId
-
-
-            // Retry logic
-            while (isActive) {
+            var retry = true
+            while (isActive && retry) {
                 try {
                     val userRating = getUserRatingForSong(userId, songId)
-                    Log.d("RatingFetch", "Attempting to fetch rating for userId: $userId and songId: $songId")
-                    Log.d("RatingFetch", "Fetched User rating: $userRating for songId: $songId")
                     if (userRating != null) {
                         currentRating = userRating.toFloat()
-                        break
+                        Log.d("CurrentRatingFetch", "Attempt Fetch")
+                        retry = false // Stop retrying after successful fetch
                     }
                 } catch (e: Exception) {
                     Log.e("RatingFetch", "Error fetching rating", e)
                 }
 
-                delay(2000) // wait for 2 seconds before retrying
+                if (retry) {
+                    delay(2000) // wait for 2 seconds before retrying
+                }
             }
+        }
+    }
+
+
+    // For fetching comments
+    LaunchedEffect(songId) {
+        while (isActive) {
+            fetchComments(songId) { fetchedComments ->
+                Log.d("CommentFetch", "Fetched comments for songId $songId: $fetchedComments")
+                comments = fetchedComments
+            }
+            delay(5000L) // Delay of 5 seconds
         }
     }
 
@@ -3519,6 +3634,11 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(url)
         context.startActivity(intent)
+    }
+
+    fun showDebugInfo() {
+        val commentsText = comments.joinToString(separator = "\n") { "${it.username}: ${it.text}" }
+        Toast.makeText(context, "Song ID: $songId\nComments:\n$commentsText", Toast.LENGTH_LONG).show()
     }
 
     fun updateLikeCountLocally(countChange: Int) {
@@ -3836,7 +3956,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable {},
+                        .clickable { showCommentDialog = true },
                 )
                 Image(
                     painter = painterResource(id = R.drawable.comment),
@@ -3847,7 +3967,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                         .width(64.dp)
                         .aspectRatio(1f)
                         .weight(1f)
-                        .clickable {},
+                        .clickable { showDebugInfo() }
                 )
                 Image(
                     painter = painterResource(id = R.drawable.share),
@@ -3875,42 +3995,48 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Comments",
-                style = TextStyle(
-                    fontSize = 35.sp,
-                    lineHeight = 42.sp,
-                    fontWeight = FontWeight(700),
-                    color = Color(0xFFFFFFFF),
+            Column {
+                Text(
+                    text = "Comments",
+                    style = TextStyle(
+                        fontSize = 35.sp,
+                        lineHeight = 42.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 )
-            )
+                LazyColumn {
+                    items(comments) { comment ->
+                        CommentItem(comment)
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            //Place Holder Comment Boxes
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(128.dp)
-                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
-            ){}
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(128.dp)
-                    .background(color = Color(0x5E33373B), shape = RoundedCornerShape(size = 15.dp))
-            ){}
+            }
         }
 
         CommonBottomBar(navController = navController)
 
     }
+
+    if (showCommentDialog) {
+        CommentDialog(
+            onDismissRequest = { showCommentDialog = false },
+            onSubmitComment = { commentText ->
+                if (userId != null) {
+                    addComment(songId, commentText, userId)
+                    fetchComments(songId) { fetchedComments ->
+                        comments = fetchedComments
+                    }
+                    showCommentDialog = false // Close dialog after submitting comment
+                }
+            }
+        )
+    }
 }
 
 
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel: ArtistViewModel = viewModel()) {
 
@@ -3987,6 +4113,7 @@ fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
     // Use the first album image URL and the corresponding track name
@@ -3995,7 +4122,7 @@ fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
 
     Column(
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
