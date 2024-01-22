@@ -113,6 +113,7 @@ app.post("/signin", async (req, res) => {
 });
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
+
 app.post('/search_songs', async (req, res) => {
   const data = req.body;
   const tracks = data.tracks;
@@ -233,6 +234,7 @@ app.post("/retrieve_user_tracks", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
+    console.log(songsList);
     res.status(200).send(songsList);
   } catch (error) {
     console.error("Error retrieving songs: ", error);
@@ -408,13 +410,14 @@ app.post("/find_recommended_tracks", async (req, res) => {
     return res.status(400).json({ error: "UID is required" });
   }
 
+  
   const userRef = db.collection('Users').doc(userUid);
   const userDoc = await userRef.get();
   // Check if the user exists
   if (!userDoc.exists) {
     return res.status(404).json({ error: "User not found" });
   }
-
+  
   try {
     const userData = {uid: userUid};
     const response = await axios.post(
@@ -435,7 +438,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
           "http://localhost:3000/get_track_artist",
           songData
         );
-        console.log(songName.data);
+        //console.log(songName.data);
         return `${songName.data["name"]} - rated by ${rated_songs[songId].rating} - sang by ${artistName.data["artist"]}`;
       })
     );
@@ -450,7 +453,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
           "http://localhost:3000/get_track_artist",
           songData
         );
-        console.log(songName.data);
+        //console.log(songName.data);
         return `${songName.data["name"]} - sang by ${artistName.data["artist"]}`;
       })
     );
@@ -458,6 +461,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
     let combinedList = songIdList.concat(lsongIdlist);
     let myList = combinedList.join("\n");
     
+    console.log(myList);
     // Check if myList is empty
     if (!myList.trim()) {
       return res.status(404).json({ message: "No songs found to recommend" });
@@ -477,6 +481,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
     const recommendations = await find_recommended_track(
       openai_response["choices"][0]["message"]["content"]
     );
+    console.log(recommendations)
     res.status(200).send(recommendations);
   } catch (error) {
     // Handle errors

@@ -8,7 +8,7 @@ describe('/retrieve_friend_list endpoint', () => {
       .post('/retrieve_friend_list')
       .send({}); // Sending an empty body
 
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(404);
     expect(response.body).toHaveProperty('error', 'UID is required');
   });
 

@@ -9,9 +9,12 @@ describe('/find_recommended_tracks endpoint', () => {
       .post('/find_recommended_tracks')
       .send({ uid: testUid });
 
-      expect(response.statusCode).toBe(200);
-      expect(Array.isArray(response.body)).toBeTruthy(); // Expect an array directly in the body
-      expect(response.body).toEqual(expect.arrayContaining([expect.objectContaining({track_id: expect.any(String)})]));
+    expect(response.statusCode).toBe(200);
+    expect(Array.isArray(response.body)).toBeTruthy(); // Expect an array
+    expect(response.body.length).toBeGreaterThan(0); // Expect at least one element in the array
+    response.body.forEach(item => {
+        expect(item).toHaveProperty('track_id');
+    });
   }, 100000);
 
   it('should return an appropriate message for a valid UID without songs', async () => {
@@ -34,7 +37,7 @@ describe('/find_recommended_tracks endpoint', () => {
     expect(response.body).toHaveProperty('error', 'User not found' );
   });
 
-  it('should return a 400 error when no UID is provided', async () => {
+  it('should return a 404 error when no UID is provided', async () => {
     const response = await request(app)
       .post('/find_recommended_tracks')
       .send({}); // No UID provided
