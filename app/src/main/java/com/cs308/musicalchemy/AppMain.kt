@@ -689,6 +689,7 @@ fun CommonBottomBar(navController: NavController, modifier: Modifier = Modifier)
 //~~~~~~~~~~
 ////~~~~~MAIN MENU~~~~~
 
+@Suppress("EnumEntryName")
 enum class SortOption {
     _Rating, _Rating_Count, _Like, _Liveness, _Danceability, _Energy, _Name
 }
@@ -2902,19 +2903,28 @@ class ProfileViewModel : ViewModel() {
             if (documentSnapshot.exists()) {
                 // User exists, update the username
                 userDocument.update("username", newUsername)
-                userDocument.update("profile_picture_url", "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg")
-                    .addOnSuccessListener {
-                        // Handle success
-                    }
-                    .addOnFailureListener {
-                        // Handle failure
-                    }
+
+                // Check if "profile_picture_url" field exists
+                if (!documentSnapshot.contains("profile_picture_url")) {
+                    // Field does not exist, add it
+                    userDocument.update(
+                        "profile_picture_url",
+                        "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg"
+                    )
+                        .addOnSuccessListener {
+                            // Handle success
+                        }
+                        .addOnFailureListener {
+                            // Handle failure
+                        }
+                }
             } else {
-                // User does not exist, create a new user with the username
+                // User does not exist, create a new user with the username and default profile picture
                 userDocument.set(
                     mapOf(
                         "username" to newUsername,
-                        "liked_song_list" to listOf<String>()
+                        "liked_song_list" to listOf<String>(),
+                        "profile_picture_url" to "https://static.vecteezy.com/system/resources/previews/005/129/844/non_2x/profile-user-icon-isolated-on-white-background-eps10-free-vector.jpg"
                     )
                 )
                     .addOnSuccessListener {
@@ -2926,6 +2936,7 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
     fun fetchLikedSongs(userId: String) {
         val likedSongsCollection = Firebase.firestore
             .collection("Users")
@@ -3252,7 +3263,7 @@ data class Artist(
 
 data class Album(
     @get:PropertyName("firebase_id") @set:PropertyName("firebase_id") var albumID: String? = "",
-    @get:PropertyName("album_artists_ids") @set:PropertyName("album_arists_id") var albumArtistID: List<String>? = listOf(),
+    @get:PropertyName("album_artists_ids") @set:PropertyName("album_artists_ids") var albumArtistID: List<String>? = listOf(),
     @get:PropertyName("album_artists_names") @set:PropertyName("album_artists_names") var artistNames: List<String>? = listOf(),
     @get:PropertyName("album_images") @set:PropertyName("album_images") var albumImages: List<String>? = listOf(),
     @get:PropertyName("album_name") @set:PropertyName("album_name") var albumName: String? = "",
@@ -3327,7 +3338,7 @@ class ArtistViewModel : ViewModel() {
                     _artistUrl.value = it.artistURL
                 }
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
                 // Handle errors here
             }
     }
@@ -3372,7 +3383,7 @@ class AlbumViewModel : ViewModel() {
 
                 _albums.value = albumsList
             }
-            .addOnFailureListener { exception ->
+            .addOnFailureListener {
                 // Handle errors here
             }
     }
@@ -3425,19 +3436,24 @@ class SongsViewModel : ViewModel() {
     }
 
     fun sortSongs(sortOption: SortOption) {
-        _songs.value = _songs.value?.sortedWith(Comparator { song1, song2 ->
+        _songs.value = _songs.value?.sortedWith { song1, song2 ->
             when (sortOption) {
                 SortOption._Rating -> (song2.rating ?: 0.0).compareTo(song1.rating ?: 0.0)
-                SortOption._Rating_Count -> (song2.ratingCount ?: 0).compareTo(song1.ratingCount ?: 0)
+                SortOption._Rating_Count -> (song2.ratingCount ?: 0).compareTo(
+                    song1.ratingCount ?: 0
+                )
+
                 SortOption._Like -> (song2.likeCount ?: 0).compareTo(song1.likeCount ?: 0)
                 SortOption._Liveness -> (song2.liveness ?: 0.0).compareTo(song1.liveness ?: 0.0)
-                SortOption._Danceability -> (song2.danceability ?: 0.0).compareTo(song1.danceability ?: 0.0)
+                SortOption._Danceability -> (song2.danceability ?: 0.0).compareTo(
+                    song1.danceability ?: 0.0
+                )
+
                 SortOption._Energy -> (song2.energy ?: 0.0).compareTo(song1.energy ?: 0.0)
                 SortOption._Name -> (song1.trackName ?: "").compareTo(song2.trackName ?: "")
                 // Add cases for other sort options
-                else -> 0
             }
-        })
+        }
     }
 
 
@@ -4060,11 +4076,6 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
         context.startActivity(intent)
     }
 
-    fun showDebugInfo() {
-        val commentsText = comments.joinToString(separator = "\n") { "${it.username}: ${it.text}" }
-        Toast.makeText(context, "Song ID: $songId\nComments:\n$commentsText", Toast.LENGTH_LONG).show()
-    }
-
     fun updateLikeCountLocally(countChange: Int) {
         val updatedSongs = songs.map {
             if (it.id == songId) {
@@ -4167,7 +4178,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .weight(1f) // Takes up all available vertical space
-        ){
+        ) {
             val imageUrl: String? = song?.albumImages?.firstOrNull()?.get("url") as? String
             imageUrl?.let {
                 Image(
@@ -4219,7 +4230,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
             val artists = song?.artists
 
             if (artists != null) {
-                Column{
+                Column {
                     artists.forEach { artist ->
                         Text(
                             text = artist,
@@ -4342,7 +4353,11 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                     userId?.let { uid ->
                         if (song != null) {
                             handleRatingUpdate(song, newRating.toDouble(), uid, viewModel)
-                            Toast.makeText(context, "Rating updated to $newRating", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Rating updated to $newRating",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -4363,7 +4378,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                             color = Color(0xFF1DB954),
                             shape = RoundedCornerShape(size = 15.dp)
                         )
-                ){
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.spotify_logo),
                         contentDescription = "spotify logo",
@@ -4380,7 +4395,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                     )
                 }
 
-                if(isLiked.value) {
+                if (isLiked.value) {
                     Image(
                         painter = painterResource(id = R.drawable.likedbutton),
                         contentDescription = "like button",
@@ -4391,8 +4406,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                             .width(64.dp)
                             .height(64.dp),
                     )
-                }
-                else{
+                } else {
                     Image(
                         painter = painterResource(id = R.drawable.likebutton),
                         contentDescription = "like button",
@@ -4404,64 +4418,35 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
                             .height(64.dp),
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp, CenterHorizontally),
-                verticalAlignment = Alignment.Top,
+
+            Image(
+                painter = painterResource(id = R.drawable.plus),
+                contentDescription = "plus",
+                contentScale = ContentScale.FillBounds,
                 modifier = Modifier
-                    .fillMaxWidth()
-            ){
-                Image(
-                    painter = painterResource(id = R.drawable.plus),
-                    contentDescription = "plus",
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .width(64.dp)
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .clickable { showCommentDialog = true },
-                )
+                    .padding(0.dp)
+                    .width(64.dp)
+                    .aspectRatio(1f)
+                    .weight(1f)
+                    .clickable { showCommentDialog = true },
+            )
 
-                Image(
+            Image(
+                painter = painterResource(id = R.drawable.share),
+                contentDescription = "share",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .padding(0.dp)
+                    .width(64.dp)
+                    .aspectRatio(1f)
+                    .weight(1f)
+                    .clickable { showShareDialog = true },
+            )
 
-                    painter = painterResource(id = R.drawable.comment),
-                    contentDescription = "comment",
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .width(64.dp)
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .clickable { showDebugInfo() }
-                )
+        }
 
-                Image(
-                    painter = painterResource(id = R.drawable.share),
-                    contentDescription = "share",
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .width(64.dp)
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .clickable { showShareDialog = true },
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.save),
-                    contentDescription = "save",
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier
-                        .padding(0.dp)
-                        .width(64.dp)
-                        .aspectRatio(1f)
-                        .weight(1f)
-                        .clickable {},
-                )
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -4524,6 +4509,7 @@ fun SongDetailScreen(navController: NavController, songId: String, viewModel: So
 
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun AlbumDetailScreen(navController: NavController, albumID: String, viewModel: AlbumViewModel = viewModel()){
 
@@ -4693,11 +4679,11 @@ fun AlbumDetailScreen(navController: NavController, albumID: String, viewModel: 
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     if (i < albumTracks.size) {
-                        AlbumTrackItem2(albumTracks[i], albumImages);
+                        AlbumTrackItem2(albumTracks[i], albumImages)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     if (i + 1 < albumTracks.size) {
-                        AlbumTrackItem2(albumTracks[i + 1], albumImages);
+                        AlbumTrackItem2(albumTracks[i + 1], albumImages)
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -4860,11 +4846,11 @@ fun ArtistDetailScreen(navController: NavController, artistID: String, viewModel
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     if (i < suggestedTracks.size) {
-                        AlbumTrackItem(suggestedTracks[i]);
+                        AlbumTrackItem(suggestedTracks[i])
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     if (i + 1 < suggestedTracks.size) {
-                        AlbumTrackItem(suggestedTracks[i + 1]);
+                        AlbumTrackItem(suggestedTracks[i + 1])
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -4924,6 +4910,7 @@ fun AlbumTrackItem(suggestedTrack: SuggestedTrack) {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun AlbumTrackItem2(albumTrack: AlbumTrack, albumImage: String) {
     // Use the first album image URL and the corresponding track name
@@ -5026,12 +5013,16 @@ fun ChatBox(currentUserId: String, friendId: String, navController: NavControlle
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(modifier = Modifier.weight(1f), state = listState, reverseLayout = true) {
             items(messages.reversed()) { message ->
-                MessageBubble(message, isCurrentUser = message.sender == currentUserId, navController = navController)
+                MessageBubble(
+                    message,
+                    isCurrentUser = message.sender == currentUserId,
+                    navController = navController
+                )
             }
         }
-        }
 
-        Row {
+
+        Row(modifier = Modifier.padding(8.dp)) {
             TextField(
                 value = messageText,
                 onValueChange = { messageText = it },
@@ -5046,7 +5037,7 @@ fun ChatBox(currentUserId: String, friendId: String, navController: NavControlle
             }
         }
     }
-
+}
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
@@ -5054,10 +5045,10 @@ fun MessageBubble(message: Message, isCurrentUser: Boolean, navController: NavCo
     val isSongMessage = message.artist.isNotEmpty() && message.trackPic.isNotEmpty() && message.trackID.isNotEmpty()
 
     Box(
-        contentAlignment = Center,
+        contentAlignment = if (isCurrentUser) Alignment.CenterEnd else Alignment.CenterStart,
         modifier = Modifier
             .background(
-                color = if (isCurrentUser) Color(0xFFFFA500) else Color(0xFFFFEFD5),
+                color = if (isCurrentUser) Color(0xFFF9CD66) else Color(0xFF8A8A8A),
                 shape = RoundedCornerShape(10.dp)
             )
             .padding(8.dp)
