@@ -1,0 +1,77 @@
+import unittest
+from unittest.mock import patch, MagicMock
+from flask import json
+from apispython import app
+
+class TestCreateSongAPI(unittest.TestCase):
+
+    def setUp(self):
+        app.testing = True
+        self.client = app.test_client()
+
+    def mock_spotify_responses(self, mock_sp_track, mock_sp_audio_features, mock_sp_artist):
+        mock_sp_track.return_value = {
+            'id': '3AgqQbQWYLGsemeBHk1U1d', 
+            'album': {'id': '1evRgENnDDNYH6KPjIFdQi'}, 
+            'artists': [{'id': '7v4imS0moSyGdXyLgVTIV7', 'name': 'Nat King Cole'}],
+            'name': 'Autumn Leaves - Remastered 1987'
+        }
+        mock_sp_audio_features.return_value = [{
+    "danceability": 0.211,
+    "energy": 0.348,
+    "key": 2,
+    "loudness": -10.12,
+    "mode": 0,
+    "speechiness": 0.0326,
+    "acousticness": 0.939,
+    "instrumentalness": 0.00052,
+    "liveness": 0.384,
+    "valence": 0.0981,
+    "tempo": 86.868,
+    "type": "audio_features",
+    "id": "3AgqQbQWYLGsemeBHk1U1d",
+    "uri": "spotify:track:3AgqQbQWYLGsemeBHk1U1d",
+    "track_href": "https://api.spotify.com/v1/tracks/3AgqQbQWYLGsemeBHk1U1d",
+    "analysis_url": "https://api.spotify.com/v1/audio-analysis/3AgqQbQWYLGsemeBHk1U1d",
+    "duration_ms": 160667,
+    "time_signature": 5
+  }]
+        mock_sp_artist.return_value = {'images': [
+  {
+    "url": "https://i.scdn.co/image/ab6761610000e5eb3bf8497c46243391e6172771",
+    "height": 640,
+    "width": 640
+  },
+  {
+    "url": "https://i.scdn.co/image/ab676161000051743bf8497c46243391e6172771",
+    "height": 320,
+    "width": 320
+  },
+  {
+    "url": "https://i.scdn.co/image/ab6761610000f1783bf8497c46243391e6172771",
+    "height": 160,
+    "width": 160
+  }
+]}
+
+    @patch('apispython.sp.track')
+    @patch('apispython.sp.audio_features')
+    @patch('apispython.sp.artist')
+    @patch('apispython.db.collection')
+    def test_create_song_already_exists(self, mock_db_collection, mock_sp_artist, mock_sp_audio_features, mock_sp_track):
+        
+        self.mock_spotify_responses(mock_sp_track, mock_sp_audio_features, mock_sp_artist)
+        mock_query= mock_db_collection.return_value.where.return_value.limit.return_value.stream 
+        mock_query.return_value = iter([type('', (), {'id': '0V43k4wyRz5mDWWCrJLk'})()])
+
+        response = self.client.post('http://localhost:8080/create_song', json={'track_spotify_id': '3AgqQbQWYLGsemeBHk1U1d'})
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.data)
+        self.assertFalse(response_data['success'])
+        self.assertIn('Track already exist in database', response_data['message'])
+
+
+
+
+if __name__ == '__main__':
+    unittest.main()
