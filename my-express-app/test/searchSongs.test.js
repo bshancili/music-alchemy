@@ -1,3 +1,6 @@
+const request = require('supertest');
+const app = require('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/server.js');
+
 // Mock the searchInFirestore function before importing the server
 jest.mock('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/server.js', () => ({
     searchInFirestore: jest.fn().mockImplementation((trackName, artistName) => {
@@ -5,10 +8,6 @@ jest.mock('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/ser
       return trackName === 'Test Track' ? [{ track_id: 'mockId' }] : [];
     })
   }));
-
-const request = require('supertest');
-const app = require('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-express-app/server.js');
-
 
   describe('/search_songs endpoint', () => {
     it('should return 200 with results for valid request', async () => {
@@ -40,6 +39,6 @@ const app = require('/Users/mvsbuse/music-alchemy-updated/music-alchemy/my-expre
   
     // Additional test cases...
   });
-  // Close the server after tests
+
 
   

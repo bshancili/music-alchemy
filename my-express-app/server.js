@@ -113,7 +113,6 @@ app.post("/signin", async (req, res) => {
 });
 ////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
-
 app.post('/search_songs', async (req, res) => {
   const data = req.body;
   const tracks = data.tracks;
@@ -329,7 +328,7 @@ app.post("/retrieve_friend_list", async (req, res) => {
 
     // Check if UID is provided
     if (!uid) {
-      return res.status(400).json({ error: "UID is required" });
+      return res.status(404).json({ error: "UID is required" });
     }
 
     const userRef = db.collection('Users').doc(uid);
@@ -391,7 +390,7 @@ async function find_recommended_track(prompt_chatgpt) {
       tracks,
     });
     if (response.data && response.data.results) {
-      console.log(response.data.results)
+      //console.log(response.data.results)
       return response.data.results;
     }
   } catch (error) {
@@ -401,8 +400,20 @@ async function find_recommended_track(prompt_chatgpt) {
   return [];
 }
 
+
 app.post("/find_recommended_tracks", async (req, res) => {
   const userUid = req.body["uid"]; 
+
+  if (!userUid) {
+    return res.status(400).json({ error: "UID is required" });
+  }
+
+  const userRef = db.collection('Users').doc(userUid);
+  const userDoc = await userRef.get();
+  // Check if the user exists
+  if (!userDoc.exists) {
+    return res.status(404).json({ error: "User not found" });
+  }
 
   try {
     const userData = {uid: userUid};
@@ -410,6 +421,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
       "http://localhost:3000/retrieve_user_tracks",
       userData
     );
+    
     const rated_songs = response.data[0]["rated_songs"];
     const liked_songs = response.data[0]["liked_songs"];
     let songIdList = await Promise.all(
@@ -423,7 +435,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
           "http://localhost:3000/get_track_artist",
           songData
         );
-        //console.log(songName.data);
+        console.log(songName.data);
         return `${songName.data["name"]} - rated by ${rated_songs[songId].rating} - sang by ${artistName.data["artist"]}`;
       })
     );
@@ -438,14 +450,18 @@ app.post("/find_recommended_tracks", async (req, res) => {
           "http://localhost:3000/get_track_artist",
           songData
         );
-        //console.log(songName.data);
+        console.log(songName.data);
         return `${songName.data["name"]} - sang by ${artistName.data["artist"]}`;
       })
     );
 
     let combinedList = songIdList.concat(lsongIdlist);
     let myList = combinedList.join("\n");
-
+    
+    // Check if myList is empty
+    if (!myList.trim()) {
+      return res.status(404).json({ message: "No songs found to recommend" });
+    }
     const prompt =
       'I would like you to give me 10 song reccomendations with name of the artist according to my list which includes rated and liked songs by me.' + 
       'Please just provide name of the songs and artist names "-" between them and do not quote the name of the songs or put anything unrelated like' + 
@@ -456,7 +472,7 @@ app.post("/find_recommended_tracks", async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    console.log(openai_response["choices"][0]["message"]["content"]);
+    //console.log(openai_response["choices"][0]["message"]["content"]);
     //res.status(200).send(openai_response['choices'][0]['message']['content']);
     const recommendations = await find_recommended_track(
       openai_response["choices"][0]["message"]["content"]
@@ -486,7 +502,7 @@ app.post("/temporal_recommendation", async (req, res) => {
     console.log(response.data);
     // Extract song IDs from the response
     const songIds = response.data.map(item => item.songid);
-    console.log(songIds);
+    //console.log(songIds);
 
     let songDetailsList = await Promise.all(
       songIds.map(async (songId) => {
