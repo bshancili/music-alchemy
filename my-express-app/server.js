@@ -322,26 +322,7 @@ app.post("/find_song_name", async (req, res) => {
   }
 });
 
-/*
-app.post("/retrieve_friend_list", async (req, res) => {
-  try{
-    const uid = req.body["uid"];
-    const querySnapshot = await db.collection('Users').get();
-    const friends = [];
-    querySnapshot.forEach((doc) => {
-      if(doc.data()["uid"] == uid){
-        friends.push({
-          friends_list: doc.data()["friends_list"]
-        });
-      }
-    });
-    res.status(200).send(friends);
-  }catch(error){
-    console.error("Error retrieving songs: ", error);
-    res.status(500).send(error);
-  }
-});
-*/
+
 app.post("/retrieve_friend_list", async (req, res) => {
   try {
     const uid = req.body["uid"];
@@ -395,7 +376,6 @@ app.post("/get_privacy_value", async (req, res) => {
     res.status(500).json({ error: "Error retrieving privacy value", details: error });
   }
 });
-
 
 async function find_recommended_track(prompt_chatgpt) {
   let tracks = prompt_chatgpt.split("\n").map((line) => {
@@ -614,3 +594,6 @@ app.post("/friends_recommendation", async (req, res) => {
   
 });
 module.exports = app;
+
+// Export find_recommended_track function
+module.exports.find_recommended_track = find_recommended_track;
