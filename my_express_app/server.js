@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 const serviceAccount = require('./music-alchemy-firebase-adminsdk.json');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const FIREBASE_API_KEY = "AIzaSyDoWU1lhDCZnwWYGIxH2Zqz5CimeTbTFS0"
+const FIREBASE_API_KEY = "MY_API_KEY"
 
 const OpenAIApi = require('openai');
 
